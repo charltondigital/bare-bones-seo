@@ -118,7 +118,7 @@ add_action( 'wp_head', function() {
 if ( is_admin() ) {
     add_filter( 'site_transient_update_plugins', function( $transient ) {
         $slug = 'bare-bones-seo/bare-bones-seo.php';
-        $repo_url = 'https://raw.githubusercontent.com/your-username/bare-bones-seo/main/bare-bones-seo.php';
+        $repo_url = 'https://raw.githubusercontent.com/charltondigital/bare-bones-seo/main/bare-bones-seo.php';
         
         if ( empty( $transient ) ) {
             $transient = new \stdClass();
@@ -149,7 +149,7 @@ if ( is_admin() ) {
                 $obj->slug = 'bare-bones-seo';
                 $obj->plugin = $slug;
                 $obj->new_version = $remote_version;
-                $obj->package = 'https://github.com/your-username/bare-bones-seo/archive/refs/heads/main.zip';
+                $obj->package = 'https://github.com/charltondigital/bare-bones-seo/archive/refs/heads/main.zip';
                 $transient->response[ $slug ] = $obj;
             }
         }
