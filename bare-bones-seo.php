@@ -3,9 +3,9 @@
  * Plugin Name:       Bare Bones SEO
  * Plugin URI:        https://charltondigital.com
  * Description:       Lightweight, no-bloat custom SEO overrides for Title tags, Meta Descriptions, and Archive controls.
- * Version:           1.0.0
- * Author:            Your Name
- * Author URI:        https://yourdomain.com
+ * Version:           1.0.1
+ * Author:            Aaron Charlton
+ * Author URI:        https://charltondigital.com
  * License:           GPL2
  * GitHub Plugin URI: https://github.com/charltondigital/bare-bones-seo
  */
