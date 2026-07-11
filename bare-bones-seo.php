@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 if ( is_admin() ) {
     add_action( 'add_meta_boxes', function() {
         foreach ( [ 'post', 'page' ] as $s ) {
-            add_meta_box( 'custom_seo_box', 'SEO Settings (No Plugin)', 'draw_seo_fields', $s, 'normal', 'high' );
+            add_meta_box( 'custom_seo_box', 'Bare Bones SEO', 'draw_seo_fields', $s, 'normal', 'high' );
         }
     });
 
