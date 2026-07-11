@@ -111,3 +111,60 @@ add_action( 'wp_head', function() {
         echo '<meta name="robots" content="noindex, follow" />' . "\n";
     }
 }, 1 );
+
+/* ==========================================================================
+   PART 3: LIGHTWEIGHT SELF-UPDATER (NO PLUGINS REQUIRED)
+   ========================================================================== */
+if ( is_admin() ) {
+    add_filter( 'site_transient_update_plugins', function( $transient ) {
+        $slug = 'bare-bones-seo/bare-bones-seo.php';
+        $repo_url = 'https://raw.githubusercontent.com/your-username/bare-bones-seo/main/bare-bones-seo.php';
+        
+        if ( empty( $transient ) ) {
+            $transient = new \stdClass();
+        }
+
+        // Cache the remote check for 12 hours so it never slows down your admin dashboard
+        $remote_source = get_transient( 'bare_bones_seo_update_check' );
+        if ( false === $remote_source ) {
+            $response = wp_remote_get( $repo_url, [ 'sslverify' => true, 'timeout' => 10 ] );
+            if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
+                $remote_source = wp_remote_retrieve_body( $response );
+                set_transient( 'bare_bones_seo_update_check', $remote_source, 12 * HOUR_IN_SECONDS );
+            }
+        }
+
+        if ( ! empty( $remote_source ) ) {
+            // Read the Version header from your GitHub file string
+            preg_match( '/Version:\s*([0-9.]+)/i', $remote_source, $matches );
+            $remote_version = isset( $matches[1] ) ? $matches[1] : '0.0.0';
+            
+            // Read the current installed local version
+            $plugin_data = get_plugin_data( WP_PLUGIN_DIR . '/' . $slug );
+            $local_version = $plugin_data['Version'];
+
+            // If GitHub version is newer, trigger the native WordPress update notice
+            if ( version_compare( $local_version, $remote_version, '<' ) ) {
+                $obj = new \stdClass();
+                $obj->slug = 'bare-bones-seo';
+                $obj->plugin = $slug;
+                $obj->new_version = $remote_version;
+                $obj->package = 'https://github.com/your-username/bare-bones-seo/archive/refs/heads/main.zip';
+                $transient->response[ $slug ] = $obj;
+            }
+        }
+        return $transient;
+    });
+
+    // Clean up the folder name mismatch during the native WP unzip sequence
+    add_filter( 'upgrader_source_selection', function( $source, $remote_source, $upgrader, $hook_extra ) {
+        if ( isset( $hook_extra['plugin'] ) && $hook_extra['plugin'] === 'bare-bones-seo/bare-bones-seo.php' ) {
+            $correct_path = dirname( $source ) . '/bare-bones-seo/';
+            if ( ! file_exists( $correct_path ) ) {
+                rename( $source, $correct_path );
+            }
+            return $correct_path;
+        }
+        return $source;
+    }, 10, 4 );
+}
