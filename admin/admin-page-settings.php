@@ -189,7 +189,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                               style="width:100%; box-sizing:border-box; font-size:12px; font-family:monospace; resize:vertical; min-height:80px; max-height:200px; overflow-y:auto;"><?php echo esc_textarea($meta['schema']); ?></textarea>
                     <p style="font-size:11px; color:#888; margin:6px 0 0;">
                         Paste the complete JSON-LD block including the &lt;script&gt; wrapper tags.
-                        <a href="https://technicalseo.com/tools/schema-generator/" target="_blank" rel="noopener noreferrer">Merkle Schema Generator</a>
+                        Browse types at <a href="https://schema.org" target="_blank" rel="noopener noreferrer">Schema.org</a> or validate with <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer">Google Rich Results Test</a>.
                     </p>
                 </div>
             </div>
