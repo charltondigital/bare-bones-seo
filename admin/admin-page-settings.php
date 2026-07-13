@@ -91,8 +91,8 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
     $index_options = array(
         'yes'                 => 'Yes',
         'no'                  => 'No',
-        'complicated_noindex' => "It's Complicated: Noindex but leave in sitemap",
-        'complicated_sitemap' => "It's Complicated: Remove from sitemap but don't noindex",
+        'complicated_noindex' => 'Noindex Only',
+        'complicated_sitemap' => 'Remove from Sitemap Only',
     );
 
     // Description placeholder: 2 blank lines when empty so preview box doesn't collapse
