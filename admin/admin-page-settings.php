@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
 function bare_bones_seo_register_meta_box() {
     $post_types = get_post_types(array('public' => true));
-    $meta_box_title = 'Page-Level SEO Settings — ' . bare_bones_seo_skull_icon(14) . 'Bare Bones SEO';
+    $meta_box_title = 'Page-Level SEO Settings — Bare Bones SEO';
 
     foreach ($post_types as $type) {
         add_meta_box(
