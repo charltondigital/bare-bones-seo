@@ -86,13 +86,17 @@ function bare_bones_seo_skull_icon($size = 18) {
  */
 add_action('admin_menu', 'bare_bones_seo_register_menus');
 function bare_bones_seo_register_menus() {
+    // Single compound path, white fill, evenodd rule for transparent cutouts
+    // WordPress svg-painter.js will recolor this — white works best as base
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="white" fill-rule="evenodd" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V13.74C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z M5.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M10.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M9.2 10c0-.28.22-.5.5-.5h.6c.28 0 .5.22.5.5v.8c0 .28-.22.5-.5.5h-.6c-.28 0-.5-.22-.5-.5V10z M6 15.5h1.5v1.5H6z M8.5 15.5H10v1.5H8.5z M12 15.5h1.5v1.5H12z"/></svg>';
+
     add_menu_page(
         'Site Level Search Engine Instructions — Bare Bones SEO',
         'Bare Bones SEO',
         'manage_options',
         'bare-bones-seo',
         'bare_bones_seo_render_global_map_screen',
-        'none',
+        'data:image/svg+xml;base64,' . base64_encode($svg),
         80
     );
 
@@ -129,33 +133,7 @@ function bare_bones_seo_enqueue_assets() {
     );
 }
 
-/**
- * Output skull icon CSS directly in admin head.
- *
- * Bypasses svg-painter.js entirely by setting the icon as a CSS
- * background-image with a white SVG data URI. This gives us full
- * control over the icon color without WordPress overriding it.
- *
- * White is correct for the dark WordPress admin sidebar.
- * The inline SVG uses the compound evenodd path so eye/nose holes
- * are transparent cutouts, not filled shapes.
- *
- * @since 1.0.3
- */
-add_action('admin_head', 'bare_bones_seo_output_menu_icon_css');
-function bare_bones_seo_output_menu_icon_css() {
-    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="white" fill-rule="evenodd" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V13.74C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z M5.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M10.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M9.2 10c0-.28.22-.5.5-.5h.6c.28 0 .5.22.5.5v.8c0 .28-.22.5-.5.5h-.6c-.28 0-.5-.22-.5-.5V10z M6 15.5h1.5v1.5H6z M8.5 15.5H10v1.5H8.5z M12 15.5h1.5v1.5H12z"/></svg>';
 
-    $encoded = 'data:image/svg+xml;base64,' . base64_encode($svg);
-    ?>
-    <style>
-        /* Skull icon — always white, bypasses svg-painter.js */
-        #adminmenu #toplevel_page_bare-bones-seo .wp-menu-image {
-            background-image: url('<?php echo esc_url($encoded); ?>') !important;
-            background-repeat: no-repeat !important;
-            background-position: center !important;
-            background-size: 18px auto !important;
-        }
         #adminmenu #toplevel_page_bare-bones-seo .wp-menu-image:before {
             display: none !important;
         }
