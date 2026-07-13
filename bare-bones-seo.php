@@ -3,7 +3,7 @@
  * Plugin Name: Bare Bones SEO
  * Plugin URI:  https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     1.0.3
+ * Version:     1.0.6
  * Author:      Charlton Digital
  * License:     GPLv2 or later
  * Text Domain: bare-bones-seo
@@ -35,7 +35,7 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 // Plugin paths
 define('BARE_BONES_SEO_PATH',    plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '1.0.3');
+define('BARE_BONES_SEO_VERSION', '1.0.6');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
