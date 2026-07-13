@@ -132,11 +132,3 @@ function bare_bones_seo_enqueue_assets() {
         true
     );
 }
-
-
-        #adminmenu #toplevel_page_bare-bones-seo .wp-menu-image:before {
-            display: none !important;
-        }
-    </style>
-    <?php
-}
