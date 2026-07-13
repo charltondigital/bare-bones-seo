@@ -148,15 +148,33 @@ function bare_bones_seo_render_global_map_screen() {
                 </form>
             </div>
 
-            <!-- RIGHT COLUMN: Live Sitemap Preview -->
+<!-- RIGHT COLUMN: Live Sitemap Preview -->
             <div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 20px; height: fit-content; position: sticky; top: 20px;">
                 <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: #333;">
                     🗺️ Sitemap: This is what you're telling Google
                 </h3>
                 
-                <div id="bb-sitemap-preview" style="background: white; border: 1px solid #e0e0e0; border-radius: 3px; padding: 15px; font-family: monospace; font-size: 12px; line-height: 1.8; color: #333; max-height: 500px; overflow-y: auto;">
-                    <!-- JavaScript will populate this -->
-                    <div style="color: #999;">Loading sitemap...</div>
+                <div id="bb-sitemap-preview" style="background: white; border: 1px solid #e0e0e0; border-radius: 3px; padding: 15px; font-size: 13px; line-height: 2; color: #333; max-height: 500px; overflow-y: auto;">
+                    <!-- Rendered directly, no loading state -->
+                    <?php
+                    $all_sections = array_merge($post_types, $taxonomies);
+                    foreach ($all_sections as $section) :
+                        $status = isset($current_options[$section->name]) ? $current_options[$section->name] : $defaults[$section->name] ?? 'yes';
+                        $is_indexed = $status === 'yes';
+                        $icon = $is_indexed ? '✓' : '✗';
+                        $color = $is_indexed ? '#46b450' : '#dc3232';
+                        $desc = bare_bones_seo_get_section_description($section->name);
+                    ?>
+                        <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
+                            <div style="color: <?php echo esc_attr($color); ?>; font-weight: bold; margin-bottom: 3px;">
+                                <span><?php echo esc_html($icon); ?></span>
+                                <?php echo esc_html($section->label); ?>
+                            </div>
+                            <div style="color: #999; font-size: 12px; margin-left: 20px;">
+                                <?php echo esc_html($desc); ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
 
                 <p style="margin-top: 15px; font-size: 12px; color: #666;">
