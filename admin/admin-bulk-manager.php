@@ -67,7 +67,7 @@ function bare_bones_seo_render_bulk_manager_screen() {
     ?>
     <div class="wrap">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #ccc; padding-bottom:15px;">
-            <h1 style="margin:0;">SEO Page Settings: Bulk Manager — Bare Bones SEO</h1>
+            <h1 style="margin:0;">SEO Page Settings: Bulk Manager — <?php echo bare_bones_seo_skull_icon(18); ?>Bare Bones SEO</h1>
             <a href="https://charltondigital.com/tools/bare-bones-seo-wordpress-plugin/" target="_blank" rel="noopener noreferrer" class="button button-secondary" style="display:inline-flex; align-items:center; gap:5px;">
                 <span class="dashicons dashicons-external" style="font-size:16px; width:16px; height:16px; margin-top:2px;"></span>
                 Documentation
