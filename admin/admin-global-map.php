@@ -2,8 +2,9 @@
 /**
  * Site Level Search Engine Instructions — Bare Bones SEO
  *
- * Fetches the real wp-sitemap.xml to build controls dynamically.
- * Detects sitemap conflicts and locks the page if found.
+ * Controls built from WordPress internals matching core sitemap logic.
+ * Only shows sections with at least 1 published item.
+ * Right column shows source of truth — all sections with ✗ for removed ones.
  *
  * @package BareBonesSEO
  * @subpackage Admin
@@ -70,132 +71,100 @@ function bare_bones_seo_detect_sitemap_conflict() {
 }
 
 /**
- * Fetch and parse the WordPress core sitemap index.
+ * Build the list of sections that WordPress would include in its sitemap.
+ *
+ * Matches WordPress core sitemap logic exactly:
+ * - Public post types with at least 1 published post
+ * - Public taxonomies with at least 1 term that has published posts
+ * - Users (author archives) only if at least 1 published post exists
+ *
+ * Sections with zero items are excluded — they won't be in the sitemap
+ * and would just clutter the UI.
  *
  * @since 1.0.3
- * @return array|false Array of sections or false on failure
+ * @return array Array of section data keyed by section key
  */
-function bare_bones_seo_fetch_sitemap_sections() {
-    $sitemap_url = get_home_url() . '/wp-sitemap.xml';
-
-    $response = wp_remote_get($sitemap_url, array('timeout' => 10));
-
-    if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-        return false;
-    }
-
-    $body = wp_remote_retrieve_body($response);
-    if (empty($body)) {
-        return false;
-    }
-
-    libxml_use_internal_errors(true);
-    $xml = simplexml_load_string($body);
-    libxml_clear_errors();
-
-    if (!$xml) {
-        return false;
-    }
-
+function bare_bones_seo_get_sitemap_sections() {
     $sections = array();
 
-    foreach ($xml->sitemap as $sitemap) {
-        $url = (string) $sitemap->loc;
+    // POST TYPES
+    // WordPress includes public post types that are publicly queryable
+    $post_types = get_post_types(array(
+        'public'             => true,
+        'publicly_queryable' => true,
+    ), 'objects');
 
-        // Get the filename only, e.g. "wp-sitemap-posts-post-1.xml"
-        $filename = basename($url);
-
-        // Remove prefix "wp-sitemap-" and suffix "-N.xml" to get middle part
-        // e.g. "posts-post", "taxonomies-category", "users"
-        $middle = preg_replace('/^wp-sitemap-/', '', $filename);
-        $middle = preg_replace('/-\d+\.xml$/', '', $middle);
-
-        // Split on first dash to get type and key
-        // "posts-post" → type=posts, key=post
-        // "posts-kadence_element" → type=posts, key=kadence_element
-        // "taxonomies-category" → type=taxonomies, key=category
-        // "users" → type=users, key=user
-        $parts = explode('-', $middle, 2);
-        $type  = $parts[0];
-        $key   = isset($parts[1]) ? $parts[1] : 'user';
-
-        // Normalize type to what WordPress uses
-        if (!in_array($type, array('posts', 'taxonomies', 'users'))) {
+    foreach ($post_types as $post_type) {
+        // Skip attachments — WordPress excludes these from sitemaps
+        if ($post_type->name === 'attachment') {
             continue;
         }
 
-        if ($type === 'users') {
-            $key = 'user';
-        }
+        $count = wp_count_posts($post_type->name);
+        $published = isset($count->publish) ? (int) $count->publish : 0;
 
-        // Already added this section (multiple pages of same type) — just increment
-        if (isset($sections[$key])) {
-            $sections[$key]['pages']++;
+        // Only include if at least 1 published post
+        if ($published === 0) {
             continue;
         }
 
-        $sections[$key] = array(
-            'key'   => $key,
-            'type'  => $type,
-            'url'   => $url,
-            'pages' => 1,
+        $sections[$post_type->name] = array(
+            'key'   => $post_type->name,
+            'type'  => 'posts',
+            'label' => $post_type->label,
+            'count' => $published,
+            'url'   => home_url('/wp-sitemap-posts-' . $post_type->name . '-1.xml'),
         );
     }
 
-    return !empty($sections) ? $sections : false;
-}
+    // TAXONOMIES
+    // WordPress includes public taxonomies with at least 1 term with posts
+    $taxonomies = get_taxonomies(array('public' => true), 'objects');
 
-/**
- * Get actual item count for a section.
- *
- * @since 1.0.3
- * @param string $key  Section key
- * @param string $type posts|taxonomies|users
- * @return int
- */
-function bare_bones_seo_get_section_count($key, $type) {
-    if ($type === 'users') {
-        $data = count_users();
-        return (int) ($data['total_users'] ?? 0);
+    foreach ($taxonomies as $taxonomy) {
+        $count = wp_count_terms(array(
+            'taxonomy'   => $taxonomy->name,
+            'hide_empty' => true, // Only count terms with published posts
+        ));
+
+        if (is_wp_error($count) || (int) $count === 0) {
+            continue;
+        }
+
+        $sections[$taxonomy->name] = array(
+            'key'   => $taxonomy->name,
+            'type'  => 'taxonomies',
+            'label' => $taxonomy->label,
+            'count' => (int) $count,
+            'url'   => home_url('/wp-sitemap-taxonomies-' . $taxonomy->name . '-1.xml'),
+        );
     }
 
-    if ($type === 'taxonomies') {
-        $count = wp_count_terms(array('taxonomy' => $key, 'hide_empty' => false));
-        return is_wp_error($count) ? 0 : (int) $count;
+    // USERS (Author Archives)
+    // WordPress includes users if at least 1 published post exists
+    $published_posts = wp_count_posts('post');
+    $total_published = isset($published_posts->publish) ? (int) $published_posts->publish : 0;
+
+    if ($total_published > 0) {
+        $user_data = count_users();
+        $user_count = (int) ($user_data['total_users'] ?? 0);
+
+        if ($user_count > 0) {
+            $sections['user'] = array(
+                'key'   => 'user',
+                'type'  => 'users',
+                'label' => 'Author Archives',
+                'count' => $user_count,
+                'url'   => home_url('/wp-sitemap-users-1.xml'),
+            );
+        }
     }
 
-    // Post type
-    $counts = wp_count_posts($key);
-    return (int) ($counts->publish ?? 0);
-}
-
-/**
- * Get human-readable label for a section.
- *
- * @since 1.0.3
- * @param string $key
- * @param string $type
- * @return string
- */
-function bare_bones_seo_get_section_label($key, $type) {
-    if ($type === 'users') {
-        return 'Author Archives';
-    }
-
-    if ($type === 'taxonomies') {
-        $taxonomy = get_taxonomy($key);
-        return $taxonomy ? $taxonomy->label : ucwords(str_replace('_', ' ', $key));
-    }
-
-    $post_type = get_post_type_object($key);
-    return $post_type ? $post_type->label : ucwords(str_replace('_', ' ', $key));
+    return $sections;
 }
 
 /**
  * Get plain-English description for a section.
- *
- * Known sections get specific descriptions.
- * Unknown sections get a generic fallback.
  *
  * @since 1.0.3
  * @param string $key
@@ -250,23 +219,25 @@ function bare_bones_seo_render_global_map_screen() {
         echo '<div class="updated"><p>Your settings have been saved.</p></div>';
     }
 
-    $current_options    = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
-    $conflict           = bare_bones_seo_detect_sitemap_conflict();
-    $has_conflict       = $conflict['conflict'];
-    $conflict_plugin    = $conflict['plugin_name'];
-    $sections           = bare_bones_seo_fetch_sitemap_sections();
-    $sitemap_unreachable = ($sections === false);
-    $critical_sections  = array('post', 'page');
+    $current_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
+    $conflict        = bare_bones_seo_detect_sitemap_conflict();
+    $has_conflict    = $conflict['conflict'];
+    $conflict_plugin = $conflict['plugin_name'];
+    $sections        = bare_bones_seo_get_sitemap_sections();
+    $critical        = array('post', 'page');
+    $skull           = bare_bones_seo_skull_icon(18);
     ?>
     <div class="wrap">
+        <!-- Header -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #ccc; padding-bottom:15px;">
-            <h1 style="margin:0;">Site Level Search Engine Instructions — Bare Bones SEO</h1>
+            <h1 style="margin:0;">Site Level Search Engine Instructions — <?php echo $skull; ?>Bare Bones SEO</h1>
             <a href="https://charltondigital.com/tools/bare-bones-seo-wordpress-plugin/" target="_blank" rel="noopener noreferrer" class="button button-secondary" style="display:inline-flex; align-items:center; gap:5px;">
                 <span class="dashicons dashicons-external" style="font-size:16px; width:16px; height:16px; margin-top:2px;"></span>
                 Documentation
             </a>
         </div>
 
+        <!-- Tabs -->
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
             <a href="?page=bare-bones-seo" class="nav-tab nav-tab-active">Site Level Search Engine Instructions</a>
             <a href="?page=bare-bones-seo-bulk" class="nav-tab">Bulk Manager</a>
@@ -279,13 +250,7 @@ function bare_bones_seo_render_global_map_screen() {
             </div>
         <?php endif; ?>
 
-        <?php if (!$has_conflict && $sitemap_unreachable) : ?>
-            <div style="background:#fff8e5; border-left:4px solid #f0ad4e; padding:15px 20px; border-radius:3px; margin-bottom:20px;">
-                <strong>⚠️ Could not reach your WordPress sitemap.</strong>
-                Make sure it is enabled at <a href="<?php echo esc_url(get_home_url() . '/wp-sitemap.xml'); ?>" target="_blank"><?php echo esc_url(get_home_url() . '/wp-sitemap.xml'); ?></a>
-            </div>
-        <?php endif; ?>
-
+        <!-- TWO-COLUMN LAYOUT -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px;">
 
             <!-- LEFT: Controls -->
@@ -303,16 +268,15 @@ function bare_bones_seo_render_global_map_screen() {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($sections) :
+                            <?php if (!empty($sections)) :
                                 foreach ($sections as $section) :
                                     $key         = $section['key'];
-                                    $type        = $section['type'];
-                                    $label       = bare_bones_seo_get_section_label($key, $type);
-                                    $description = bare_bones_seo_get_section_description($key, $type);
+                                    $label       = $section['label'];
+                                    $count       = $section['count'];
+                                    $description = bare_bones_seo_get_section_description($key, $section['type']);
                                     $default     = bare_bones_seo_get_section_default($key);
                                     $status      = isset($current_options[$key]) ? $current_options[$key] : $default;
-                                    $is_critical = in_array($key, $critical_sections);
-                                    $count       = bare_bones_seo_get_section_count($key, $type);
+                                    $is_critical = in_array($key, $critical);
                                     $disabled    = ($has_conflict || $is_critical) ? 'disabled' : '';
                                 ?>
                                     <tr>
@@ -350,14 +314,14 @@ function bare_bones_seo_render_global_map_screen() {
                             else : ?>
                                 <tr>
                                     <td colspan="4" style="padding:20px; color:#666; text-align:center;">
-                                        <?php echo $has_conflict ? 'Controls locked until sitemap conflict is resolved.' : 'Could not load sitemap sections.'; ?>
+                                        No sitemap sections found. Make sure you have published content.
                                     </td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
 
-                    <?php if (!$has_conflict && $sections) : ?>
+                    <?php if (!$has_conflict && !empty($sections)) : ?>
                         <p class="submit" style="margin-top:20px;">
                             <input type="submit" name="bb_save_global_map" class="button button-primary button-large" value="Save Settings">
                         </p>
@@ -365,7 +329,7 @@ function bare_bones_seo_render_global_map_screen() {
                 </form>
             </div>
 
-            <!-- RIGHT: Real sitemap preview -->
+            <!-- RIGHT: Source of truth sitemap preview -->
             <div style="background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:20px; height:fit-content; position:sticky; top:20px;">
                 <h3 style="margin-top:0; margin-bottom:15px; font-size:14px; color:#333;">
                     🗺️ This is what you're pushing to search engines and AI
@@ -376,39 +340,41 @@ function bare_bones_seo_render_global_map_screen() {
                         <div style="color:#dc3232; padding:10px 0;">
                             ⚠️ Sitemap controlled by <?php echo esc_html($conflict_plugin); ?>
                         </div>
-                    <?php elseif ($sitemap_unreachable) : ?>
-                        <div style="color:#f0ad4e; padding:10px 0;">
-                            ⚠️ Sitemap unreachable
+                    <?php elseif (empty($sections)) : ?>
+                        <div style="color:#888; padding:10px 0;">
+                            No published content found.
                         </div>
-                    <?php elseif ($sections) : ?>
+                    <?php else : ?>
                         <div style="color:#666; margin-bottom:10px; font-family:monospace;">
-                            <a href="<?php echo esc_url(get_home_url() . '/wp-sitemap.xml'); ?>" target="_blank" style="color:#0073aa; text-decoration:none;">
+                            <a href="<?php echo esc_url(home_url('/wp-sitemap.xml')); ?>" target="_blank" style="color:#0073aa; text-decoration:none;">
                                 /wp-sitemap.xml
                             </a>
                         </div>
                         <?php foreach ($sections as $section) :
-                            $key        = $section['key'];
-                            $type       = $section['type'];
-                            $default    = bare_bones_seo_get_section_default($key);
-                            $status     = isset($current_options[$key]) ? $current_options[$key] : $default;
-                            $is_indexed = ($status === 'yes');
-                            $icon       = $is_indexed ? '✓' : '✗';
-                            $color      = $is_indexed ? '#46b450' : '#dc3232';
-                            $count      = bare_bones_seo_get_section_count($key, $type);
+                            $key     = $section['key'];
+                            $default = bare_bones_seo_get_section_default($key);
+                            $status  = isset($current_options[$key]) ? $current_options[$key] : $default;
+
+                            // ✗ only when removed from sitemap
+                            // 'no' and 'complicated_sitemap' remove from sitemap
+                            // 'yes', 'advanced'(noindex), and unset = still in sitemap
+                            $removed_from_sitemap = in_array($status, array('no', 'complicated_sitemap'));
+                            $icon  = $removed_from_sitemap ? '✗' : '✓';
+                            $color = $removed_from_sitemap ? '#dc3232' : '#46b450';
                         ?>
                             <div style="color:<?php echo esc_attr($color); ?>; margin-bottom:8px; font-family:monospace;">
                                 <span style="font-weight:bold;"><?php echo esc_html($icon); ?></span>
                                 <a href="<?php echo esc_url($section['url']); ?>" target="_blank" style="color:#0073aa; text-decoration:none;">
                                     <?php echo esc_html(basename($section['url'])); ?>
                                 </a>
-                                <span style="color:#999; font-size:11px;">(<?php echo esc_html($count); ?>)</span>
+                                <span style="color:#999; font-size:11px;">(<?php echo esc_html($section['count']); ?>)</span>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
 
                 <p style="margin-top:15px; font-size:11px; color:#666; line-height:1.6;">
-                    <strong>✓</strong> = Included &nbsp;|&nbsp; <strong>✗</strong> = Hidden<br>
+                    <strong>✓</strong> = In sitemap &nbsp;|&nbsp; <strong>✗</strong> = Removed from sitemap<br>
                     Click any link to preview what Google sees.
                 </p>
             </div>
