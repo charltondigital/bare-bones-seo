@@ -21,10 +21,12 @@ if (!defined('ABSPATH')) {
 add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
 function bare_bones_seo_register_meta_box() {
     $post_types = get_post_types(array('public' => true));
+    $meta_box_title = 'Page-Level SEO Settings — ' . bare_bones_seo_skull_icon(14) . 'Bare Bones SEO';
+
     foreach ($post_types as $type) {
         add_meta_box(
             'bare-bones-seo-box',
-            'Page-Level SEO Settings — Bare Bones SEO',
+            $meta_box_title,
             'bare_bones_seo_render_meta_box',
             $type,
             'normal',
@@ -69,7 +71,7 @@ function bare_bones_seo_render_meta_box($post) {
  */
 function bare_bones_seo_render_fields($post, $in_bulk = false) {
     $meta         = bare_bones_seo_get_page_meta($post->ID);
-    $site_name    = get_bloginfo('name');
+    $site_name    = html_entity_decode(get_bloginfo('name'), ENT_QUOTES, 'UTF-8');
     $index_status = get_post_meta($post->ID, BARE_BONES_SEO_META_INDEX, true);
 
     if ($index_status === '') {
@@ -77,7 +79,9 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
     }
 
     // Title shown in preview: custom title or post title, always with site name appended
-    $preview_title           = $meta['title'] ? $meta['title'] : $post->post_title;
+    $preview_title           = $meta['title']
+        ? html_entity_decode($meta['title'], ENT_QUOTES, 'UTF-8')
+        : html_entity_decode($post->post_title, ENT_QUOTES, 'UTF-8');
     $preview_title_with_site = $preview_title . ' \u2014 ' . $site_name;
 
     // Unique prefix per post so IDs don't clash when multiple rows are open
@@ -203,7 +207,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 </div>
                 <div id="<?php echo esc_attr($uid); ?>-preview-desktop-desc"
                      style="font-family:arial,sans-serif; font-size:14px; color:#545454; max-width:572px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.58; <?php echo $desc_placeholder_style; ?>">
-                    <?php echo esc_html($meta['desc']); ?>
+                    <?php echo esc_html(html_entity_decode($meta['desc'], ENT_QUOTES, 'UTF-8')); ?>
                 </div>
             </div>
 
@@ -216,7 +220,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 </div>
                 <div id="<?php echo esc_attr($uid); ?>-preview-mobile-desc"
                      style="font-family:arial,sans-serif; font-size:14px; color:#545454; max-width:892px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.58; <?php echo $desc_placeholder_style; ?>">
-                    <?php echo esc_html($meta['desc']); ?>
+                    <?php echo esc_html(html_entity_decode($meta['desc'], ENT_QUOTES, 'UTF-8')); ?>
                 </div>
             </div>
         </div>
@@ -227,7 +231,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
     <script type="application/json" id="<?php echo esc_attr($uid); ?>-meta-data"><?php echo wp_json_encode(array(
         'uid'        => $uid,
         'site_name'  => $site_name,
-        'post_title' => $post->post_title,
+        'post_title' => html_entity_decode($post->post_title, ENT_QUOTES, 'UTF-8'),
         'post_id'    => $post->ID,
     )); ?></script>
 
