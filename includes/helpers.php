@@ -201,6 +201,34 @@ function bare_bones_seo_inject_frontend_tags() {
     // Output noindex meta tag if section or page is marked as noindex
     if ($section_noindex || $page_noindex) {
         echo '<meta name="robots" content="noindex, follow">' . "\n";
+        return;
+    }
+
+    // Auto-handle WordPress system pages based on saved settings
+    // These never appear in sitemaps so only yes/noindex options apply
+    $system_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
+
+    $system_checks = array(
+        'date'    => is_date(),
+        'search'  => is_search(),
+        '404'     => is_404(),
+        'paged'   => is_paged(),
+    );
+
+    $system_defaults = array(
+        'date'   => 'complicated_noindex',
+        'search' => 'complicated_noindex',
+        '404'    => 'complicated_noindex',
+        'paged'  => 'yes',
+    );
+
+    foreach ($system_checks as $key => $is_active) {
+        if (!$is_active) continue;
+        $status = isset($system_options[$key]) ? $system_options[$key] : $system_defaults[$key];
+        if ($status === 'complicated_noindex') {
+            echo '<meta name="robots" content="noindex, follow">' . "\n";
+        }
+        break;
     }
 }
 
