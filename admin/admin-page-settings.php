@@ -99,9 +99,9 @@ function bare_bones_seo_save_meta_box_data($post_id) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     bare_bones_seo_update_page_meta($post_id, array(
-        'title'        => $_POST['bb_seo_title'],
-        'desc'         => $_POST['bb_seo_desc'],
-        'schema'       => $_POST['bb_seo_schema'],
-        'should_index' => isset($_POST['bb_seo_should_index']) ? 'no' : 'yes'
-    ));
+    'title'        => isset($_POST['bb_seo_title']) ? $_POST['bb_seo_title'] : '',
+    'desc'         => isset($_POST['bb_seo_desc']) ? $_POST['bb_seo_desc'] : '',
+    'schema'       => isset($_POST['bb_seo_schema']) ? $_POST['bb_seo_schema'] : '',
+    'should_index' => isset($_POST['bb_seo_should_index']) ? 'no' : 'yes'
+));
 }
