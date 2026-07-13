@@ -164,21 +164,26 @@ function bare_bones_seo_inject_frontend_tags() {
     $global_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
     $post_type = get_post_type();
 
-    // Default: index everything unless explicitly disabled
-    $section_indexable = isset($global_options[$post_type]) 
-        ? ($global_options[$post_type] === 'yes') 
-        : true;
-    $page_indexable = true;
+    // Determine if this section should be noindexed
+    // 'no' = noindex + remove from sitemap
+    // 'complicated_noindex' = noindex but keep in sitemap
+    // 'complicated_sitemap' = remove from sitemap but keep indexed
+    // 'yes' or not set = index normally
+    $section_status    = isset($global_options[$post_type]) ? $global_options[$post_type] : 'yes';
+    $section_noindex   = in_array($section_status, array('no', 'complicated_noindex'));
+    $page_noindex      = false;
 
     // On singular pages, check page-level settings
     if (is_singular() && isset($post->ID)) {
         $meta = bare_bones_seo_get_page_meta($post->ID);
-        $page_indexable = $meta['should_index'];
+
+        // Page-level noindex states
+        $page_index_status = get_post_meta($post->ID, BARE_BONES_SEO_META_INDEX, true);
+        $page_noindex      = in_array($page_index_status, array('no', 'complicated_noindex'));
 
         // Output custom title tag if provided
         if (!empty($meta['title'])) {
             echo '<title>' . esc_html($meta['title']) . '</title>' . "\n";
-            // Remove theme's default title tag to prevent duplicates
             remove_theme_support('title-tag');
         }
 
@@ -188,14 +193,13 @@ function bare_bones_seo_inject_frontend_tags() {
         }
 
         // Output custom JSON-LD schema if provided
-        // Note: Schema must include full <script type="application/ld+json">...</script> wrapper
         if (!empty($meta['schema'])) {
             echo $meta['schema'] . "\n";
         }
     }
 
-    // Output noindex meta tag if either section or page is marked as non-indexable
-    if (!$section_indexable || !$page_indexable) {
+    // Output noindex meta tag if section or page is marked as noindex
+    if ($section_noindex || $page_noindex) {
         echo '<meta name="robots" content="noindex, follow">' . "\n";
     }
 }
@@ -246,12 +250,56 @@ add_filter('wp_sitemaps_post_types', 'bare_bones_seo_filter_global_sitemap_secti
 function bare_bones_seo_filter_global_sitemap_sections($post_types) {
     $global_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
 
-    // Remove post types marked as non-indexable
+    // Remove post types set to NO or Remove from Sitemap Only
     foreach ($post_types as $type => $object) {
-        if (isset($global_options[$type]) && $global_options[$type] === 'no') {
+        if (isset($global_options[$type]) && in_array($global_options[$type], array('no', 'complicated_sitemap'))) {
             unset($post_types[$type]);
         }
     }
 
     return $post_types;
+}
+
+/**
+ * Filter taxonomies from sitemap based on global settings.
+ *
+ * Removes taxonomy sections (categories, tags, custom taxonomies)
+ * from the sitemap when set to NO or Remove from Sitemap Only.
+ *
+ * @since 1.0.3
+ * @param array $taxonomies Array of taxonomy objects eligible for sitemaps
+ * @return array Filtered array
+ */
+add_filter('wp_sitemaps_taxonomies', 'bare_bones_seo_filter_global_sitemap_taxonomies');
+function bare_bones_seo_filter_global_sitemap_taxonomies($taxonomies) {
+    $global_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
+
+    foreach ($taxonomies as $taxonomy => $object) {
+        if (isset($global_options[$taxonomy]) && in_array($global_options[$taxonomy], array('no', 'complicated_sitemap'))) {
+            unset($taxonomies[$taxonomy]);
+        }
+    }
+
+    return $taxonomies;
+}
+
+/**
+ * Filter users from sitemap based on global settings.
+ *
+ * Removes author archives from sitemap when set to NO or
+ * Remove from Sitemap Only.
+ *
+ * @since 1.0.3
+ * @param bool $enabled Whether users sitemap is enabled
+ * @return bool
+ */
+add_filter('wp_sitemaps_users_enabled', 'bare_bones_seo_filter_global_sitemap_users');
+function bare_bones_seo_filter_global_sitemap_users($enabled) {
+    $global_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
+
+    if (isset($global_options['user']) && in_array($global_options['user'], array('no', 'complicated_sitemap'))) {
+        return false;
+    }
+
+    return $enabled;
 }
