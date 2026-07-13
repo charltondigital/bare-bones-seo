@@ -112,6 +112,30 @@ function bare_bones_seo_register_menus() {
 }
 
 /**
+ * Manual update check button
+ */
+add_action('admin_bar_menu', 'bare_bones_seo_add_update_check_link', 999);
+function bare_bones_seo_add_update_check_link($wp_admin_bar) {
+    if (!current_user_can('manage_options')) return;
+
+    $wp_admin_bar->add_node(array(
+        'id'    => 'bb-check-updates',
+        'title' => '☠️ Check Updates',
+        'href'  => wp_nonce_url(admin_url('admin-ajax.php?action=bb_check_updates'), 'bb_nonce'),
+        'parent' => 'top-secondary',
+    ));
+}
+
+add_action('wp_ajax_bb_check_updates', function() {
+    check_ajax_referer('bb_nonce', 'nonce');
+    if (!current_user_can('manage_options')) wp_die('No');
+    wp_update_plugins();
+    wp_redirect(admin_url('plugins.php?plugin_status=all'));
+    exit;
+});
+
+
+/**
  * Enqueue admin styles and scripts
  * 
  * Loads CSS and JavaScript only on Bare Bones SEO admin pages.
