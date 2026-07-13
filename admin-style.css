@@ -1,0 +1,127 @@
+/**
+ * Bare Bones SEO Admin Stylesheet
+ * 
+ * Styles for the WordPress admin interface:
+ * - Meta box styling in post/page editor
+ * - Global indexing map table
+ * - Bulk page manager
+ * - Search snippet preview simulator
+ */
+
+/* ============================================================================
+   Meta Box Container & Layout
+   ============================================================================ */
+
+.bb-panel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 10px 0;
+}
+
+/* ============================================================================
+   Form Fields
+   ============================================================================ */
+
+.bb-field-group {
+    margin-bottom: 18px;
+}
+
+.bb-field-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.bb-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: sans-serif;
+}
+
+/* ============================================================================
+   Search Result Snippet Preview Simulator
+   
+   Simulates how the page appears in Google search results.
+   Uses system fonts and sizing that matches Google's search results.
+   ============================================================================ */
+
+.bb-simulator-card {
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fff;
+    margin-bottom: 15px;
+    font-family: Arial, sans-serif;
+}
+
+/* Desktop snippet (600px width - matches most laptop viewports) */
+.bb-sim-title {
+    color: #1a0dab;
+    font-size: 20px;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.bb-sim-url {
+    color: #202124;
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.bb-sim-desc {
+    color: #4d5156;
+    font-size: 14px;
+    line-height: 1.58;
+    word-wrap: break-word;
+}
+
+/* Mobile snippet (360px width - matches mobile viewports) */
+.bb-mobile .bb-sim-title {
+    font-size: 16px;
+    color: #15c;
+}
+
+/* ============================================================================
+   Radio Button Styling
+   ============================================================================ */
+
+.bb-radio-toggle {
+    cursor: pointer;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+    .bb-panel-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .bb-simulator-card {
+        width: 100% !important;
+    }
+
+    .bb-sim-title {
+        font-size: 18px;
+    }
+
+    .bb-sim-url {
+        font-size: 12px;
+    }
+
+    .bb-sim-desc {
+        font-size: 12px;
+    }
+}
