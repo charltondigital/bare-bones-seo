@@ -3,7 +3,7 @@
  * Plugin Name: Bare Bones SEO
  * Plugin URI:  https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     1.0.5
+ * Version:     1.0.3
  * Author:      Charlton Digital
  * License:     GPLv2 or later
  * Text Domain: bare-bones-seo
@@ -35,13 +35,14 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 // Plugin paths
 define('BARE_BONES_SEO_PATH',    plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '1.0.5');
+define('BARE_BONES_SEO_VERSION', '1.0.3');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
+require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
 
 /**
  * Activation hook — no hard blocks.
@@ -108,6 +109,15 @@ function bare_bones_seo_register_menus() {
         'bare-bones-seo-bulk',
         'bare_bones_seo_render_bulk_manager_screen'
     );
+
+    add_submenu_page(
+        'bare-bones-seo',
+        'Redirects — Bare Bones SEO',
+        'Redirects',
+        'manage_options',
+        'bare-bones-seo-redirects',
+        'bare_bones_seo_render_redirects_screen'
+    );
 }
 
 /**
@@ -131,65 +141,4 @@ function bare_bones_seo_enqueue_assets() {
         BARE_BONES_SEO_VERSION,
         true
     );
-}
-
-
-
-/**
- * Check GitHub for plugin updates
- * 
- * Hooks into WordPress's update system so the plugin appears
- * in the standard Plugins → Updates screen like any other plugin.
- * Checks once every 12 hours via transient cache.
- * 
- * @since 1.0.3
- */
-add_filter('pre_set_site_transient_update_plugins', 'bare_bones_seo_check_for_updates');
-function bare_bones_seo_check_for_updates($transient) {
-    if (empty($transient->checked)) {
-        return $transient;
-    }
-
-    $plugin_slug = 'bare-bones-seo/bare-bones-seo.php';
-    $github_user = 'charltondigital';
-    $github_repo = 'bare-bones-seo';
-
-    // Check cache first — only hit GitHub API once every 12 hours
-    $cache_key = 'bb_seo_update_check';
-    $cached    = get_transient($cache_key);
-
-    if ($cached === false) {
-        $response = wp_remote_get(
-            "https://api.github.com/repos/{$github_user}/{$github_repo}/releases/latest",
-            array(
-                'timeout' => 10,
-                'headers' => array('User-Agent' => 'Bare-Bones-SEO-Update-Checker'),
-            )
-        );
-
-        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-            return $transient;
-        }
-
-        $cached = json_decode(wp_remote_retrieve_body($response));
-        set_transient($cache_key, $cached, 12 * HOUR_IN_SECONDS);
-    }
-
-    if (empty($cached->tag_name)) {
-        return $transient;
-    }
-
-    $latest_version = ltrim($cached->tag_name, 'v');
-
-    if (version_compare($latest_version, BARE_BONES_SEO_VERSION, '>')) {
-        $transient->response[$plugin_slug] = (object) array(
-            'slug'        => 'bare-bones-seo',
-            'plugin'      => $plugin_slug,
-            'new_version' => $latest_version,
-            'url'         => "https://github.com/{$github_user}/{$github_repo}",
-            'package'     => $cached->zipball_url,
-        );
-    }
-
-    return $transient;
 }
