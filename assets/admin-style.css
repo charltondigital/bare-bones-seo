@@ -12,20 +12,27 @@
 /* ============================================================================
    Meta Box Title
    Keeps "Page-Level SEO Settings — [skull] Bare Bones SEO" together
-   and left-aligned. Prevents WordPress's meta box header from splitting
-   our title across the screen.
+   and left-aligned. WordPress wraps the title in a button inside .hndle
+   which can cause the content to split across the header.
    ============================================================================ */
 
 #bare-bones-seo-box .hndle {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
 }
 
-#bare-bones-seo-box .hndle span {
+#bare-bones-seo-box .hndle span,
+#bare-bones-seo-box .hndle button {
     white-space: nowrap;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
+}
+
+/* Hide the default WP postbox controls from splitting the title */
+#bare-bones-seo-box .postbox-header .handle-actions {
+    margin-left: auto;
 }
 
 /* ============================================================================
