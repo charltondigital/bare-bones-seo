@@ -1,10 +1,11 @@
 <?php
 /**
- * SEO Page Settings — Bulk Manager
+ * SEO Page Settings: Bulk Manager — ☠️ Bare Bones SEO
  *
- * Displays all published posts and pages in an expandable table.
- * Each row shows saved Bare Bones SEO values (blank if not set).
- * Expanding a row shows the full page-level SEO settings UI.
+ * Expandable table of all published posts and pages.
+ * Collapsed row shows saved Bare Bones SEO values (blank if nothing set).
+ * Expanding a row shows the full shared page-level SEO settings UI.
+ * Red ✗ only shown when actively noindexed or removed from sitemap.
  *
  * @package BareBonesSEO
  * @subpackage Admin
@@ -17,11 +18,7 @@ if (!defined('ABSPATH')) {
 /**
  * AJAX handler: Save all four SEO fields for a single post.
  *
- * Accepts: post_id, title, desc, schema, should_index
- * Security: nonce + capability check + post existence check
- *
  * @since 1.0.3
- * @return void
  */
 add_action('wp_ajax_' . BARE_BONES_SEO_AJAX_ACTION, 'bare_bones_seo_process_bulk_ajax_save');
 function bare_bones_seo_process_bulk_ajax_save() {
@@ -44,11 +41,10 @@ function bare_bones_seo_process_bulk_ajax_save() {
         return;
     }
 
-    // Save all four fields
     bare_bones_seo_update_page_meta($post_id, array(
-        'title'        => isset($_POST['bb_seo_title']) ? $_POST['bb_seo_title'] : '',
-        'desc'         => isset($_POST['bb_seo_desc']) ? $_POST['bb_seo_desc'] : '',
-        'schema'       => isset($_POST['bb_seo_schema']) ? $_POST['bb_seo_schema'] : '',
+        'title'        => isset($_POST['bb_seo_title'])        ? $_POST['bb_seo_title']        : '',
+        'desc'         => isset($_POST['bb_seo_desc'])         ? $_POST['bb_seo_desc']         : '',
+        'schema'       => isset($_POST['bb_seo_schema'])       ? $_POST['bb_seo_schema']       : '',
         'should_index' => isset($_POST['bb_seo_should_index']) ? $_POST['bb_seo_should_index'] : 'yes',
     ));
 
@@ -58,15 +54,9 @@ function bare_bones_seo_process_bulk_ajax_save() {
 /**
  * Render the Bulk Manager screen.
  *
- * Shows a table of all published posts/pages. Each row displays
- * saved Bare Bones SEO values (blank if nothing set yet).
- * Clicking a row expands the full page-level SEO settings UI.
- *
  * @since 1.0.0
- * @return void
  */
 function bare_bones_seo_render_bulk_manager_screen() {
-    // Query all published pages and posts
     $query = new WP_Query(array(
         'post_type'      => array('page', 'post'),
         'posts_per_page' => -1,
@@ -76,28 +66,25 @@ function bare_bones_seo_render_bulk_manager_screen() {
     ));
     ?>
     <div class="wrap">
-        <!-- Header -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #ccc; padding-bottom:15px;">
-            <h1 style="margin:0;">☠️ SEO Page Settings — Bulk Manager</h1>
+            <h1 style="margin:0;">SEO Page Settings: Bulk Manager — ☠️ Bare Bones SEO</h1>
             <a href="https://charltondigital.com/tools/bare-bones-seo-wordpress-plugin/" target="_blank" rel="noopener noreferrer" class="button button-secondary" style="display:inline-flex; align-items:center; gap:5px;">
                 <span class="dashicons dashicons-external" style="font-size:16px; width:16px; height:16px; margin-top:2px;"></span>
                 Documentation
             </a>
         </div>
 
-        <!-- Tabs -->
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
             <a href="?page=bare-bones-seo" class="nav-tab">Site Level Search Engine Instructions</a>
             <a href="?page=bare-bones-seo-bulk" class="nav-tab nav-tab-active">Bulk Manager</a>
         </h2>
 
-        <!-- Table -->
         <table class="wp-list-table widefat fixed" style="margin-top:20px; table-layout:fixed;">
             <colgroup>
                 <col style="width:20%;">
-                <col style="width:25%;">
+                <col style="width:27%;">
                 <col style="width:10%;">
-                <col style="width:35%;">
+                <col style="width:33%;">
                 <col style="width:10%;">
             </colgroup>
             <thead>
@@ -120,34 +107,35 @@ function bare_bones_seo_render_bulk_manager_screen() {
                         $post_type    = get_post_type_object(get_post_type());
                         $uid          = 'bb-' . $post->ID;
 
-                        // Indexation badge
-                        if ($index_status === 'yes') {
-                            $badge = '<span style="color:#46b450; font-size:16px; font-weight:700;">✓</span>';
-                        } elseif ($index_status === '') {
-                            $badge = '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>';
-                        } else {
-                            $badge = '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>';
-                        }
+                        // Show red ✗ ONLY when actively noindexed or removed from sitemap
+                        // Empty string = not set = default indexed = show nothing
+                        $show_x = in_array($index_status, array('no', 'complicated_noindex', 'complicated_sitemap'));
+                        $badge  = $show_x
+                            ? '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>'
+                            : '';
                 ?>
                     <!-- COLLAPSED ROW -->
                     <tr id="<?php echo esc_attr($uid); ?>-collapsed"
                         style="cursor:pointer;"
                         onclick="bbToggleRow(<?php echo esc_js($post->ID); ?>)">
                         <td style="padding:10px 12px; vertical-align:middle;">
-                            <span style="color:#888; margin-right:6px; font-size:11px;" id="<?php echo esc_attr($uid); ?>-chevron">▶</span>
+                            <span id="<?php echo esc_attr($uid); ?>-chevron"
+                                  style="color:#999; margin-right:6px; font-size:11px; display:inline-block; transition:transform 0.15s;">▶</span>
                             <strong style="font-size:13px;"><?php the_title(); ?></strong>
                             <div style="font-size:11px; color:#999; margin-top:2px;"><?php echo esc_html($post_type->labels->singular_name); ?></div>
                         </td>
                         <td style="padding:10px 12px; vertical-align:middle; overflow:hidden;">
-                            <span style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; color:#555;">
+                            <span id="<?php echo esc_attr($uid); ?>-desc-preview"
+                                  style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; color:#555;">
                                 <?php echo esc_html($meta['desc']); ?>
                             </span>
                         </td>
-                        <td style="padding:10px 12px; vertical-align:middle;">
+                        <td style="padding:10px 12px; vertical-align:middle;" id="<?php echo esc_attr($uid); ?>-badge-cell">
                             <?php echo $badge; ?>
                         </td>
                         <td style="padding:10px 12px; vertical-align:middle; overflow:hidden;">
-                            <span style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px; color:#888; font-family:monospace;">
+                            <span id="<?php echo esc_attr($uid); ?>-schema-preview"
+                                  style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px; color:#888; font-family:monospace;">
                                 <?php echo esc_html($meta['schema']); ?>
                             </span>
                         </td>
@@ -156,10 +144,8 @@ function bare_bones_seo_render_bulk_manager_screen() {
 
                     <!-- EXPANDED ROW -->
                     <tr id="<?php echo esc_attr($uid); ?>-expanded" style="display:none;">
-                        <td colspan="5" style="padding:20px; background:#fafafa; border-top:2px solid #ddd; border-bottom:2px solid #ddd;">
+                        <td colspan="5" style="padding:20px; background:#fafafa; border-top:2px solid #2271b1; border-bottom:2px solid #ddd;">
                             <?php bare_bones_seo_render_fields($post, true); ?>
-
-                            <!-- Save / Cancel buttons -->
                             <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end; border-top:1px solid #eee; padding-top:16px;">
                                 <button type="button"
                                         class="button"
