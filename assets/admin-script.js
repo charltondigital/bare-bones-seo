@@ -256,3 +256,57 @@
     });
 
 })();
+/**
+ * GLOBAL MAP: Live Sitemap Preview
+ * 
+ * As user changes radio buttons, the preview updates in real-time
+ * to show what sections will be in the sitemap.
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    var radioButtons = document.querySelectorAll('.bb-radio-toggle[data-section]');
+    var sitemapPreview = document.getElementById('bb-sitemap-preview');
+    var sectionDataEl = document.getElementById('bb-section-data');
+
+    // Only run on global map page
+    if (!sitemapPreview || !sectionDataEl) {
+        return;
+    }
+
+    // Parse section data
+    var sectionData = JSON.parse(sectionDataEl.textContent).sections;
+
+    /**
+     * Update the sitemap preview based on current radio selections
+     */
+    function updateSitemapPreview() {
+        var html = '<div style="color: #2c3e50; font-weight: bold; margin-bottom: 10px;">/sitemap.xml</div>';
+
+        // Build sitemap based on current selections
+        for (var sectionName in sectionData) {
+            var section = sectionData[sectionName];
+            var radio = document.querySelector('input[name="section_index[' + sectionName + '"]:checked');
+            
+            if (!radio) continue;
+
+            var isIndexed = radio.value === 'yes';
+            var icon = isIndexed ? '✓' : '✗';
+            var color = isIndexed ? '#46b450' : '#dc3232';
+
+            html += '<div style="margin-left: 20px; color: ' + color + '; margin-bottom: 6px;">';
+            html += '<span style="font-weight: bold;">' + icon + '</span> ';
+            html += '/sitemap-' + sectionName + '-1.xml';
+            html += '</div>';
+        }
+
+        sitemapPreview.innerHTML = html;
+    }
+
+    // Listen for radio button changes
+    radioButtons.forEach(function(radio) {
+        radio.addEventListener('change', updateSitemapPreview);
+    });
+
+    // Initial render
+    updateSitemapPreview();
+});
