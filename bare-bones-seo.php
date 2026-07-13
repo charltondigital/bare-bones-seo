@@ -45,7 +45,6 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 
 /**
  * Activation hook — no hard blocks.
- * Sitemap conflicts flagged on admin page instead.
  *
  * @since 1.0.0
  */
@@ -53,19 +52,42 @@ register_activation_hook(__FILE__, 'bare_bones_seo_activation_check');
 function bare_bones_seo_activation_check() {}
 
 /**
+ * Return inline skull SVG for use in admin headings.
+ *
+ * Single source of truth for the skull icon used throughout the UI.
+ * Sized at 18px with vertical-align middle so it sits neatly inline
+ * next to text. Fill is currentColor so it inherits text color.
+ *
+ * Usage: echo bare_bones_seo_skull_icon();
+ *
+ * @since 1.0.3
+ * @param int $size Icon size in px (default 18)
+ * @return string SVG HTML string
+ */
+function bare_bones_seo_skull_icon($size = 18) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="' . $size . '" height="' . $size . '" style="vertical-align:middle; margin-right:4px; position:relative; top:-1px;" aria-hidden="true">'
+        . '<path fill="currentColor" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z"/>'
+        . '<ellipse cx="7.5" cy="8" rx="1.8" ry="2" fill="white"/>'
+        . '<ellipse cx="12.5" cy="8" rx="1.8" ry="2" fill="white"/>'
+        . '<rect x="9.2" y="10" width="1.6" height="1.5" rx="0.4" fill="white"/>'
+        . '<rect x="6" y="15.5" width="1.5" height="1.5" rx="0.3" fill="currentColor"/>'
+        . '<rect x="8.5" y="15.5" width="1.5" height="1.5" rx="0.3" fill="currentColor"/>'
+        . '<rect x="12" y="15.5" width="1.5" height="1.5" rx="0.3" fill="currentColor"/>'
+        . '</svg>';
+}
+
+/**
  * Admin menu registration.
  *
- * Uses a custom SVG skull icon from assets/icon.svg.
- * WordPress inverts the icon color automatically on active/hover states
- * when using a base64-encoded SVG with fill="black".
+ * Uses skull SVG from assets/icon.svg as the menu icon.
+ * WordPress colorizes the icon automatically on hover/active states.
  *
  * @since 1.0.0
  */
 add_action('admin_menu', 'bare_bones_seo_register_menus');
 function bare_bones_seo_register_menus() {
-    // Load SVG and encode as base64 for use as menu icon
     $svg_path = BARE_BONES_SEO_PATH . 'assets/icon.svg';
-    $svg_icon = 'dashicons-shield'; // fallback
+    $svg_icon = 'dashicons-shield';
 
     if (file_exists($svg_path)) {
         $svg_content = file_get_contents($svg_path);
@@ -93,11 +115,10 @@ function bare_bones_seo_register_menus() {
 }
 
 /**
- * Enqueue admin styles and scripts on ALL admin pages.
+ * Enqueue admin styles and scripts on all admin pages.
  *
- * Files are tiny (a few KB each) so the performance impact is negligible.
- * Loading everywhere eliminates hook-suffix mismatch bugs on post edit
- * screens and plugin admin pages.
+ * Files are tiny so the performance impact is negligible.
+ * Loading everywhere eliminates hook-suffix mismatch bugs.
  *
  * @since 1.0.3
  */
