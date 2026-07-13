@@ -46,6 +46,8 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 /**
  * Activation hook — no hard blocks.
  * Sitemap conflicts flagged on admin page instead.
+ *
+ * @since 1.0.0
  */
 register_activation_hook(__FILE__, 'bare_bones_seo_activation_check');
 function bare_bones_seo_activation_check() {}
@@ -53,23 +55,36 @@ function bare_bones_seo_activation_check() {}
 /**
  * Admin menu registration.
  *
+ * Uses a custom SVG skull icon from assets/icon.svg.
+ * WordPress inverts the icon color automatically on active/hover states
+ * when using a base64-encoded SVG with fill="black".
+ *
  * @since 1.0.0
  */
 add_action('admin_menu', 'bare_bones_seo_register_menus');
 function bare_bones_seo_register_menus() {
+    // Load SVG and encode as base64 for use as menu icon
+    $svg_path = BARE_BONES_SEO_PATH . 'assets/icon.svg';
+    $svg_icon = 'dashicons-shield'; // fallback
+
+    if (file_exists($svg_path)) {
+        $svg_content = file_get_contents($svg_path);
+        $svg_icon    = 'data:image/svg+xml;base64,' . base64_encode($svg_content);
+    }
+
     add_menu_page(
-        'Site Level Search Engine Instructions — ☠️ Bare Bones SEO',
-        '☠️ Bare Bones SEO',
+        'Site Level Search Engine Instructions — Bare Bones SEO',
+        'Bare Bones SEO',
         'manage_options',
         'bare-bones-seo',
         'bare_bones_seo_render_global_map_screen',
-        'dashicons-shield',
+        $svg_icon,
         80
     );
 
     add_submenu_page(
         'bare-bones-seo',
-        'SEO Page Settings: Bulk Manager — ☠️ Bare Bones SEO',
+        'SEO Page Settings: Bulk Manager — Bare Bones SEO',
         'Bulk Manager',
         'manage_options',
         'bare-bones-seo-bulk',
@@ -78,32 +93,16 @@ function bare_bones_seo_register_menus() {
 }
 
 /**
- * Enqueue admin styles and scripts.
+ * Enqueue admin styles and scripts on ALL admin pages.
  *
- * Loads on:
- * - Our two plugin admin pages (global map, bulk manager)
- * - ANY post edit screen (for the meta box accordions and preview)
+ * Files are tiny (a few KB each) so the performance impact is negligible.
+ * Loading everywhere eliminates hook-suffix mismatch bugs on post edit
+ * screens and plugin admin pages.
  *
- * The post edit screen check uses strpos on the hook suffix since
- * it varies by post type (post.php, post-new.php).
- *
- * @since 1.0.2
- * @param string $hook_suffix Current admin page hook
+ * @since 1.0.3
  */
 add_action('admin_enqueue_scripts', 'bare_bones_seo_enqueue_assets');
-function bare_bones_seo_enqueue_assets($hook_suffix) {
-    $plugin_pages = array(
-        'toplevel_page_bare-bones-seo',
-        'bare-bones-seo_page_bare-bones-seo-bulk',
-    );
-
-    $is_plugin_page = in_array($hook_suffix, $plugin_pages);
-    $is_post_edit   = in_array($hook_suffix, array('post.php', 'post-new.php'));
-
-    if (!$is_plugin_page && !$is_post_edit) {
-        return;
-    }
-
+function bare_bones_seo_enqueue_assets() {
     wp_enqueue_style(
         'bare-bones-seo-admin',
         BARE_BONES_SEO_URL . 'assets/admin-style.css',
