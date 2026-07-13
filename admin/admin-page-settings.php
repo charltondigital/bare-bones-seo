@@ -1,6 +1,6 @@
 <?php
 /**
- * Page-Level SEO Settings — ☠️ Bare Bones SEO
+ * Page-Level SEO Settings — Bare Bones SEO
  *
  * Shared render function used by both the meta box and bulk manager.
  * One UI, two contexts, same experience everywhere.
@@ -24,7 +24,7 @@ function bare_bones_seo_register_meta_box() {
     foreach ($post_types as $type) {
         add_meta_box(
             'bare-bones-seo-box',
-            'Page-Level SEO Settings — ☠️ Bare Bones SEO',
+            'Page-Level SEO Settings — Bare Bones SEO',
             'bare_bones_seo_render_meta_box',
             $type,
             'normal',
