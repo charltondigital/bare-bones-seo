@@ -1,24 +1,43 @@
+/**
+ * Bare Bones SEO Admin JavaScript v1.0.3
+ *
+ * Handles:
+ * 1. Section accordion toggles (Snippet Builder, Indexing, Schema)
+ * 2. Indexing warning display
+ * 3. Snippet preview (desktop + mobile) on button click
+ * 4. Bulk manager row expand/collapse
+ * 5. Bulk manager AJAX save with collapsed row update
+ *
+ * All event listeners use event delegation on document so they work
+ * for both the meta box and dynamically rendered bulk manager rows.
+ */
+
 (function() {
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function() {
 
         /**
-         * SECTION TOGGLES
+         * 1. SECTION ACCORDION TOGGLES
          *
-         * Works for both meta box and bulk manager expanded rows.
-         * Uses data-target to find the section body by ID.
+         * Delegated click on .bb-section-toggle buttons.
+         * Toggles the section body identified by data-target attribute.
+         * Updates aria-expanded and the +/− icon.
          */
         document.addEventListener('click', function(e) {
             var toggle = e.target.closest('.bb-section-toggle');
             if (!toggle) return;
 
+            e.preventDefault();
+            e.stopPropagation();
+
             var targetId = toggle.getAttribute('data-target');
             var target   = document.getElementById(targetId);
             var icon     = toggle.querySelector('.bb-toggle-icon');
-            var expanded = toggle.getAttribute('aria-expanded') === 'true';
 
             if (!target) return;
+
+            var expanded = toggle.getAttribute('aria-expanded') === 'true';
 
             if (expanded) {
                 target.style.display = 'none';
@@ -32,14 +51,14 @@
         });
 
         /**
-         * INDEXING WARNING
+         * 2. INDEXING WARNING
          *
-         * Show warning when anything other than YES is selected.
-         * Works for any radio group with class bb-index-radio.
+         * Show/hide the warning message when radio buttons change.
+         * Warning appears when anything other than YES is selected.
          */
         document.addEventListener('change', function(e) {
             var radio = e.target;
-            if (!radio.classList.contains('bb-index-radio')) return;
+            if (!radio.classList || !radio.classList.contains('bb-index-radio')) return;
 
             var uid     = radio.getAttribute('data-uid');
             var warning = document.getElementById(uid + '-index-warning');
@@ -50,20 +69,21 @@
         });
 
         /**
-         * SNIPPET PREVIEW
+         * 3. SNIPPET PREVIEW
          *
-         * On button click, read title and description for this post's
-         * fields (identified by uid), build preview string, update panels.
+         * On button click, read current title + description,
+         * build preview title (custom title or post title + site name),
+         * update desktop (600px) and mobile (920px) preview panels.
          *
-         * Works for both meta box and bulk manager since both use the
-         * same uid-prefixed IDs.
+         * Description area maintains min-height even when blank so
+         * the preview box doesn't collapse.
          */
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.bb-trigger-preview');
             if (!btn) return;
 
-            var uid       = btn.getAttribute('data-uid');
-            var metaEl    = document.getElementById(uid + '-meta-data');
+            var uid    = btn.getAttribute('data-uid');
+            var metaEl = document.getElementById(uid + '-meta-data');
 
             if (!metaEl) return;
 
@@ -71,49 +91,51 @@
             var siteName  = metaData.site_name;
             var postTitle = metaData.post_title;
 
-            // Find inputs scoped to this uid's section
-            var section   = document.getElementById(uid + '-snippet');
-            if (!section) return;
+            // Find inputs within this post's snippet section
+            var snippet    = document.getElementById(uid + '-snippet');
+            if (!snippet) return;
 
-            var titleInput = section.querySelector('.bb-title-input');
-            var descInput  = section.querySelector('.bb-desc-input');
+            var titleInput = snippet.querySelector('.bb-title-input');
+            var descInput  = snippet.querySelector('.bb-desc-input');
 
             var rawTitle  = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : postTitle;
             var fullTitle = rawTitle + ' \u2014 ' + siteName;
             var rawDesc   = (descInput && descInput.value.trim()) ? descInput.value.trim() : '';
 
-            var desktopTitle = document.getElementById(uid + '-preview-desktop-title');
-            var desktopDesc  = document.getElementById(uid + '-preview-desktop-desc');
-            var mobileTitle  = document.getElementById(uid + '-preview-mobile-title');
-            var mobileDesc   = document.getElementById(uid + '-preview-mobile-desc');
+            // Update desktop preview (600px max)
+            var dt = document.getElementById(uid + '-preview-desktop-title');
+            var dd = document.getElementById(uid + '-preview-desktop-desc');
+            if (dt) dt.textContent = fullTitle;
+            if (dd) dd.textContent = rawDesc;
 
-            if (desktopTitle) desktopTitle.textContent = fullTitle;
-            if (desktopDesc)  desktopDesc.textContent  = rawDesc;
-            if (mobileTitle)  mobileTitle.textContent  = fullTitle;
-            if (mobileDesc)   mobileDesc.textContent   = rawDesc;
+            // Update mobile preview (920px max)
+            var mt = document.getElementById(uid + '-preview-mobile-title');
+            var md = document.getElementById(uid + '-preview-mobile-desc');
+            if (mt) mt.textContent = fullTitle;
+            if (md) md.textContent = rawDesc;
         });
 
         /**
-         * BULK MANAGER: AJAX SAVE
+         * 4. BULK MANAGER AJAX SAVE
          *
-         * Collects all four fields from the expanded row and saves
-         * via AJAX. Shows loading state then success/error feedback.
+         * Collects all four fields from the expanded row,
+         * sends via AJAX, updates the collapsed row display values,
+         * then collapses the row on success.
          */
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.bb-bulk-save');
             if (!btn) return;
 
-            var postId  = btn.getAttribute('data-post-id');
-            var uid     = btn.getAttribute('data-uid');
-            var nonce   = document.getElementById('bb_bulk_nonce_field');
+            var postId      = btn.getAttribute('data-post-id');
+            var uid         = btn.getAttribute('data-uid');
+            var nonceField  = document.getElementById('bb_bulk_nonce_field');
 
-            if (!postId || !nonce) return;
+            if (!postId || !nonceField) return;
 
-            // Get expanded row container
             var expandedRow = document.getElementById(uid + '-expanded');
             if (!expandedRow) return;
 
-            // Read all four fields
+            // Collect all four field values
             var titleInput  = expandedRow.querySelector('[name="bb_seo_title"]');
             var descInput   = expandedRow.querySelector('[name="bb_seo_desc"]');
             var schemaInput = expandedRow.querySelector('[name="bb_seo_schema"]');
@@ -130,61 +152,49 @@
             btn.disabled     = true;
 
             jQuery.post(ajaxurl, {
-                action:          'bb_seo_bulk_save',
-                security:        nonce.value,
-                post_id:         postId,
-                bb_seo_title:    title,
-                bb_seo_desc:     desc,
-                bb_seo_schema:   schema,
+                action:              'bb_seo_bulk_save',
+                security:            nonceField.value,
+                post_id:             postId,
+                bb_seo_title:        title,
+                bb_seo_desc:         desc,
+                bb_seo_schema:       schema,
                 bb_seo_should_index: shouldIndex,
             })
             .done(function(response) {
                 btn.disabled = false;
 
                 if (response.success) {
-                    // Update collapsed row display values
-                    var collapsedRow = document.getElementById(uid + '-collapsed');
-                    if (collapsedRow) {
-                        var cells = collapsedRow.querySelectorAll('td');
+                    // Update collapsed row preview values
+                    var descPreview   = document.getElementById(uid + '-desc-preview');
+                    var schemaPreview = document.getElementById(uid + '-schema-preview');
+                    var badgeCell     = document.getElementById(uid + '-badge-cell');
 
-                        // Description cell (index 1)
-                        if (cells[1]) {
-                            cells[1].querySelector('span').textContent = desc;
-                        }
+                    if (descPreview)   descPreview.textContent   = desc;
+                    if (schemaPreview) schemaPreview.textContent = schema;
 
-                        // Indexation badge (index 2)
-                        if (cells[2]) {
-                            cells[2].innerHTML = shouldIndex === 'yes'
-                                ? '<span style="color:#46b450; font-size:16px; font-weight:700;">✓</span>'
-                                : '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>';
-                        }
-
-                        // Schema cell (index 3)
-                        if (cells[3]) {
-                            cells[3].querySelector('span').textContent = schema;
-                        }
+                    // Update badge: red ✗ only when actively hiding
+                    if (badgeCell) {
+                        var showX = ['no', 'complicated_noindex', 'complicated_sitemap'].indexOf(shouldIndex) !== -1;
+                        badgeCell.innerHTML = showX
+                            ? '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>'
+                            : '';
                     }
 
-                    // Success feedback then collapse
                     btn.textContent = 'Saved ✓';
                     setTimeout(function() {
                         btn.textContent = originalText;
                         bbToggleRow(postId);
-                    }, 1000);
+                    }, 800);
 
                 } else {
                     btn.textContent = 'Error — try again';
-                    setTimeout(function() {
-                        btn.textContent = originalText;
-                    }, 3000);
+                    setTimeout(function() { btn.textContent = originalText; }, 3000);
                 }
             })
             .fail(function() {
                 btn.disabled    = false;
                 btn.textContent = 'Network error';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                }, 3000);
+                setTimeout(function() { btn.textContent = originalText; }, 3000);
             });
         });
 
@@ -193,12 +203,13 @@
 })();
 
 /**
- * BULK MANAGER ROW TOGGLE
+ * 5. BULK MANAGER ROW TOGGLE
  *
- * Global function so onclick attributes in PHP can call it.
+ * Global function called by onclick attributes in PHP.
  * Swaps collapsed/expanded rows and rotates the chevron.
+ * Multiple rows can be open simultaneously.
  *
- * @param {number} postId
+ * @param {number|string} postId
  */
 function bbToggleRow(postId) {
     var uid      = 'bb-' + postId;
@@ -208,7 +219,7 @@ function bbToggleRow(postId) {
 
     if (!collapsed || !expanded) return;
 
-    var isExpanded = expanded.style.display !== 'none';
+    var isExpanded = (expanded.style.display !== 'none');
 
     if (isExpanded) {
         expanded.style.display  = 'none';
