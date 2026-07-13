@@ -277,8 +277,8 @@ function bare_bones_seo_render_global_map_screen() {
                                     $description = bare_bones_seo_get_section_description($key, $section['type']);
                                     $default     = bare_bones_seo_get_section_default($key);
                                     $status      = isset($current_options[$key]) ? $current_options[$key] : $default;
-                                    $is_critical = in_array($key, $critical);
-                                    $disabled    = ($has_conflict || $is_critical) ? 'disabled' : '';
+                                    $is_critical = false;
+                                    $disabled    = $has_conflict ? 'disabled' : '';
                                 ?>
                                     <tr>
                                         <td style="padding:15px; vertical-align:top;">
