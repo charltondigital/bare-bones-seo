@@ -69,6 +69,28 @@
         });
 
         /**
+         * GLOBAL MAP: It's Complicated expansion
+         *
+         * When "It's Complicated" radio is selected on the global map,
+         * show the sub-options row. Hide it when YES or NO is selected.
+         */
+        document.addEventListener('change', function(e) {
+            var radio = e.target;
+            if (!radio.name || radio.name.indexOf('section_index') === -1) return;
+
+            // Extract key from name="section_index[key]"
+            var match = radio.name.match(/\[([^\]]+)\]/);
+            if (!match) return;
+
+            var key = match[1];
+            var row = document.getElementById('bb-complicated-' + key);
+            if (!row) return;
+
+            // Show sub-options when advanced selected, hide otherwise
+            row.style.display = (radio.value === 'advanced') ? 'table-row' : 'none';
+        });
+
+        /**
          * 3. SNIPPET PREVIEW
          *
          * On button click, read current title + description,
