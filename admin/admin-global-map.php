@@ -297,40 +297,37 @@ function bare_bones_seo_render_global_map_screen() {
                                                    <?php checked($status, 'no'); ?>
                                                    <?php echo esc_attr($disabled); ?>>
                                         </td>
-                                        <td style="text-align:center; vertical-align:middle;">
+                                        <td style="text-align:center; vertical-align:top; padding-top:10px;">
                                             <input type="radio"
                                                    name="section_index[<?php echo esc_attr($key); ?>]"
                                                    value="advanced"
                                                    <?php checked($status, 'advanced'); ?>
                                                    <?php echo esc_attr($disabled); ?>>
+                                            <!-- It's Complicated sub-options: shown inline below radio -->
+                                            <div id="bb-complicated-<?php echo esc_attr($key); ?>"
+                                                 style="display:<?php echo in_array($status, array('complicated_noindex', 'complicated_sitemap')) ? 'block' : 'none'; ?>; margin-top:8px; text-align:left; background:#fffcf0; border-left:3px solid #f0b849; padding:8px 10px; border-radius:2px; white-space:nowrap;">
+                                                <label style="display:flex; align-items:center; gap:6px; margin-bottom:6px; font-size:11px; cursor:pointer; font-weight:normal;">
+                                                    <input type="radio"
+                                                           name="section_index[<?php echo esc_attr($key); ?>]"
+                                                           value="complicated_noindex"
+                                                           <?php checked($status, 'complicated_noindex'); ?>
+                                                           <?php echo esc_attr($disabled); ?>>
+                                                    Noindex, keep in sitemap
+                                                </label>
+                                                <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer; font-weight:normal;">
+                                                    <input type="radio"
+                                                           name="section_index[<?php echo esc_attr($key); ?>]"
+                                                           value="complicated_sitemap"
+                                                           <?php checked($status, 'complicated_sitemap'); ?>
+                                                           <?php echo esc_attr($disabled); ?>>
+                                                    Remove from sitemap, keep indexed
+                                                </label>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr style="background:#f9f9f9;">
                                         <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
                                             <?php echo esc_html($description); ?>
-                                        </td>
-                                    </tr>
-                                    <!-- It's Complicated: expanded sub-options -->
-                                    <tr class="bb-complicated-row"
-                                        id="bb-complicated-<?php echo esc_attr($key); ?>"
-                                        style="display:<?php echo in_array($status, array('complicated_noindex', 'complicated_sitemap')) ? 'table-row' : 'none'; ?>; background:#fffcf0;">
-                                        <td colspan="4" style="padding:10px 15px 12px 40px; border-left:3px solid #f0b849;">
-                                            <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; cursor:pointer;">
-                                                <input type="radio"
-                                                       name="section_index[<?php echo esc_attr($key); ?>]"
-                                                       value="complicated_noindex"
-                                                       <?php checked($status, 'complicated_noindex'); ?>
-                                                       <?php echo esc_attr($disabled); ?>>
-                                                Noindex but leave in sitemap
-                                            </label>
-                                            <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
-                                                <input type="radio"
-                                                       name="section_index[<?php echo esc_attr($key); ?>]"
-                                                       value="complicated_sitemap"
-                                                       <?php checked($status, 'complicated_sitemap'); ?>
-                                                       <?php echo esc_attr($disabled); ?>>
-                                                Remove from sitemap but don't noindex
-                                            </label>
                                         </td>
                                     </tr>
                                 <?php endforeach;
