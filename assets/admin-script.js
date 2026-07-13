@@ -71,12 +71,19 @@
         /**
          * GLOBAL MAP: It's Complicated expansion
          *
-         * When "It's Complicated" radio is selected on the global map,
-         * show the sub-options row. Hide it when YES or NO is selected.
+         * When "It's Complicated" (value=advanced) radio is selected,
+         * show the sub-options row below.
+         * When YES or NO is selected, hide it.
+         * When a sub-option (complicated_noindex/complicated_sitemap) is
+         * selected, do nothing — row stays visible.
          */
         document.addEventListener('change', function(e) {
             var radio = e.target;
             if (!radio.name || radio.name.indexOf('section_index') === -1) return;
+
+            // Only handle the top-level yes/no/advanced radios
+            // Sub-options (complicated_*) should not trigger hide/show
+            if (radio.value === 'complicated_noindex' || radio.value === 'complicated_sitemap') return;
 
             // Extract key from name="section_index[key]"
             var match = radio.name.match(/\[([^\]]+)\]/);
