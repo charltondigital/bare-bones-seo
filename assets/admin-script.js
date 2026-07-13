@@ -94,7 +94,7 @@
             if (!row) return;
 
             // Show sub-options when advanced selected, hide otherwise
-            row.style.display = (radio.value === 'advanced') ? 'table-row' : 'none';
+            row.style.display = (radio.value === 'advanced') ? 'block' : 'none';
         });
 
         /**
