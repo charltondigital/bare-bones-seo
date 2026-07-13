@@ -88,11 +88,11 @@ function bare_bones_seo_get_sitemap_sections() {
     $sections = array();
 
     // POST TYPES
-    // WordPress includes public post types that are publicly queryable
-    $post_types = get_post_types(array(
-        'public'             => true,
-        'publicly_queryable' => true,
-    ), 'objects');
+    // WordPress core sitemap includes post types where public=true OR publicly_queryable=true
+    // Pages have public=true but publicly_queryable=false, so we query each condition separately
+    $post_types_public = get_post_types(array('public' => true), 'objects');
+    $post_types_queryable = get_post_types(array('publicly_queryable' => true), 'objects');
+    $post_types = array_merge($post_types_public, $post_types_queryable);
 
     foreach ($post_types as $post_type) {
         // Skip attachments — WordPress excludes these from sitemaps
