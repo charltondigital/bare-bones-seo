@@ -102,17 +102,31 @@ function bare_bones_seo_fetch_sitemap_sections() {
     foreach ($xml->sitemap as $sitemap) {
         $url = (string) $sitemap->loc;
 
-        // Parse: wp-sitemap-posts-post-1.xml → type=posts, key=post
-        //        wp-sitemap-taxonomies-category-1.xml → type=taxonomies, key=category
-        //        wp-sitemap-users-1.xml → type=users, key=user
-        preg_match('/wp-sitemap-(posts|taxonomies|users)-?([a-z0-9_-]*)-?\d+\.xml/', $url, $matches);
+        // Get the filename only, e.g. "wp-sitemap-posts-post-1.xml"
+        $filename = basename($url);
 
-        if (empty($matches)) {
+        // Remove prefix "wp-sitemap-" and suffix "-N.xml" to get middle part
+        // e.g. "posts-post", "taxonomies-category", "users"
+        $middle = preg_replace('/^wp-sitemap-/', '', $filename);
+        $middle = preg_replace('/-\d+\.xml$/', '', $middle);
+
+        // Split on first dash to get type and key
+        // "posts-post" → type=posts, key=post
+        // "posts-kadence_element" → type=posts, key=kadence_element
+        // "taxonomies-category" → type=taxonomies, key=category
+        // "users" → type=users, key=user
+        $parts = explode('-', $middle, 2);
+        $type  = $parts[0];
+        $key   = isset($parts[1]) ? $parts[1] : 'user';
+
+        // Normalize type to what WordPress uses
+        if (!in_array($type, array('posts', 'taxonomies', 'users'))) {
             continue;
         }
 
-        $type = $matches[1];
-        $key  = ($type === 'users') ? 'user' : $matches[2];
+        if ($type === 'users') {
+            $key = 'user';
+        }
 
         // Already added this section (multiple pages of same type) — just increment
         if (isset($sections[$key])) {
