@@ -1,10 +1,12 @@
 <?php
 /**
- * Page-level SEO settings meta box
- * 
- * Renders the Bare Bones SEO workspace in the post/page editor.
- * Provides per-post controls for title, description, schema, and indexing.
- * 
+ * Page-Level SEO Settings meta box
+ *
+ * Three collapsible sections:
+ * 1. Snippet Builder (open by default) — title, description, preview
+ * 2. Indexing (collapsed) — yes/no/it's complicated
+ * 3. Schema Markup (collapsed) — JSON-LD
+ *
  * @package BareBonesSEO
  * @subpackage Admin
  */
@@ -14,26 +16,19 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Register the SEO meta box on all public post types
- * 
- * Fires on the 'add_meta_boxes' hook to register our custom meta box
- * for all public post types (pages, posts, custom post types).
- * The meta box appears in the 'normal' context (below the editor)
- * at high priority (renders first).
- * 
+ * Register the SEO meta box on all public post types.
+ *
  * @since 1.0.0
  * @return void
  */
 add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
 function bare_bones_seo_register_meta_box() {
-    // Get all publicly visible post types
     $post_types = get_post_types(array('public' => true));
 
-    // Register meta box for each post type
     foreach ($post_types as $type) {
         add_meta_box(
             'bare-bones-seo-box',
-            '☠️ Bare Bones SEO — Workspace',
+            '☠️ Page-Level SEO Settings',
             'bare_bones_seo_render_meta_box',
             $type,
             'normal',
@@ -43,160 +38,216 @@ function bare_bones_seo_register_meta_box() {
 }
 
 /**
- * Render the SEO workspace meta box
- * 
- * Outputs the meta box content in the post/page editor:
- * - Left column: Title, description, schema markup, and indexing checkbox
- * - Right column: Live preview of search snippet (desktop & mobile)
- * 
- * The preview updates in real-time as the user types, without page refresh.
- * 
+ * Render the Page-Level SEO Settings meta box.
+ *
+ * Left column: three collapsible sections (snippet builder, indexing, schema).
+ * Right column: desktop and mobile search snippet previews.
+ *
+ * Preview renders on button click, not on keystroke, to keep things fast.
+ * Title preview appends site name to match how Google displays titles.
+ *
  * @since 1.0.0
  * @param WP_Post $post The current post object
  * @return void
  */
 function bare_bones_seo_render_meta_box($post) {
-    // Output nonce field for verification on save
     wp_nonce_field(BARE_BONES_SEO_NONCE_PAGE, 'bare_bones_seo_nonce');
 
-    // Fetch existing SEO metadata for this post
-    $meta = bare_bones_seo_get_page_meta($post->ID);
+    $meta      = bare_bones_seo_get_page_meta($post->ID);
+    $site_name = get_bloginfo('name');
+
+    // Build the title shown in preview: custom title or post title, plus site name
+    $preview_title = $meta['title'] ? $meta['title'] : $post->post_title;
+    $preview_title_with_site = $preview_title . ' — ' . $site_name;
+
+    // Indexing status
+    $index_status = get_post_meta($post->ID, BARE_BONES_SEO_META_INDEX, true);
+    if ($index_status === '') {
+        $index_status = 'yes'; // Default to indexed
+    }
     ?>
 
-    <div class="bb-panel-grid">
-        <!-- LEFT COLUMN: Input Fields -->
+    <div style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; padding: 8px 0;">
+
+        <!-- LEFT COLUMN: Collapsible Sections -->
         <div>
-            <!-- SEO Title Field -->
-            <div class="bb-field-group">
-                <label for="bb_seo_title">SEO Title Tag</label>
-                <input type="text" 
-                       id="bb_seo_title" 
-                       name="bb_seo_title" 
-                       class="bb-input" 
-                       value="<?php echo esc_attr($meta['title']); ?>" 
-                       maxlength="70" 
-                       placeholder="Defaults to native page title...">
-            </div>
 
-            <!-- Meta Description Field -->
-            <div class="bb-field-group">
-                <label for="bb_seo_desc">Meta Description</label>
-                <textarea id="bb_seo_desc" 
-                          name="bb_seo_desc" 
-                          class="bb-input" 
-                          rows="3" 
-                          maxlength="160" 
-                          placeholder="Summarize your page content..."><?php echo esc_textarea($meta['desc']); ?></textarea>
-            </div>
-
-            <!-- Custom Schema Markup Field -->
-            <div class="bb-field-group">
-                <label for="bb_seo_schema">Custom Schema Markup (JSON-LD)</label>
-                <textarea id="bb_seo_schema" 
-                          name="bb_seo_schema" 
-                          class="bb-input" 
-                          rows="4" 
-                          style="font-family: monospace;" 
-                          placeholder='<script type="application/ld+json">{"@context": "https://schema.org", ...}</script>'><?php echo esc_textarea($meta['schema']); ?></textarea>
-                <p class="description">
-                    💡 Paste the complete JSON-LD block including the &lt;script&gt; wrapper tags. 
-                    Use the <a href="https://schema.org/docs/gs.html" target="_blank" rel="noopener noreferrer">Schema.org guide</a> 
-                    or <a href="https://technicalseo.com/tools/schema-generator/" target="_blank" rel="noopener noreferrer">Merkle Schema Generator</a>.
-                </p>
-            </div>
-
-            <!-- Indexing Checkbox -->
-            <div class="bb-field-group">
-                <label>
-                    <input type="checkbox" 
-                           name="bb_seo_should_index" 
-                           value="no" 
-                           <?php checked(!$meta['should_index']); ?>> 
-                    🚨 Hide this individual page from search engine indexes (noindex, follow)
-                </label>
-            </div>
-        </div>
-
-        <!-- RIGHT COLUMN: Live Preview -->
-        <div>
-            <div style="margin-bottom: 10px; font-weight:600;">Snippet Quality Validation Preview</div>
-            
-            <!-- Desktop Preview (600px) -->
-            <div class="bb-simulator-card" style="width: 600px;">
-                <span class="bb-sim-url"><?php echo esc_url(get_permalink($post->ID)); ?></span>
-                <span id="bb-preview-desktop-title" class="bb-sim-title">
-                    <?php echo $meta['title'] ? esc_html($meta['title']) : esc_html($post->post_title); ?>
-                </span>
-                <div id="bb-preview-desktop-desc" class="bb-sim-desc">
-                    <?php echo $meta['desc'] ? esc_html($meta['desc']) : 'Please enter a description value to accurately populate search snippets...'; ?>
+            <!-- SECTION 1: Snippet Builder (open by default) -->
+            <div class="bb-section" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                <button type="button"
+                        class="bb-section-toggle"
+                        aria-expanded="true"
+                        data-target="bb-section-snippet"
+                        style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f6f7f7; border: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #1d2327; text-align: left;">
+                    Snippet Builder
+                    <span class="bb-toggle-icon" style="font-size: 18px; line-height: 1; color: #666;">−</span>
+                </button>
+                <div id="bb-section-snippet" style="padding: 14px; border-top: 1px solid #ddd;">
+                    <div style="margin-bottom: 12px;">
+                        <label for="bb_seo_title" style="display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px;">SEO Title</label>
+                        <input type="text"
+                               id="bb_seo_title"
+                               name="bb_seo_title"
+                               value="<?php echo esc_attr($meta['title']); ?>"
+                               placeholder="<?php echo esc_attr($post->post_title); ?>"
+                               style="width: 100%; box-sizing: border-box; font-size: 13px;">
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label for="bb_seo_desc" style="display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px;">Meta Description</label>
+                        <textarea id="bb_seo_desc"
+                                  name="bb_seo_desc"
+                                  rows="3"
+                                  style="width: 100%; box-sizing: border-box; font-size: 13px; resize: vertical;"><?php echo esc_textarea($meta['desc']); ?></textarea>
+                    </div>
+                    <button type="button"
+                            id="bb-trigger-preview"
+                            class="button button-secondary"
+                            style="font-size: 12px;">
+                        Generate Preview
+                    </button>
                 </div>
             </div>
 
-            <!-- Mobile Preview (360px) -->
-            <div class="bb-simulator-card bb-mobile" style="width: 360px;">
-                <span class="bb-sim-url"><?php echo esc_url(get_permalink($post->ID)); ?></span>
-                <span id="bb-preview-mobile-title" class="bb-sim-title">
-                    <?php echo $meta['title'] ? esc_html($meta['title']) : esc_html($post->post_title); ?>
-                </span>
-                <div id="bb-preview-mobile-desc" class="bb-sim-desc">
-                    <?php echo $meta['desc'] ? esc_html($meta['desc']) : 'Please enter a description value to accurately populate search snippets...'; ?>
+            <!-- SECTION 2: Indexing (collapsed by default) -->
+            <div class="bb-section" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                <button type="button"
+                        class="bb-section-toggle"
+                        aria-expanded="false"
+                        data-target="bb-section-indexing"
+                        style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f6f7f7; border: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #1d2327; text-align: left;">
+                    Indexing
+                    <span class="bb-toggle-icon" style="font-size: 18px; line-height: 1; color: #666;">+</span>
+                </button>
+                <div id="bb-section-indexing" style="display: none; padding: 14px; border-top: 1px solid #ddd;">
+                    <p style="font-size: 12px; font-weight: 600; color: #444; margin: 0 0 10px;">Should this page be indexed by Google?</p>
+
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; cursor: pointer;">
+                        <input type="radio"
+                               name="bb_seo_should_index"
+                               value="yes"
+                               <?php checked($index_status, 'yes'); ?>>
+                        YES
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; cursor: pointer;">
+                        <input type="radio"
+                               name="bb_seo_should_index"
+                               value="no"
+                               <?php checked($index_status, 'no'); ?>>
+                        NO
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; cursor: pointer;">
+                        <input type="radio"
+                               name="bb_seo_should_index"
+                               value="advanced"
+                               <?php checked($index_status, 'advanced'); ?>>
+                        It's Complicated <span style="font-size: 11px; color: #888; margin-left: 4px;">(noindex; remove from sitemap)</span>
+                    </label>
+
+                    <!-- Warning: shown when NO or It's Complicated is selected -->
+                    <div id="bb-index-warning"
+                         style="display: <?php echo in_array($index_status, array('no', 'advanced')) ? 'block' : 'none'; ?>; background: #fff5f5; border-left: 3px solid #dc3232; padding: 8px 12px; font-size: 12px; color: #dc3232; border-radius: 2px;">
+                        ⚠️ This page is currently hidden from Google.
+                    </div>
                 </div>
             </div>
-            
-            <button type="button" id="bb-trigger-preview" class="button button-secondary">Generate Visual Verification</button>
+
+            <!-- SECTION 3: Schema Markup (collapsed by default) -->
+            <div class="bb-section" style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+                <button type="button"
+                        class="bb-section-toggle"
+                        aria-expanded="false"
+                        data-target="bb-section-schema"
+                        style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f6f7f7; border: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #1d2327; text-align: left;">
+                    Schema Markup
+                    <span class="bb-toggle-icon" style="font-size: 18px; line-height: 1; color: #666;">+</span>
+                </button>
+                <div id="bb-section-schema" style="display: none; padding: 14px; border-top: 1px solid #ddd;">
+                    <textarea id="bb_seo_schema"
+                              name="bb_seo_schema"
+                              rows="6"
+                              placeholder='<script type="application/ld+json">{"@context": "https://schema.org", ...}</script>'
+                              style="width: 100%; box-sizing: border-box; font-size: 12px; font-family: monospace; resize: vertical;"><?php echo esc_textarea($meta['schema']); ?></textarea>
+                    <p style="font-size: 11px; color: #888; margin: 6px 0 0;">
+                        Paste the complete JSON-LD block including the &lt;script&gt; wrapper tags.
+                        <a href="https://technicalseo.com/tools/schema-generator/" target="_blank" rel="noopener noreferrer">Merkle Schema Generator</a>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Preview -->
+        <div>
+
+            <!-- Desktop Preview -->
+            <div style="font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Desktop</div>
+            <div style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 14px; margin-bottom: 20px; max-width: 600px; overflow: hidden;">
+                <div id="bb-preview-desktop-title"
+                     style="font-family: arial, sans-serif; font-size: 20px; color: #1a0dab; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 572px; line-height: 1.3; margin-bottom: 4px;">
+                    <?php echo esc_html($preview_title_with_site); ?>
+                </div>
+                <div id="bb-preview-desktop-desc"
+                     style="font-family: arial, sans-serif; font-size: 14px; color: #545454; max-width: 572px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.58;">
+                    <?php echo esc_html($meta['desc']); ?>
+                </div>
+            </div>
+
+            <!-- Mobile Preview -->
+            <div style="font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Mobile</div>
+            <div style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 14px; max-width: 380px; overflow: hidden;">
+                <div id="bb-preview-mobile-title"
+                     style="font-family: arial, sans-serif; font-size: 20px; color: #1a0dab; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 352px; line-height: 1.3; margin-bottom: 4px;">
+                    <?php echo esc_html($preview_title_with_site); ?>
+                </div>
+                <div id="bb-preview-mobile-desc"
+                     style="font-family: arial, sans-serif; font-size: 14px; color: #545454; max-width: 352px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.58;">
+                    <?php echo esc_html($meta['desc']); ?>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Footer with version info -->
-    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
-        ☠️ Running Bare Bones SEO v<?php echo BARE_BONES_SEO_VERSION; ?>. Need deployment tips? 
-        <a href="https://charltondigital.com/tools/bare-bones-seo-wordpress-plugin/" target="_blank" rel="noopener noreferrer" style="color: #d63636; text-decoration: none; font-weight: 600;">View Official Guide</a>
-    </div>
+    <!-- Pass site name to JS -->
+    <script type="application/json" id="bb-meta-data"><?php echo json_encode(array(
+        'site_name'  => $site_name,
+        'post_title' => $post->post_title,
+    )); ?></script>
 
     <?php
 }
 
 /**
- * Save SEO metadata when post is saved
- * 
- * Fires on 'save_post' hook. Validates nonce, checks capabilities,
- * skips autosaves, and saves the submitted SEO metadata.
- * 
- * Security checks in order:
- * 1. Nonce verification (CSRF protection)
- * 2. Autosave check (prevent saving during automatic backups)
- * 3. Capability check (user can edit this post)
- * 
+ * Save SEO metadata when post is saved.
+ *
+ * Security checks: nonce, autosave, capability.
+ * Sanitization handled by bare_bones_seo_update_page_meta().
+ *
  * @since 1.0.0
  * @param int $post_id The ID of the post being saved
  * @return void
  */
 add_action('save_post', 'bare_bones_seo_save_meta_box_data');
 function bare_bones_seo_save_meta_box_data($post_id) {
-    // SECURITY: Verify nonce
-    if (!isset($_POST['bare_bones_seo_nonce']) || 
+    if (!isset($_POST['bare_bones_seo_nonce']) ||
         !wp_verify_nonce($_POST['bare_bones_seo_nonce'], BARE_BONES_SEO_NONCE_PAGE)) {
         return;
     }
 
-    // SECURITY: Skip autosaves (WordPress auto-saves periodically)
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
 
-    // SECURITY: Verify user can edit this post
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
 
-    // Safely extract POST data with isset checks to prevent notices
     $data = array(
         'title'        => isset($_POST['bb_seo_title']) ? $_POST['bb_seo_title'] : '',
         'desc'         => isset($_POST['bb_seo_desc']) ? $_POST['bb_seo_desc'] : '',
         'schema'       => isset($_POST['bb_seo_schema']) ? $_POST['bb_seo_schema'] : '',
-        'should_index' => isset($_POST['bb_seo_should_index']) ? 'no' : 'yes',
+        'should_index' => isset($_POST['bb_seo_should_index']) ? $_POST['bb_seo_should_index'] : 'yes',
     );
 
-    // Save the metadata (sanitization happens in the helper function)
     bare_bones_seo_update_page_meta($post_id, $data);
 }
