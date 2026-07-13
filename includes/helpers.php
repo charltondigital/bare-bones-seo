@@ -314,20 +314,25 @@ function bare_bones_seo_filter_global_sitemap_taxonomies($taxonomies) {
 /**
  * Filter users from sitemap based on global settings.
  *
- * Removes author archives from sitemap when set to NO or
- * Remove from Sitemap Only.
+ * Uses wp_sitemaps_add_provider which is the correct hook for
+ * removing specific providers from the sitemap index.
  *
  * @since 1.0.3
- * @param bool $enabled Whether users sitemap is enabled
- * @return bool
+ * @param WP_Sitemaps_Provider $provider The provider instance
+ * @param string $name The provider name
+ * @return WP_Sitemaps_Provider|null Null to remove the provider
  */
-add_filter('wp_sitemaps_users_enabled', 'bare_bones_seo_filter_global_sitemap_users');
-function bare_bones_seo_filter_global_sitemap_users($enabled) {
+add_filter('wp_sitemaps_add_provider', 'bare_bones_seo_filter_global_sitemap_users', 10, 2);
+function bare_bones_seo_filter_global_sitemap_users($provider, $name) {
+    if ($name !== 'users') {
+        return $provider;
+    }
+
     $global_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
 
     if (isset($global_options['user']) && in_array($global_options['user'], array('no', 'complicated_sitemap'))) {
-        return false;
+        return null;
     }
 
-    return $enabled;
+    return $provider;
 }
