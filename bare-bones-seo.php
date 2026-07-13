@@ -3,7 +3,7 @@
  * Plugin Name: Bare Bones SEO
  * Plugin URI:  https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     1.0.4
+ * Version:     1.0.5
  * Author:      Charlton Digital
  * License:     GPLv2 or later
  * Text Domain: bare-bones-seo
