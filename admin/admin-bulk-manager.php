@@ -8,9 +8,21 @@ function bare_bones_seo_process_bulk_ajax_save() {
     check_ajax_referer('bb_bulk_manager_nonce', 'security');
     if (!current_user_can('manage_options')) { wp_send_json_error(); }
 
+    // Validate all required POST fields exist
+    if (!isset($_POST['post_id']) || !isset($_POST['seo_title']) || !isset($_POST['should_index'])) {
+        wp_send_json_error('Missing required fields');
+        return;
+    }
+
     $post_id = intval($_POST['post_id']);
-    $title   = $_POST['seo_title'];
-    $indexed = $_POST['should_index'];
+    $title   = sanitize_text_field($_POST['seo_title']);
+    $indexed = sanitize_text_field($_POST['should_index']);
+
+    // Extra validation
+    if ($post_id === 0) {
+        wp_send_json_error('Invalid post ID');
+        return;
+    }
 
     bare_bones_seo_update_page_meta($post_id, array(
         'title'        => $title,
