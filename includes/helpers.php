@@ -255,3 +255,23 @@ function bare_bones_seo_filter_global_sitemap_sections($post_types) {
 
     return $post_types;
 }
+/**
+ * Get human-readable description for a section
+ * 
+ * Provides plain-language explanations of what each section is
+ * so content writers understand what they're including/hiding.
+ * 
+ * @since 1.0.3
+ * @param string $section_name The post type or taxonomy name
+ * @return string Human-readable description
+ */
+function bare_bones_seo_get_section_description($section_name) {
+    $descriptions = array(
+        'page'      => 'Your site pages (About, Contact, Services, etc.)',
+        'post'      => 'Your blog posts and articles',
+        'category'  => 'Blog category archive pages',
+        'post_tag'  => 'Blog tag archive pages (often thin content)',
+    );
+    
+    return $descriptions[$section_name] ?? 'Archive page for ' . $section_name;
+}
