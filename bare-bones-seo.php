@@ -168,3 +168,47 @@ function bare_bones_seo_enqueue_assets($hook_suffix) {
         true // Load in footer
     );
 }
+/**
+ * Add manual update check link to admin bar
+ * 
+ * Shows "☠️ Check Updates" button in top-right admin bar.
+ * Admins can click to force immediate update check instead of
+ * waiting for WordPress's automatic 2x daily schedule.
+ * 
+ * @since 1.0.3
+ */
+add_action('admin_bar_menu', 'bare_bones_seo_add_update_check', 999);
+function bare_bones_seo_add_update_check($wp_admin_bar) {
+    // Only show to admins
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    // Add link to check for updates
+    $wp_admin_bar->add_node(array(
+        'id'     => 'bb-check-updates',
+        'title'  => '☠️ Check Updates',
+        'href'   => wp_nonce_url(admin_url('admin-ajax.php?action=bb_check_updates'), 'bb_nonce'),
+        'parent' => 'top-secondary',
+    ));
+}
+
+/**
+ * AJAX handler for manual update check
+ * 
+ * @since 1.0.3
+ */
+add_action('wp_ajax_bb_check_updates', 'bare_bones_seo_do_update_check');
+function bare_bones_seo_do_update_check() {
+    check_ajax_referer('bb_nonce', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+
+    // Force WordPress to check for plugin updates right now
+    wp_update_plugins();
+
+    // Redirect to plugins page
+    wp_redirect(admin_url('plugins.php'));
+    exit;
+}
