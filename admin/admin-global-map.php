@@ -1,6 +1,6 @@
 <?php
 /**
- * Site Level Search Engine Instructions — Bare Bones SEO
+ * Indexation — Bare Bones SEO
  *
  * Controls built from WordPress internals matching core sitemap logic.
  * Only shows sections with at least 1 published item.
@@ -203,7 +203,7 @@ function bare_bones_seo_get_section_default($key) {
 }
 
 /**
- * Render the Site Level Search Engine Instructions screen.
+ * Render the Indexation screen.
  *
  * @since 1.0.0
  */
@@ -230,7 +230,7 @@ function bare_bones_seo_render_global_map_screen() {
     <div class="wrap">
         <!-- Header -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #ccc; padding-bottom:15px;">
-            <h1 style="margin:0;">Site Level Search Engine Instructions — <?php echo $skull; ?>Bare Bones SEO</h1>
+            <h1 style="margin:0;">Indexation — <?php echo $skull; ?>Bare Bones SEO</h1>
             <a href="https://charltondigital.com/tools/bare-bones-seo-wordpress-plugin/" target="_blank" rel="noopener noreferrer" class="button button-secondary" style="display:inline-flex; align-items:center; gap:5px;">
                 <span class="dashicons dashicons-external" style="font-size:16px; width:16px; height:16px; margin-top:2px;"></span>
                 Documentation
@@ -239,7 +239,7 @@ function bare_bones_seo_render_global_map_screen() {
 
         <!-- Tabs -->
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
-            <a href="?page=bare-bones-seo" class="nav-tab nav-tab-active">Site Level Search Engine Instructions</a>
+            <a href="?page=bare-bones-seo" class="nav-tab nav-tab-active">Indexation</a>
             <a href="?page=bare-bones-seo-bulk" class="nav-tab">Bulk Manager</a>
             <a href="?page=bare-bones-seo-redirects" class="nav-tab">Redirects</a>
         </h2>
@@ -322,29 +322,20 @@ function bare_bones_seo_render_global_map_screen() {
                                 <?php endforeach;
                             else : ?>
                                 <tr>
-                                    <td colspan="4" style="padding:20px; color:#666; text-align:center;">
+                                    <td colspan="5" style="padding:20px; color:#666; text-align:center;">
                                         No sitemap sections found. Make sure you have published content.
                                     </td>
                                 </tr>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
 
-                    <!-- SYSTEM PAGES: Not in sitemap, indexation control only -->
-                    <h3 style="margin-top:30px; margin-bottom:8px; font-size:13px; font-weight:600; color:#444;">WordPress System Pages</h3>
-                    <p style="font-size:12px; color:#666; margin-bottom:12px;">These pages are never included in your sitemap. Control whether search engines should index them.</p>
-
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr style="background:#f6f7f7;">
-                                <th style="font-weight:600; padding:15px;">Page Type</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:20%;">YES</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:20%; color:#bbb;">NO</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:20%;">Noindex Only</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:20%; color:#bbb;">Remove from Sitemap Only</th>
+                            <!-- DIVIDER: WordPress System Pages -->
+                            <tr>
+                                <td colspan="5" style="padding:12px 15px 6px; background:#f0f0f0; border-top:2px solid #ddd;">
+                                    <strong style="font-size:12px; color:#444; text-transform:uppercase; letter-spacing:0.05em;">WordPress System Pages</strong>
+                                    <span style="font-size:11px; color:#888; margin-left:8px;">Never in sitemap — indexation control only</span>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
+
                             <?php
                             $system_pages = array(
                                 'date'   => array(
@@ -409,6 +400,7 @@ function bare_bones_seo_render_global_map_screen() {
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
+
                         </tbody>
                     </table>
 
