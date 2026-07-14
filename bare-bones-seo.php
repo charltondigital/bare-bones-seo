@@ -101,6 +101,16 @@ function bare_bones_seo_register_menus() {
         80
     );
 
+    // Override the auto-generated first submenu item with "Indexation"
+    add_submenu_page(
+        'bare-bones-seo',
+        'Indexation — Bare Bones SEO',
+        'Indexation',
+        'manage_options',
+        'bare-bones-seo',
+        'bare_bones_seo_render_global_map_screen'
+    );
+
     add_submenu_page(
         'bare-bones-seo',
         'SEO Page Settings: Bulk Manager — Bare Bones SEO',
