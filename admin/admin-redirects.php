@@ -53,6 +53,7 @@ function bare_bones_seo_redirection_404_logging_on() {
  *
  * Reads directly from wp_redirection_items — no hooks, no overhead.
  * Only runs when the Redirects tab is open.
+ * action_data is stored as a plain URL string in newer versions of Redirection.
  *
  * @since 1.0.5
  * @return array|false
@@ -77,7 +78,7 @@ function bare_bones_seo_get_redirection_data() {
         "SELECT COUNT(*) FROM {$table} WHERE status = 'enabled' AND last_count = 0"
     );
 
-    // Last 5 redirects sorted by most recently accessed (never accessed last)
+    // Last 5 redirects sorted by most recently accessed
     $redirects = $wpdb->get_results(
         "SELECT url, action_data, last_count, last_access
          FROM {$table}
@@ -275,22 +276,23 @@ function bare_bones_seo_render_redirects_screen() {
                         </thead>
                         <tbody>
                             <?php foreach ($data['redirects'] as $redirect) :
-                                // Parse TO url from action_data — Redirection stores as JSON string or object
-                                $action = $redirect->action_data;
-                                if (is_string($action)) {
-                                    $action = json_decode($action, true);
-                                } elseif (is_object($action)) {
-                                    $action = (array) $action;
-                                }
+                                // action_data is stored as a plain URL string in current Redirection versions
+                                // Try JSON decode first for backwards compatibility with older versions
                                 $to_url = '';
-                                if (isset($action['url'])) {
-                                    $to_url = $action['url'];
-                                } elseif (isset($action[0]['url'])) {
-                                    $to_url = $action[0]['url'];
+                                $raw    = $redirect->action_data;
+
+                                if (!empty($raw)) {
+                                    $decoded = json_decode($raw, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && isset($decoded['url'])) {
+                                        $to_url = $decoded['url'];
+                                    } else {
+                                        // Plain URL string (current Redirection format)
+                                        $to_url = $raw;
+                                    }
                                 }
 
-                                $never  = ($redirect->last_count == 0);
-                                $from   = $redirect->url;
+                                $never = ($redirect->last_count == 0);
+                                $from  = $redirect->url;
                             ?>
                                 <tr>
                                     <td style="padding:10px 12px; font-family:monospace; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:0;">
