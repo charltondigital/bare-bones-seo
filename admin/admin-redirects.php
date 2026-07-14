@@ -110,11 +110,20 @@ function bare_bones_seo_get_redirection_data() {
  * @return string
  */
 function bare_bones_seo_relative_time($timestamp) {
-    if (empty($timestamp) || $timestamp === '0000-00-00 00:00:00') {
+    if (empty($timestamp) || $timestamp === '0000-00-00 00:00:00' || $timestamp === '0000-00-00') {
         return 'never';
     }
 
-    $diff = time() - strtotime($timestamp);
+    $time = strtotime($timestamp);
+    if (!$time || $time <= 0) {
+        return 'never';
+    }
+
+    $diff = time() - $time;
+
+    if ($diff < 0) {
+        return 'never';
+    }
 
     if ($diff < 3600) {
         $mins = max(1, round($diff / 60));
@@ -137,6 +146,12 @@ function bare_bones_seo_relative_time($timestamp) {
     }
 
     $months = round($diff / 2592000);
+
+    // Cap at 24 months to avoid "688 months ago" from bad dates
+    if ($months > 24) {
+        return 'never';
+    }
+
     return $months . ' month' . ($months !== 1 ? 's' : '') . ' ago';
 }
 
@@ -175,7 +190,7 @@ function bare_bones_seo_render_redirects_screen() {
 
         <!-- Tabs -->
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
-            <a href="?page=bare-bones-seo" class="nav-tab">Site Level Search Engine Instructions</a>
+            <a href="?page=bare-bones-seo" class="nav-tab">Indexation</a>
             <a href="?page=bare-bones-seo-bulk" class="nav-tab">Bulk Manager</a>
             <a href="?page=bare-bones-seo-redirects" class="nav-tab nav-tab-active">Redirects</a>
         </h2>
@@ -260,18 +275,33 @@ function bare_bones_seo_render_redirects_screen() {
                         </thead>
                         <tbody>
                             <?php foreach ($data['redirects'] as $redirect) :
-                                $to = is_string($redirect->action_data)
-                                    ? json_decode($redirect->action_data, true)
-                                    : (array) $redirect->action_data;
-                                $to_url = isset($to['url']) ? $to['url'] : '—';
+                                // Parse TO url from action_data — Redirection stores as JSON string or object
+                                $action = $redirect->action_data;
+                                if (is_string($action)) {
+                                    $action = json_decode($action, true);
+                                } elseif (is_object($action)) {
+                                    $action = (array) $action;
+                                }
+                                $to_url = '';
+                                if (isset($action['url'])) {
+                                    $to_url = $action['url'];
+                                } elseif (isset($action[0]['url'])) {
+                                    $to_url = $action[0]['url'];
+                                }
+
                                 $never  = ($redirect->last_count == 0);
+                                $from   = $redirect->url;
                             ?>
                                 <tr>
-                                    <td style="padding:10px 12px; font-family:monospace; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                        <?php echo esc_html($redirect->url); ?>
+                                    <td style="padding:10px 12px; font-family:monospace; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:0;">
+                                        <span title="<?php echo esc_attr($from); ?>" style="cursor:help;">
+                                            <?php echo esc_html($from); ?>
+                                        </span>
                                     </td>
-                                    <td style="padding:10px 12px; font-family:monospace; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#0073aa;">
-                                        <?php echo esc_html($to_url); ?>
+                                    <td style="padding:10px 12px; font-family:monospace; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:0; color:#0073aa;">
+                                        <span title="<?php echo esc_attr($to_url); ?>" style="cursor:help;">
+                                            <?php echo esc_html($to_url ?: '—'); ?>
+                                        </span>
                                     </td>
                                     <td style="padding:10px 12px; text-align:center; font-size:13px; color:<?php echo $never ? '#bbb' : '#1d2327'; ?>;">
                                         <?php echo esc_html($redirect->last_count); ?>
