@@ -3,7 +3,7 @@
  * Plugin Name: Bare Bones SEO
  * Plugin URI:  https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     1.0.7
+ * Version:     1.0.8
  * Author:      Charlton Digital
  * License:     GPLv2 or later
  * Text Domain: bare-bones-seo
@@ -35,7 +35,7 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 // Plugin paths
 define('BARE_BONES_SEO_PATH',    plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '1.0.7');
+define('BARE_BONES_SEO_VERSION', '1.0.8');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
@@ -92,7 +92,7 @@ function bare_bones_seo_register_menus() {
     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="white" fill-rule="evenodd" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V13.74C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z M5.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M10.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M9.2 10c0-.28.22-.5.5-.5h.6c.28 0 .5.22.5.5v.8c0 .28-.22.5-.5.5h-.6c-.28 0-.5-.22-.5-.5V10z M6 15.5h1.5v1.5H6z M8.5 15.5H10v1.5H8.5z M12 15.5h1.5v1.5H12z"/></svg>';
 
     add_menu_page(
-        'Site Level Search Engine Instructions — Bare Bones SEO',
+        'Indexation — Bare Bones SEO',
         'Bare Bones SEO',
         'manage_options',
         'bare-bones-seo',
