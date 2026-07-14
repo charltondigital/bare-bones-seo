@@ -75,9 +75,8 @@ function bare_bones_seo_render_bulk_manager_screen() {
         </div>
 
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
-            <a href="?page=bare-bones-seo" class="nav-tab">Site Level Search Engine Instructions</a>
+            <a href="?page=bare-bones-seo" class="nav-tab">Indexation</a>
             <a href="?page=bare-bones-seo-bulk" class="nav-tab nav-tab-active">Bulk Manager</a>
-            <a href="?page=bare-bones-seo-redirects" class="nav-tab">Redirects</a>
         </h2>
 
         <table class="wp-list-table widefat fixed" style="margin-top:20px; table-layout:fixed;">
