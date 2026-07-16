@@ -13,7 +13,7 @@ function bare_bones_seo_render_404_monitor_screen() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'bbseo_404_logs';
 
-	// 1. Handle individual log delete or clear all actions
+	// 1. Handle actions
 	if ( isset( $_GET['action'] ) ) {
 		if ( 'delete' === $_GET['action'] && isset( $_GET['id'] ) ) {
 			$entry_id = absint( $_GET['id'] );
@@ -25,14 +25,15 @@ function bare_bones_seo_render_404_monitor_screen() {
 
 		if ( 'clear_all' === $_GET['action'] ) {
 			if ( check_admin_referer( 'bb_clear_all_404' ) ) {
-				$wpdb->query( "TRUNCATE TABLE $table_name" );
+				// Secure execution of table truncate
+				$wpdb->query( "TRUNCATE TABLE `$table_name`" );
 				echo '<div class="notice notice-success is-dismissible"><p>All 404 logs successfully cleared.</p></div>';
 			}
 		}
 	}
 
 	// 2. Query logs
-	$logs = $wpdb->get_results( "SELECT * FROM $table_name ORDER BY hits DESC LIMIT 150" );
+	$logs = $wpdb->get_results( "SELECT * FROM `$table_name` ORDER BY hits DESC LIMIT 150" );
 	?>
 	<div style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; border-radius: 4px;">
 		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -68,7 +69,7 @@ function bare_bones_seo_render_404_monitor_screen() {
 								</a>
 							</td>
 							<td style="color: #646970; word-wrap: break-word; font-size: 12px;">
-								<?php echo esc_html( $log->referer ); ?>
+								<?php echo esc_html( ! empty( $log->referer ) ? $log->referer : 'Direct' ); ?>
 							</td>
 							<td style="text-align: center; font-weight: bold;"><?php echo esc_html( $log->hits ); ?></td>
 							<td style="font-size: 12px; color: #646970;">
