@@ -14,8 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function bare_bones_seo_render_other_tools_screen() {
 	?>
-	<div class="card" style="max-width: 800px; margin-top: 0; padding: 20px;">
-		<h2>🛠️ <?php _e( 'More SEO Utilities', 'bare-bones-seo' ); ?></h2>
+	<div class="card" style="max-width: 800px; margin-top: 20px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ccd0d4; background: #fff;">
+		<h2 style="margin-top: 0;">🛠️ <?php _e( 'More SEO Utilities', 'bare-bones-seo' ); ?></h2>
 		<p class="description" style="font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
 			<?php _e( 'Bare Bones SEO is built to stay fast and unbloated. If you need advanced features beyond clean indexing controls and 404 monitoring, here are some lightweight, recommended tools and resources:', 'bare-bones-seo' ); ?>
 		</p>
