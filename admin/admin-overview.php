@@ -25,7 +25,7 @@ function bare_bones_seo_render_overview_screen() {
     $redirect_tracking = has_action('template_redirect', 'bbseo_log_old_slug_redirect_90_days') ? 'Active' : 'Disabled';
 
     // Check footprint estimate
-    $version = '1.0.11';
+    $version = '1.0.12';
     if (defined('BARE_BONES_SEO_VERSION')) {
         $version = BARE_BONES_SEO_VERSION;
     }
