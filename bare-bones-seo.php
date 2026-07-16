@@ -157,26 +157,43 @@ function bare_bones_seo_render_dashboard() {
 }
 
 /**
- * Enqueue admin styles and scripts on all admin pages.
+ * Enqueue admin scripts and styles.
  *
- * @since 1.0.3
+ * @param string $hook The current admin page hook.
  */
-add_action('admin_enqueue_scripts', 'bare_bones_seo_enqueue_assets');
-function bare_bones_seo_enqueue_assets() {
-    wp_enqueue_style(
-        'bare-bones-seo-admin',
-        BARE_BONES_SEO_URL . 'assets/admin-style.css',
-        array(),
-        BARE_BONES_SEO_VERSION
-    );
+add_action( 'admin_enqueue_scripts', 'bare_bones_seo_enqueue_admin_assets' );
+function bare_bones_seo_enqueue_admin_assets( $hook ) {
+	global $post_type;
 
-    wp_enqueue_script(
-        'bare-bones-seo-admin',
-        BARE_BONES_SEO_URL . 'assets/admin-script.js',
-        array('jquery'),
-        BARE_BONES_SEO_VERSION,
-        true
-    );
+	// Determine if we are on a public post type editing screen
+	$is_post_editor = false;
+	if ( in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+		$public_types = get_post_types( array( 'public' => true ) );
+		if ( in_array( $post_type, $public_types, true ) ) {
+			$is_post_editor = true;
+		}
+	}
+
+	// Determine if we are on our custom Bulk Manager dashboard page
+	$is_bulk_manager = ( strpos( $hook, 'bare-bones-seo-bulk' ) !== false );
+
+	// Only load our assets if we are on the post editor or the bulk manager
+	if ( $is_post_editor || $is_bulk_manager ) {
+		wp_enqueue_style(
+			'bare-bones-seo-admin-css',
+			plugins_url( 'assets/admin-style.css', __FILE__ ),
+			array(),
+			'1.0.4'
+		);
+
+		wp_enqueue_script(
+			'bare-bones-seo-admin-js',
+			plugins_url( 'assets/admin-script.js', __FILE__ ),
+			array( 'jquery' ), // Depends on jQuery for AJAX bulk saving
+			'1.0.4',
+			true // Load in footer
+		);
+	}
 }
 
 /**
