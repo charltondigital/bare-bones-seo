@@ -338,3 +338,31 @@ function bb_seo_create_404_table() {
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	dbDelta( $sql );
 }
+
+add_action( 'template_redirect', 'bb_seo_handle_404_detection' );
+function bb_seo_handle_404_detection() {
+	if ( ! is_404() ) {
+		return;
+	}
+
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'bb_seo_404_logs';
+	
+	// Get current clean relative request path
+	$current_url = esc_url_raw( $_SERVER['REQUEST_URI'] );
+	$path        = wp_parse_url( $current_url, PHP_URL_PATH );
+	$path        = '/' . ltrim( $path, '/' );
+
+	// Ignore common background request noise like favicons
+	if ( strpos( $path, 'favicon.ico' ) !== false || strpos( $path, 'robots.txt' ) !== false ) {
+		return;
+	}
+
+	// Insert new log or increment existing counter
+	$wpdb->query( $wpdb->prepare(
+		"INSERT INTO $table_name (url, hits, last_accessed) 
+		 VALUES (%s, 1, NOW()) 
+		 ON DUPLICATE KEY UPDATE hits = hits + 1, last_accessed = NOW()",
+		$path
+	) );
+}
