@@ -15,14 +15,17 @@ if (!defined('ABSPATH')) {
 /**
  * Render the Overview screen.
  *
- * @since 1.0.10
+ * @since 1.0.11
  */
 function bare_bones_seo_render_overview_screen() {
     // Get the current monitor status dynamically
     $monitor_active = has_action('template_redirect', 'bbseo_log_404_error') ? 'Active' : 'Disabled';
     
+    // Check if redirect hit-tracking is hooked and active
+    $redirect_tracking = has_action('template_redirect', 'bbseo_log_old_slug_redirect_90_days') ? 'Active' : 'Disabled';
+
     // Check footprint estimate
-    $version = '1.0.10';
+    $version = '1.0.11';
     if (defined('BARE_BONES_SEO_VERSION')) {
         $version = BARE_BONES_SEO_VERSION;
     }
@@ -91,6 +94,10 @@ function bare_bones_seo_render_overview_screen() {
                             <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">✏️ Page-Level Control</strong>
                             Granular control over individual post and page metadata. Override global rules to set custom titles, descriptions, schema JSON, and indexation settings directly within the WordPress editor. <em>Includes a built-in <strong>Bulk Manager</strong> to quickly tweak these values across your entire site from a single, fast-loading screen.</em>
                         </li>
+                        <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
+                            <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">🔗 301 Redirects</strong>
+                            Manage custom redirects with ease. Safely forward old, dead paths straight to your modern pages and track absolute hits day-by-day inside a self-cleaning, rolling 90-day archive.
+                        </li>
                         <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 0; font-size: 13px; line-height: 1.5;">
                             <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">🚫 404 Monitor</strong>
                             A silent listener tracking broken links across your environment. It automatically filters out common background bot exploits and vulnerability scans, logging only high-value user metrics.
@@ -112,6 +119,11 @@ function bare_bones_seo_render_overview_screen() {
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f1; font-size: 13px;">
                         <span style="font-weight: 600; color: #50575e;">Pricing Model</span>
                         <span style="color: #047857; font-weight: 600;">100% Free / No Upsells</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f1; font-size: 13px;">
+                        <span style="font-weight: 600; color: #50575e;">301 Redirects</span>
+                        <span style="color: #1d2327;"><?php echo esc_html($redirect_tracking); ?></span>
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f1; font-size: 13px;">
