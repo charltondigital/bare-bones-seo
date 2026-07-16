@@ -106,19 +106,22 @@ function bare_bones_seo_register_menus() {
  * Render the unified plugin dashboard.
  */
 function bare_bones_seo_render_dashboard() {
-    // Determine the active tab (default to 'indexation')
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'indexation';
+    // Determine the active tab (default to 'overview')
+    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
     ?>
-    <div class="wrap">
-        <!-- Shared Header with skull icon -->
-        <h1>
-            <?php echo bare_bones_seo_skull_icon(22); ?>
+    <div class="wrap" style="max-width: 1200px;">
+        <!-- Shared Header with your existing skull icon function -->
+        <h1 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            <?php echo bare_bones_seo_skull_icon(24); ?>
             <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
         </h1>
 
         <!-- Unified Tab Navigation -->
         <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
-            <a href="?page=bare-bones-seo" class="nav-tab <?php echo $active_tab === 'indexation' ? 'nav-tab-active' : ''; ?>">
+            <a href="?page=bare-bones-seo" class="nav-tab <?php echo $active_tab === 'overview' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('Overview', 'bare-bones-seo'); ?>
+            </a>
+            <a href="?page=bare-bones-seo&tab=indexation" class="nav-tab <?php echo $active_tab === 'indexation' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('Indexation', 'bare-bones-seo'); ?>
             </a>
             <a href="?page=bare-bones-seo&tab=bulk" class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>">
@@ -136,6 +139,9 @@ function bare_bones_seo_render_dashboard() {
         <div class="bbseo-tab-content">
             <?php
             switch ($active_tab) {
+                case 'indexation':
+                    bare_bones_seo_render_global_map_screen();
+                    break;
                 case 'bulk':
                     bare_bones_seo_render_bulk_manager_screen();
                     break;
@@ -145,9 +151,14 @@ function bare_bones_seo_render_dashboard() {
                 case 'other-tools':
                     bare_bones_seo_render_other_tools_screen();
                     break;
-                case 'indexation':
+                case 'overview':
                 default:
-                    bare_bones_seo_render_global_map_screen();
+                    // Make sure you require/include the file containing bare_bones_seo_render_overview_screen()
+                    if (function_exists('bare_bones_seo_render_overview_screen')) {
+                        bare_bones_seo_render_overview_screen();
+                    } else {
+                        echo '<p>Overview screen is missing.</p>';
+                    }
                     break;
             }
             ?>
