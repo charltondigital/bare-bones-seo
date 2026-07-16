@@ -123,8 +123,8 @@ function bare_bones_seo_register_menus() {
 
     add_submenu_page(
         'bare-bones-seo',
-        'Bulk Manager',
-        'Bulk Manager',
+        'Page Meta',
+        'Page Meta',
         'manage_options',
         'bare-bones-seo&tab=bulk',
         'bare_bones_seo_render_dashboard'
@@ -156,16 +156,18 @@ function bare_bones_seo_render_dashboard() {
     // Determine the active tab (default to 'overview')
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
     ?>
-    <div class="wrap" style="max-width: 1200px;">
+    <div class="wrap" style="max-width: 1200px; margin-top: 0; padding-top: 0;">
         
         <!-- FORCE SYSTEM NOTICES TO APPEAR ABOVE THIS LINE -->
-        <div class="wp-header-end"></div>
+        <div class="wp-header-end" style="height: 0; margin: 0; padding: 0; display: none;"></div>
 
-        <!-- Shared Header with your existing skull icon function -->
-        <h1 style="display: flex; align-items: center; gap: 8px; margin-top: 15px; margin-bottom: 20px;">
-            <?php echo bare_bones_seo_skull_icon(24); ?>
-            <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
-        </h1>
+        <!-- Shared Header Wrapper: Eliminates unwanted top-space and centers neatly -->
+        <div class="bbseo-header-wrapper" style="margin-top: 15px; margin-bottom: 15px;">
+            <h1 style="display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; font-size: 23px; font-weight: 400; line-height: 1.2;">
+                <?php echo bare_bones_seo_skull_icon(24); ?>
+                <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
+            </h1>
+        </div>
 
         <!-- Unified Tab Navigation -->
         <h2 class="nav-tab-wrapper" style="margin-bottom: 20px; margin-top: 10px;">
@@ -176,7 +178,7 @@ function bare_bones_seo_render_dashboard() {
                 <?php _e('Indexation', 'bare-bones-seo'); ?>
             </a>
             <a href="?page=bare-bones-seo&tab=bulk" class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>">
-                <?php _e('Bulk Manager', 'bare-bones-seo'); ?>
+                <?php _e('Page Meta', 'bare-bones-seo'); ?>
             </a>
             <a href="?page=bare-bones-seo&tab=404-monitor" class="nav-tab <?php echo $active_tab === '404-monitor' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('404 Monitor', 'bare-bones-seo'); ?>
