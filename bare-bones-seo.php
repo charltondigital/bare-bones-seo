@@ -39,6 +39,7 @@ define('BARE_BONES_SEO_VERSION', '1.0.10');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
+require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
