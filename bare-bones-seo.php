@@ -47,16 +47,26 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
 
 /**
- * Calculate and save the plugin size to the database.
+ * Calculate and save the plugin size to the database, ignoring the update checker.
  */
 function bbseo_update_stored_plugin_size() {
     $plugin_dir = plugin_dir_path(__FILE__);
     $total_size = 0;
 
     if (is_dir($plugin_dir)) {
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($plugin_dir, FilesystemIterator::SKIP_DOTS)
-        );
+        // Create a recursive directory iterator
+        $directory = new RecursiveDirectoryIterator($plugin_dir, FilesystemIterator::SKIP_DOTS);
+        
+        // Filter out the 'plugin-update-checker' directory entirely
+        $filtered_files = new RecursiveCallbackFilterIterator($directory, function ($current, $key, $iterator) {
+            // If it is a directory named 'plugin-update-checker', block it
+            if ($iterator->hasChildren() && $current->getFilename() === 'plugin-update-checker') {
+                return false;
+            }
+            return true;
+        });
+
+        $files = new RecursiveIteratorIterator($filtered_files);
 
         foreach ($files as $file) {
             $total_size += $file->getSize();
