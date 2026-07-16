@@ -42,8 +42,8 @@ require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
+require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
 
 /**
  * Activation hook — no hard blocks.
@@ -110,7 +110,7 @@ function bare_bones_seo_render_dashboard() {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'indexation';
     ?>
     <div class="wrap">
-        <!-- Render the shared header with the skull icon! -->
+        <!-- Shared Header with skull icon -->
         <h1>
             <?php echo bare_bones_seo_skull_icon(22); ?>
             <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
@@ -124,11 +124,11 @@ function bare_bones_seo_render_dashboard() {
             <a href="?page=bare-bones-seo&tab=bulk" class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('Bulk Manager', 'bare-bones-seo'); ?>
             </a>
-            <a href="?page=bare-bones-seo&tab=redirects" class="nav-tab <?php echo $active_tab === 'redirects' ? 'nav-tab-active' : ''; ?>">
-                <?php _e('Redirects', 'bare-bones-seo'); ?>
-            </a>
             <a href="?page=bare-bones-seo&tab=404-monitor" class="nav-tab <?php echo $active_tab === '404-monitor' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('404 Monitor', 'bare-bones-seo'); ?>
+            </a>
+            <a href="?page=bare-bones-seo&tab=other-tools" class="nav-tab <?php echo $active_tab === 'other-tools' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('Other Tools', 'bare-bones-seo'); ?>
             </a>
         </h2>
 
@@ -137,20 +137,16 @@ function bare_bones_seo_render_dashboard() {
             <?php
             switch ($active_tab) {
                 case 'bulk':
-                    // Calls your existing Bulk Manager renderer
                     bare_bones_seo_render_bulk_manager_screen();
                     break;
-                case 'redirects':
-                    // Calls your existing Redirects renderer
-                    bare_bones_seo_render_redirects_screen();
-                    break;
                 case '404-monitor':
-                    // Calls our brand new 404 renderer
                     bare_bones_seo_render_404_monitor_screen();
+                    break;
+                case 'other-tools':
+                    bare_bones_seo_render_other_tools_screen();
                     break;
                 case 'indexation':
                 default:
-                    // Calls your existing Indexation/Global Map renderer
                     bare_bones_seo_render_global_map_screen();
                     break;
             }
