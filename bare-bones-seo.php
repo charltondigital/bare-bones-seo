@@ -319,3 +319,22 @@ function bbseo_log_404_error() {
         );
     }
 }
+
+register_activation_hook( __FILE__, 'bb_seo_create_404_table' );
+function bb_seo_create_404_table() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'bb_seo_404_logs';
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		id bigint(20) NOT NULL AUTO_INCREMENT,
+		url varchar(255) NOT NULL,
+		hits int(11) DEFAULT 1,
+		last_accessed datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+		PRIMARY KEY  (id),
+		UNIQUE KEY url (url)
+	) $charset_collate;";
+
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+}
