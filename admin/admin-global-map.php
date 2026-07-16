@@ -212,7 +212,13 @@ function bare_bones_seo_render_global_map_screen() {
             $clean[sanitize_key($key)] = sanitize_text_field($val);
         }
         update_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, $clean);
-        echo '<div class="updated"><p>Your settings have been saved.</p></div>';
+
+        // Clear native core sitemap cached transients to apply changes instantly
+        global $wpdb;
+        $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wp_sitemaps_%'" );
+        flush_rewrite_rules( false );
+
+        echo '<div class="updated"><p>Your settings have been saved and sitemaps rebuilt instantly!</p></div>';
     }
 
     $current_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
