@@ -1,5 +1,5 @@
 /**
- * Bare Bones SEO Admin JavaScript v1.0.3
+ * Bare Bones SEO Admin JavaScript v1.0.4
  *
  * Handles:
  * 1. Section accordion toggles (Snippet Builder, Indexing, Schema)
@@ -112,6 +112,7 @@
             if (!btn) return;
 
             var uid    = btn.getAttribute('data-uid');
+            var postId = uid.replace('bb-', '');
             var metaEl = document.getElementById(uid + '-meta-data');
 
             if (!metaEl) return;
@@ -120,12 +121,12 @@
             var siteName  = metaData.site_name;
             var postTitle = metaData.post_title;
 
-            // Find inputs within this post's snippet section
+            // Find inputs within this post's snippet section using ID-suffixed selectors
             var snippet    = document.getElementById(uid + '-snippet');
             if (!snippet) return;
 
-            var titleInput = snippet.querySelector('.bb-title-input');
-            var descInput  = snippet.querySelector('.bb-desc-input');
+            var titleInput = snippet.querySelector('[name="bb_seo_title_' + postId + '"]') || snippet.querySelector('.bb-title-input');
+            var descInput  = snippet.querySelector('[name="bb_seo_desc_' + postId + '"]') || snippet.querySelector('.bb-desc-input');
 
             var rawTitle  = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : postTitle;
             var fullTitle = rawTitle + ' \u2014 ' + siteName;
@@ -135,13 +136,19 @@
             var dt = document.getElementById(uid + '-preview-desktop-title');
             var dd = document.getElementById(uid + '-preview-desktop-desc');
             if (dt) dt.textContent = fullTitle;
-            if (dd) dd.textContent = rawDesc;
+            if (dd) {
+                dd.textContent = rawDesc;
+                dd.style.minHeight = rawDesc ? 'auto' : '2.5em';
+            }
 
             // Update mobile preview (920px max)
             var mt = document.getElementById(uid + '-preview-mobile-title');
             var md = document.getElementById(uid + '-preview-mobile-desc');
             if (mt) mt.textContent = fullTitle;
-            if (md) md.textContent = rawDesc;
+            if (md) {
+                md.textContent = rawDesc;
+                md.style.minHeight = rawDesc ? 'auto' : '2.5em';
+            }
         });
 
         /**
@@ -164,10 +171,10 @@
             var expandedRow = document.getElementById(uid + '-expanded');
             if (!expandedRow) return;
 
-            // Collect all four field values
-            var titleInput  = expandedRow.querySelector('[name="bb_seo_title"]');
-            var descInput   = expandedRow.querySelector('[name="bb_seo_desc"]');
-            var schemaInput = expandedRow.querySelector('[name="bb_seo_schema"]');
+            // Collect all four field values using post-specific ID naming architecture
+            var titleInput  = expandedRow.querySelector('[name="bb_seo_title_' + postId + '"]') || expandedRow.querySelector('[name="bb_seo_title"]');
+            var descInput   = expandedRow.querySelector('[name="bb_seo_desc_' + postId + '"]') || expandedRow.querySelector('[name="bb_seo_desc"]');
+            var schemaInput = expandedRow.querySelector('[name="bb_seo_schema_' + postId + '"]') || expandedRow.querySelector('[name="bb_seo_schema"]');
             var indexRadio  = expandedRow.querySelector('[name="bb_seo_should_index_' + postId + '"]:checked');
 
             var title       = titleInput  ? titleInput.value  : '';
