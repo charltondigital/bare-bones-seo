@@ -10,6 +10,53 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Get SEO metadata for a specific post with sensible defaults.
+ *
+ * @param int $post_id The ID of the post.
+ * @return array Sanitized SEO metadata.
+ */
+function bare_bones_seo_get_page_meta( $post_id ) {
+	$title  = get_post_meta( $post_id, BARE_BONES_SEO_META_TITLE, true );
+	$desc   = get_post_meta( $post_id, BARE_BONES_SEO_META_DESC, true );
+	$schema = get_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, true );
+	$index  = get_post_meta( $post_id, BARE_BONES_SEO_META_INDEX, true );
+
+	// If the indexing option is empty (never set), default it to 'index' or 'yes'
+	if ( '' === $index ) {
+		$index = 'yes';
+	}
+
+	return array(
+		'title'  => sanitize_text_field( $title ),
+		'desc'   => sanitize_text_field( $desc ),
+		'schema' => $schema, // Raw text area storage for JSON schema
+		'index'  => sanitize_key( $index ),
+	);
+}
+
+/**
+ * Save SEO metadata for a specific post.
+ *
+ * @param int   $post_id The ID of the post.
+ * @param array $data    The array of data to save.
+ */
+function bare_bones_seo_update_page_meta( $post_id, $data ) {
+	if ( isset( $data['title'] ) ) {
+		update_post_meta( $post_id, BARE_BONES_SEO_META_TITLE, sanitize_text_field( $data['title'] ) );
+	}
+	if ( isset( $data['desc'] ) ) {
+		update_post_meta( $post_id, BARE_BONES_SEO_META_DESC, sanitize_text_field( $data['desc'] ) );
+	}
+	if ( isset( $data['schema'] ) ) {
+		// Keep raw text input for JSON schema, but run it through safe post-filtering
+		update_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, wp_kses_post( $data['schema'] ) );
+	}
+	if ( isset( $data['should_index'] ) ) {
+		update_post_meta( $post_id, BARE_BONES_SEO_META_INDEX, sanitize_key( $data['should_index'] ) );
+	}
+}
+
+/**
  * Log 404 errors in database
  */
 function bbseo_log_404_error() {
