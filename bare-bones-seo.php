@@ -3,7 +3,7 @@
  * Plugin Name: Bare Bones SEO
  * Plugin URI:   https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     1.0.10
+ * Version:     1.0.11
  * Author:       Charlton Digital
  * License:      GPLv2 or later
  * Text Domain: bare-bones-seo
@@ -35,7 +35,7 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 // Plugin paths
 define('BARE_BONES_SEO_PATH',    plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '1.0.10');
+define('BARE_BONES_SEO_VERSION', '1.0.11');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
@@ -44,10 +44,11 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
+require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php'; // New Redirect Manager Tab
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
 
 /**
- * Calculate and save the plugin size to the database (Calculates all files naturally).
+ * Calculate and save the plugin size to the database.
  */
 function bbseo_update_stored_plugin_size() {
     $plugin_dir = plugin_dir_path(__FILE__);
@@ -70,13 +71,9 @@ function bbseo_update_stored_plugin_size() {
  * Combined master activation setup routine.
  */
 function bare_bones_seo_master_activation() {
-    // 1. Run core verification placeholder if necessary
     bare_bones_seo_activation_check();
-
-    // 2. Build database tables
     bbseo_create_404_table();
 
-    // 3. Wipe old calculations and force immediate re-index
     delete_option('bbseo_plugin_disk_size');
     bbseo_update_stored_plugin_size();
 }
@@ -163,6 +160,15 @@ function bare_bones_seo_register_menus() {
 
     add_submenu_page(
         'bare-bones-seo',
+        '301 Redirects',
+        '301 Redirects',
+        'manage_options',
+        'bare-bones-seo&tab=redirects',
+        'bare_bones_seo_render_dashboard'
+    );
+
+    add_submenu_page(
+        'bare-bones-seo',
         '404 Monitor',
         '404 Monitor',
         'manage_options',
@@ -206,6 +212,9 @@ function bare_bones_seo_render_dashboard() {
             <a href="?page=bare-bones-seo&tab=bulk" class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('Page Meta', 'bare-bones-seo'); ?>
             </a>
+            <a href="?page=bare-bones-seo&tab=redirects" class="nav-tab <?php echo $active_tab === 'redirects' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('301 Redirects', 'bare-bones-seo'); ?>
+            </a>
             <a href="?page=bare-bones-seo&tab=404-monitor" class="nav-tab <?php echo $active_tab === '404-monitor' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('404 Monitor', 'bare-bones-seo'); ?>
             </a>
@@ -222,6 +231,11 @@ function bare_bones_seo_render_dashboard() {
                     break;
                 case 'bulk':
                     bare_bones_seo_render_bulk_manager_screen();
+                    break;
+                case 'redirects':
+                    if (function_exists('render_bare_bones_redirects_tab')) {
+                        render_bare_bones_redirects_tab();
+                    }
                     break;
                 case '404-monitor':
                     bare_bones_seo_render_404_monitor_screen();
@@ -329,7 +343,47 @@ function bbseo_prune_old_404_logs() {
 }
 
 /**
- * Initialize Single-File Over-The-Air Update Engine
+ * Intercept WordPress template redirects on 404 to track hits over a rolling 90 days.
+ * Keeps everything optimized inside a single, self-cleaning metadata field.
+ */
+add_action('template_redirect', 'bbseo_log_old_slug_redirect_90_days', 5);
+function bbseo_log_old_slug_redirect_90_days() {
+    if (is_404() && '' !== get_query_var('name')) {
+        global $wpdb;
+        
+        $query_slug = get_query_var('name');
+        
+        $post_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_wp_old_slug' AND meta_value = %s LIMIT 1",
+            $query_slug
+        ));
+
+        if ($post_id) {
+            $meta_key = '_wp_old_slug_hits_' . sanitize_key($query_slug);
+            
+            $hits = get_post_meta($post_id, $meta_key, true);
+            if (!is_array($hits)) {
+                $hits = array();
+            }
+            
+            $today = gmdate('Y-m-d');
+            $hits[$today] = isset($hits[$today]) ? (int) $hits[$today] + 1 : 1;
+            
+            // Sweep historical data older than 90 days
+            $cutoff = strtotime('-90 days');
+            foreach ($hits as $date => $count) {
+                if (strtotime($date) < $cutoff) {
+                    unset($hits[$date]);
+                }
+            }
+            
+            update_post_meta($post_id, $meta_key, $hits);
+        }
+    }
+}
+
+/**
+ * Initialize Single-File Over-The-Air Update Engine.
  */
 require_once BARE_BONES_SEO_PATH . 'includes/github-updater.php';
 new BBSEO_GitHub_Updater(__FILE__, 'charltondigital/bare-bones-seo');
