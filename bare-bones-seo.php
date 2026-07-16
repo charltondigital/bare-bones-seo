@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Bare Bones SEO
- * Plugin URI:  https://github.com/charltondigital/bare-bones-seo
+ * Plugin URI:   https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
  * Version:     1.0.9
- * Author:      Charlton Digital
- * License:     GPLv2 or later
+ * Author:       Charlton Digital
+ * License:      GPLv2 or later
  * Text Domain: bare-bones-seo
  *
  * @package BareBonesSEO
@@ -96,7 +96,7 @@ function bare_bones_seo_register_menus() {
         'Bare Bones SEO',
         'manage_options',
         'bare-bones-seo',
-        'bare_bones_seo_render_dashboard', // Updated callback name to reflect the dynamic layout
+        'bare_bones_seo_render_dashboard',
         'data:image/svg+xml;base64,' . base64_encode($svg),
         80
     );
@@ -174,11 +174,11 @@ function bare_bones_seo_enqueue_admin_assets( $hook ) {
 		}
 	}
 
-	// Determine if we are on our custom Bulk Manager dashboard page
-	$is_bulk_manager = ( strpos( $hook, 'bare-bones-seo-bulk' ) !== false );
+	// Determine if we are on our custom dashboard page
+	$is_seo_dashboard = ( strpos( $hook, 'bare-bones-seo' ) !== false );
 
-	// Only load our assets if we are on the post editor or the bulk manager
-	if ( $is_post_editor || $is_bulk_manager ) {
+	// Only load our assets if we are on the post editor or our plugin settings tabs
+	if ( $is_post_editor || $is_seo_dashboard ) {
 		wp_enqueue_style(
 			'bare-bones-seo-admin-css',
 			plugins_url( 'assets/admin-style.css', __FILE__ ),
@@ -318,51 +318,4 @@ function bbseo_log_404_error() {
             array('%s', '%s', '%d', '%s')
         );
     }
-}
-
-register_activation_hook( __FILE__, 'bb_seo_create_404_table' );
-function bb_seo_create_404_table() {
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'bb_seo_404_logs';
-	$charset_collate = $wpdb->get_charset_collate();
-
-	$sql = "CREATE TABLE $table_name (
-		id bigint(20) NOT NULL AUTO_INCREMENT,
-		url varchar(255) NOT NULL,
-		hits int(11) DEFAULT 1,
-		last_accessed datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-		PRIMARY KEY  (id),
-		UNIQUE KEY url (url)
-	) $charset_collate;";
-
-	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-	dbDelta( $sql );
-}
-
-add_action( 'template_redirect', 'bb_seo_handle_404_detection' );
-function bb_seo_handle_404_detection() {
-	if ( ! is_404() ) {
-		return;
-	}
-
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'bb_seo_404_logs';
-	
-	// Get current clean relative request path
-	$current_url = esc_url_raw( $_SERVER['REQUEST_URI'] );
-	$path        = wp_parse_url( $current_url, PHP_URL_PATH );
-	$path        = '/' . ltrim( $path, '/' );
-
-	// Ignore common background request noise like favicons
-	if ( strpos( $path, 'favicon.ico' ) !== false || strpos( $path, 'robots.txt' ) !== false ) {
-		return;
-	}
-
-	// Insert new log or increment existing counter
-	$wpdb->query( $wpdb->prepare(
-		"INSERT INTO $table_name (url, hits, last_accessed) 
-		 VALUES (%s, 1, NOW()) 
-		 ON DUPLICATE KEY UPDATE hits = hits + 1, last_accessed = NOW()",
-		$path
-	) );
 }
