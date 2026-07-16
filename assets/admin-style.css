@@ -1,5 +1,5 @@
 /**
- * Bare Bones SEO Admin Stylesheet v1.0.3
+ * Bare Bones SEO Admin Stylesheet v1.0.4
  *
  * Styles for the WordPress admin interface:
  * - Meta box title alignment
@@ -7,6 +7,7 @@
  * - Global indexing map table
  * - Bulk page manager
  * - Search snippet preview simulator
+ * - Snappy, click-optimized tab navigation
  */
 
 /* ============================================================================
@@ -117,6 +118,25 @@
     background: #fafafa;
     border-top: 2px solid #2271b1;
     border-bottom: 2px solid #ddd;
+}
+
+/* ============================================================================
+   Tab Navigation
+   Forces the entire tab target to be clickable and adds tactile click feedback
+   ============================================================================ */
+
+.wrap.bare-bones-seo-wrap .nav-tab-wrapper .nav-tab {
+    display: inline-block !important;
+    cursor: pointer !important;
+    position: relative;
+    user-select: none;
+    padding: 10px 16px !important;
+}
+
+.wrap.bare-bones-seo-wrap .nav-tab-wrapper .nav-tab:active {
+    transform: translateY(1px);
+    background-color: #f0f0f1 !important;
+    transition: transform 0.05s ease;
 }
 
 /* ============================================================================
