@@ -47,26 +47,15 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
 
 /**
- * Calculate and save the plugin size to the database, ignoring the update checker.
+ * Calculate and save the plugin size to the database (Calculates all files naturally).
  */
 function bbseo_update_stored_plugin_size() {
     $plugin_dir = plugin_dir_path(__FILE__);
     $total_size = 0;
 
     if (is_dir($plugin_dir)) {
-        // Create a recursive directory iterator
         $directory = new RecursiveDirectoryIterator($plugin_dir, FilesystemIterator::SKIP_DOTS);
-        
-        // Filter out the 'plugin-update-checker' directory entirely
-        $filtered_files = new RecursiveCallbackFilterIterator($directory, function ($current, $key, $iterator) {
-            // If it is a directory named 'plugin-update-checker', block it
-            if ($iterator->hasChildren() && $current->getFilename() === 'plugin-update-checker') {
-                return false;
-            }
-            return true;
-        });
-
-        $files = new RecursiveIteratorIterator($filtered_files);
+        $files = new RecursiveIteratorIterator($directory);
 
         foreach ($files as $file) {
             $total_size += $file->getSize();
@@ -340,16 +329,7 @@ function bbseo_prune_old_404_logs() {
 }
 
 /**
- * Automated GitHub Over-The-Air Update Engine
+ * Initialize Single-File Over-The-Air Update Engine
  */
-require_once BARE_BONES_SEO_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
-
-$bbseo_update_checker = PucFactory::buildUpdateChecker(
-    'https://github.com/charltondigital/bare-bones-seo/', // Your GitHub repo URL
-    __FILE__, // Full path to this main file
-    'bare-bones-seo' // Must match the directory slug
-);
-
-// Instruct the checker to track your master/main release tag branches
-$bbseo_update_checker->setBranch('main');
+require_once BARE_BONES_SEO_PATH . 'includes/github-updater.php';
+new BBSEO_GitHub_Updater(__FILE__, 'charltondigital/bare-bones-seo');
