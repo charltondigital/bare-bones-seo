@@ -178,3 +178,55 @@ function bare_bones_seo_enqueue_assets() {
         true
     );
 }
+
+/**
+ * Create custom 404 logging table on plugin activation.
+ */
+function bbseo_create_404_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'bbseo_404_logs';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id bigint(20) NOT NULL AUTO_INCREMENT,
+        url varchar(2048) NOT NULL,
+        referer varchar(2048) NOT NULL,
+        hits int(11) DEFAULT 1 NOT NULL,
+        last_accessed datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        PRIMARY KEY  (id),
+        KEY last_accessed (last_accessed)
+    ) $charset_collate;";
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta($sql);
+
+    // Schedule the 90-day cleanup cron if not scheduled
+    if (!wp_next_scheduled('bbseo_daily_cleanup_404_logs')) {
+        wp_schedule_event(time(), 'daily', 'bbseo_daily_cleanup_404_logs');
+    }
+}
+register_activation_hook(__FILE__, 'bbseo_create_404_table');
+
+/**
+ * Clear daily scheduled events on deactivation.
+ */
+function bbseo_deactivation_cleanup() {
+    wp_clear_scheduled_hook('bbseo_daily_cleanup_404_logs');
+}
+register_deactivation_hook(__FILE__, 'bbseo_deactivation_cleanup');
+
+/**
+ * Automatically prune logs older than 90 days.
+ */
+add_action('bbseo_daily_cleanup_404_logs', 'bbseo_prune_old_404_logs');
+function bbseo_prune_old_404_logs() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'bbseo_404_logs';
+    
+    // Delete logs where last_accessed is older than 90 days
+    $wpdb->query(
+        $wpdb->prepare(
+            "DELETE FROM $table_name WHERE last_accessed < DATE_SUB(NOW(), INTERVAL 90 DAY)"
+        )
+    );
+}
