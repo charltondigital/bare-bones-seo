@@ -100,21 +100,7 @@ function render_bare_bones_redirects_tab() {
     // Retrieve pending notices
     $notices = get_transient('bb_redirect_notices');
     ?>
-    <div class="wrap bare-bones-seo-wrap">
-        <h1 class="wp-heading-inline" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-            <span class="dashicons dashicons-performance" style="font-size: 28px; width: 28px; height: 28px;"></span>
-            Bare Bones SEO
-        </h1>
-        <hr class="wp-header-end">
-
-        <!-- Tab Navigation (Matching admin-style.css context) -->
-        <nav class="nav-tab-wrapper wp-clearfix" style="margin-bottom: 20px;">
-            <a href="?page=bare-bones-seo" class="nav-tab">Overview</a>
-            <a href="?page=bare-bones-seo&tab=indexation" class="nav-tab">Indexation</a>
-            <a href="?page=bare-bones-seo&tab=meta" class="nav-tab">Page Meta</a>
-            <a href="?page=bare-bones-seo&tab=redirects" class="nav-tab nav-tab-active">301 Redirects</a>
-            <a href="?page=bare-bones-seo&tab=other" class="nav-tab">Other Tools</a>
-        </nav>
+    <div class="wrap bare-bones-seo-wrap" style="padding: 0; margin-top: 10px;">
 
         <!-- Display Session Notice Queue -->
         <?php if (is_array($notices) && !empty($notices)) : ?>
@@ -122,7 +108,7 @@ function render_bare_bones_redirects_tab() {
                 $class = (strpos($notice, 'ERROR:') === 0) ? 'notice-error' : 'notice-success';
                 $clean_notice = str_replace('ERROR: ', '', $notice);
                 ?>
-                <div class="notice <?php echo $class; ?> is-dismissible" style="margin: 0 0 10px 0;">
+                <div class="notice <?php echo $class; ?> is-dismissible" style="margin: 0 0 15px 0;">
                     <p style="margin: 0; padding: 2px 0; font-size: 13px;"><?php echo $clean_notice; ?></p>
                 </div>
             <?php endforeach; ?>
@@ -132,7 +118,7 @@ function render_bare_bones_redirects_tab() {
         <div class="bb-redirects-container" style="max-width: 1200px;">
             
             <!-- Manual Add Form -->
-            <div class="card" style="max-width: 100%; margin-bottom: 20px; padding: 16px; border: 1px solid #c3c4c7; box-shadow: none; background: #fff;">
+            <div class="card" style="max-width: 100%; margin-bottom: 20px; padding: 16px; border: 1px solid #c3c4c7; box-shadow: none; background: #fff; border-radius: 4px;">
                 <h2 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 600;">Add New 301 Redirect</h2>
                 <form method="post" action="" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
                     <?php wp_nonce_field('bb_add_redirect', 'bb_add_redirect_nonce'); ?>
@@ -171,7 +157,7 @@ function render_bare_bones_redirects_tab() {
                 </thead>
                 <tbody>
                     <?php
-                    // --- 2. RETRIEVE & AGGREGATE REDIRECT DATA ---
+                    // --- RETRIEVE & AGGREGATE REDIRECT DATA ---
                     $db_results = $wpdb->get_results("
                         SELECT post_id, meta_value AS old_slug 
                         FROM $wpdb->postmeta 
