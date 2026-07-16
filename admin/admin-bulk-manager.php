@@ -42,10 +42,10 @@ function bare_bones_seo_process_bulk_ajax_save() {
     }
 
     bare_bones_seo_update_page_meta($post_id, array(
-        'title'        => isset($_POST['bb_seo_title'])        ? $_POST['bb_seo_title']        : '',
-        'desc'         => isset($_POST['bb_seo_desc'])         ? $_POST['bb_seo_desc']         : '',
-        'schema'       => isset($_POST['bb_seo_schema'])       ? $_POST['bb_seo_schema']       : '',
-        'should_index' => isset($_POST['bb_seo_should_index']) ? $_POST['bb_seo_should_index'] : 'yes',
+        'title'        => isset($_POST['bb_seo_title'])        ? sanitize_text_field($_POST['bb_seo_title'])        : '',
+        'desc'         => isset($_POST['bb_seo_desc'])         ? sanitize_text_field($_POST['bb_seo_desc'])         : '',
+        'schema'       => isset($_POST['bb_seo_schema'])       ? wp_kses_post($_POST['bb_seo_schema'])              : '',
+        'should_index' => isset($_POST['bb_seo_should_index']) ? sanitize_key($_POST['bb_seo_should_index'])          : 'yes',
     ));
 
     wp_send_json_success(array('message' => 'Saved'));
