@@ -101,6 +101,52 @@ function bare_bones_seo_register_menus() {
         'data:image/svg+xml;base64,' . base64_encode($svg),
         80
     );
+
+    // Register submenu items so WordPress displays the hover pop-out sidebar navigation
+    add_submenu_page(
+        'bare-bones-seo',
+        'Overview',
+        'Overview',
+        'manage_options',
+        'bare-bones-seo', // Slug matches parent to load default view
+        'bare_bones_seo_render_dashboard'
+    );
+
+    add_submenu_page(
+        'bare-bones-seo',
+        'Indexation',
+        'Indexation',
+        'manage_options',
+        'bare-bones-seo&tab=indexation',
+        'bare_bones_seo_render_dashboard'
+    );
+
+    add_submenu_page(
+        'bare-bones-seo',
+        'Bulk Manager',
+        'Bulk Manager',
+        'manage_options',
+        'bare-bones-seo&tab=bulk',
+        'bare_bones_seo_render_dashboard'
+    );
+
+    add_submenu_page(
+        'bare-bones-seo',
+        '404 Monitor',
+        '404 Monitor',
+        'manage_options',
+        'bare-bones-seo&tab=404-monitor',
+        'bare_bones_seo_render_dashboard'
+    );
+
+    add_submenu_page(
+        'bare-bones-seo',
+        'Other Tools',
+        'Other Tools',
+        'manage_options',
+        'bare-bones-seo&tab=other-tools',
+        'bare_bones_seo_render_dashboard'
+    );
 }
 
 /**
@@ -117,8 +163,12 @@ function bare_bones_seo_render_dashboard() {
             <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
         </h1>
 
+        <!-- Inline clear wrapper forces WP to target and dump admin notices here, 
+             preventing notice boxes from breaking layout/causing gaps below. -->
+        <div class="clear"></div>
+
         <!-- Unified Tab Navigation -->
-        <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
+        <h2 class="nav-tab-wrapper" style="margin-bottom: 20px; margin-top: 10px;">
             <a href="?page=bare-bones-seo" class="nav-tab <?php echo $active_tab === 'overview' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('Overview', 'bare-bones-seo'); ?>
             </a>
@@ -154,7 +204,6 @@ function bare_bones_seo_render_dashboard() {
                     break;
                 case 'overview':
                 default:
-                    // Make sure you require/include the file containing bare_bones_seo_render_overview_screen()
                     if (function_exists('bare_bones_seo_render_overview_screen')) {
                         bare_bones_seo_render_overview_screen();
                     } else {
