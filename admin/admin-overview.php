@@ -27,21 +27,21 @@ function bare_bones_seo_render_overview_screen() {
         $version = BARE_BONES_SEO_VERSION;
     }
 
-    // Fetch the cached plugin size computed at hook installation/update
-    $plugin_size = get_option('bbseo_plugin_disk_size', '29 KB');
+    // Fetch the cached plugin size computed at hook installation/update (Defaulting to 100 KB)
+    $plugin_size = get_option('bbseo_plugin_disk_size', '100 KB');
 
     // Split size into numeric and unit segments dynamically for the styling layout
     $size_number = preg_replace('/[^0-9.]/', '', $plugin_size);
     $size_unit   = preg_replace('/[0-9.\s]/', '', $plugin_size);
 
     // Fallback security checks
-    if (empty($size_number)) { $size_number = '29'; }
+    if (empty($size_number)) { $size_number = '100'; }
     if (empty($size_unit))   { $size_unit   = 'KB'; }
     ?>
     <div class="wrap" style="max-width: 1200px; margin-top: 20px;">
         
         <!-- High-Impact Bare Bones Welcome Panel -->
-        <div class="bbseo-welcome-card" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 40px; padding: 40px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #ccd0d4; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.04); overflow: hidden;">
+        <div class="bbseo-welcome-card" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 40px; padding: 40px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #ccd0d4; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.04); overflow: hidden;">
             
             <!-- Left Column: Scaled Up Custom SVG -->
             <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; background: #f6f7f8; padding: 30px; border-radius: 6px; border: 1px solid #e2e4e7; color: #1d2327;">
@@ -56,8 +56,8 @@ function bare_bones_seo_render_overview_screen() {
                 </svg>
             </div>
 
-            <!-- Right Column: Massive Size Callout & Philosphy Statement -->
-            <div style="flex: 1; min-width: 300px; max-width: 650px;">
+            <!-- Right Column: Massive Size Callout & Philosophy Statement -->
+            <div style="flex: 1; min-width: 300px;">
                 <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
                     <span style="font-size: 96px; font-weight: 900; line-height: 0.8; letter-spacing: -4px; color: #1d2327; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                         <?php echo esc_html($size_number); ?>
