@@ -28,8 +28,8 @@ function bare_bones_seo_render_overview_screen() {
     }
     ?>
     <div class="wrap" style="max-width: 1200px; margin-top: 20px;">
-        <!-- Hero Welcome Panel -->
-        <div class="welcome-panel" style="padding: 30px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ccd0d4; background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+        <!-- Hero Welcome Panel - Changed class to avoid WP core styling conflict -->
+        <div class="bbseo-welcome-card" style="padding: 30px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ccd0d4; background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
             <div class="welcome-panel-content">
                 <h2 style="font-size: 21px; font-weight: 400; margin-top: 0; margin-bottom: 10px;">Welcome to Bare Bones SEO</h2>
                 <p style="font-size: 15px; color: #50575e; max-width: 800px; line-height: 1.5; margin-bottom: 0;">
