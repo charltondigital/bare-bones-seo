@@ -43,6 +43,7 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
+require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 
 /**
  * Activation hook — no hard blocks.
@@ -87,47 +88,76 @@ function bare_bones_seo_skull_icon($size = 18) {
  */
 add_action('admin_menu', 'bare_bones_seo_register_menus');
 function bare_bones_seo_register_menus() {
-    // Single compound path, white fill, evenodd rule for transparent cutouts
-    // WordPress svg-painter.js will recolor this — white works best as base
     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="white" fill-rule="evenodd" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V13.74C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z M5.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M10.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M9.2 10c0-.28.22-.5.5-.5h.6c.28 0 .5.22.5.5v.8c0 .28-.22.5-.5.5h-.6c-.28 0-.5-.22-.5-.5V10z M6 15.5h1.5v1.5H6z M8.5 15.5H10v1.5H8.5z M12 15.5h1.5v1.5H12z"/></svg>';
 
+    // Register the main sidebar menu item
     add_menu_page(
-        'Indexation — Bare Bones SEO',
+        'Bare Bones SEO',
         'Bare Bones SEO',
         'manage_options',
         'bare-bones-seo',
-        'bare_bones_seo_render_global_map_screen',
+        'bare_bones_seo_render_dashboard', // Updated callback name to reflect the dynamic layout
         'data:image/svg+xml;base64,' . base64_encode($svg),
         80
     );
+}
 
-    // Override the auto-generated first submenu item with "Indexation"
-    add_submenu_page(
-        'bare-bones-seo',
-        'Indexation — Bare Bones SEO',
-        'Indexation',
-        'manage_options',
-        'bare-bones-seo',
-        'bare_bones_seo_render_global_map_screen'
-    );
+/**
+ * Render the unified plugin dashboard.
+ */
+function bare_bones_seo_render_dashboard() {
+    // Determine the active tab (default to 'indexation')
+    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'indexation';
+    ?>
+    <div class="wrap">
+        <!-- Render the shared header with the skull icon! -->
+        <h1>
+            <?php echo bare_bones_seo_skull_icon(22); ?>
+            <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
+        </h1>
 
-    add_submenu_page(
-        'bare-bones-seo',
-        'SEO Page Settings: Bulk Manager — Bare Bones SEO',
-        'Bulk Manager',
-        'manage_options',
-        'bare-bones-seo-bulk',
-        'bare_bones_seo_render_bulk_manager_screen'
-    );
+        <!-- Unified Tab Navigation -->
+        <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
+            <a href="?page=bare-bones-seo" class="nav-tab <?php echo $active_tab === 'indexation' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('Indexation', 'bare-bones-seo'); ?>
+            </a>
+            <a href="?page=bare-bones-seo&tab=bulk" class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('Bulk Manager', 'bare-bones-seo'); ?>
+            </a>
+            <a href="?page=bare-bones-seo&tab=redirects" class="nav-tab <?php echo $active_tab === 'redirects' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('Redirects', 'bare-bones-seo'); ?>
+            </a>
+            <a href="?page=bare-bones-seo&tab=404-monitor" class="nav-tab <?php echo $active_tab === '404-monitor' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('404 Monitor', 'bare-bones-seo'); ?>
+            </a>
+        </h2>
 
-    add_submenu_page(
-        'bare-bones-seo',
-        'Redirects — Bare Bones SEO',
-        'Redirects',
-        'manage_options',
-        'bare-bones-seo-redirects',
-        'bare_bones_seo_render_redirects_screen'
-    );
+        <!-- Dynamically Load Tab Content -->
+        <div class="bbseo-tab-content">
+            <?php
+            switch ($active_tab) {
+                case 'bulk':
+                    // Calls your existing Bulk Manager renderer
+                    bare_bones_seo_render_bulk_manager_screen();
+                    break;
+                case 'redirects':
+                    // Calls your existing Redirects renderer
+                    bare_bones_seo_render_redirects_screen();
+                    break;
+                case '404-monitor':
+                    // Calls our brand new 404 renderer
+                    bare_bones_seo_render_404_monitor_screen();
+                    break;
+                case 'indexation':
+                default:
+                    // Calls your existing Indexation/Global Map renderer
+                    bare_bones_seo_render_global_map_screen();
+                    break;
+            }
+            ?>
+        </div>
+    </div>
+    <?php
 }
 
 /**
