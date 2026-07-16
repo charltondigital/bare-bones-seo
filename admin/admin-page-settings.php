@@ -118,7 +118,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     <div style="margin-bottom:12px;">
                         <label style="display:block; font-size:12px; font-weight:600; color:#444; margin-bottom:4px;">SEO Title</label>
                         <input type="text"
-                               name="bb_seo_title"
+                               name="bb_seo_title_<?php echo esc_attr($post->ID); ?>"
                                class="bb-title-input"
                                data-uid="<?php echo esc_attr($uid); ?>"
                                value="<?php echo esc_attr($meta['title']); ?>"
@@ -127,7 +127,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     </div>
                     <div style="margin-bottom:14px;">
                         <label style="display:block; font-size:12px; font-weight:600; color:#444; margin-bottom:4px;">Meta Description</label>
-                        <textarea name="bb_seo_desc"
+                        <textarea name="bb_seo_desc_<?php echo esc_attr($post->ID); ?>"
                                   class="bb-desc-input"
                                   data-uid="<?php echo esc_attr($uid); ?>"
                                   rows="3"
@@ -183,7 +183,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     <span class="bb-toggle-icon" style="font-size:18px; line-height:1; color:#666; pointer-events:none;">+</span>
                 </button>
                 <div id="<?php echo esc_attr($uid); ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
-                    <textarea name="bb_seo_schema"
+                    <textarea name="bb_seo_schema_<?php echo esc_attr($post->ID); ?>"
                               rows="6"
                               placeholder='<script type="application/ld+json">{"@context": "https://schema.org", ...}</script>'
                               style="width:100%; box-sizing:border-box; font-size:12px; font-family:monospace; resize:vertical; min-height:80px; max-height:200px; overflow-y:auto;"><?php echo esc_textarea($meta['schema']); ?></textarea>
@@ -241,6 +241,9 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
 /**
  * Save SEO metadata when post is saved via meta box.
  *
+ * Checks for both fallback global inputs (from single edit post actions)
+ * and ID-suffixed inputs (from single-edit updates and bulk contexts).
+ *
  * @since 1.0.0
  * @param int $post_id
  */
@@ -259,10 +262,20 @@ function bare_bones_seo_save_meta_box_data($post_id) {
         return;
     }
 
+    // Resolve form fields, falling back to non-prefixed fields if necessary
+    $title  = isset($_POST['bb_seo_title_' . $post_id]) ? $_POST['bb_seo_title_' . $post_id] : (isset($_POST['bb_seo_title']) ? $_POST['bb_seo_title'] : '');
+    $desc   = isset($_POST['bb_seo_desc_' . $post_id]) ? $_POST['bb_seo_desc_' . $post_id] : (isset($_POST['bb_seo_desc']) ? $_POST['bb_seo_desc'] : '');
+    $schema = isset($_POST['bb_seo_schema_' . $post_id]) ? $_POST['bb_seo_schema_' . $post_id] : (isset($_POST['bb_seo_schema']) ? $_POST['bb_seo_schema'] : '');
+    
+    $should_index = 'yes';
+    if (isset($_POST['bb_seo_should_index_' . $post_id])) {
+        $should_index = $_POST['bb_seo_should_index_' . $post_id];
+    }
+
     bare_bones_seo_update_page_meta($post_id, array(
-        'title'        => isset($_POST['bb_seo_title']) ? $_POST['bb_seo_title'] : '',
-        'desc'         => isset($_POST['bb_seo_desc']) ? $_POST['bb_seo_desc'] : '',
-        'schema'       => isset($_POST['bb_seo_schema']) ? $_POST['bb_seo_schema'] : '',
-        'should_index' => isset($_POST['bb_seo_should_index_' . $post_id]) ? $_POST['bb_seo_should_index_' . $post_id] : 'yes',
+        'title'        => $title,
+        'desc'         => $desc,
+        'schema'       => $schema,
+        'should_index' => $should_index,
     ));
 }
