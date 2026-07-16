@@ -338,3 +338,18 @@ function bbseo_prune_old_404_logs() {
         )
     );
 }
+
+/**
+ * Automated GitHub Over-The-Air Update Engine
+ */
+require_once BARE_BONES_SEO_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$bbseo_update_checker = PucFactory::buildUpdateChecker(
+    'https://github.com/charltondigital/bare-bones-seo/', // Your GitHub repo URL
+    __FILE__, // Full path to this main file
+    'bare-bones-seo' // Must match the directory slug
+);
+
+// Instruct the checker to track your master/main release tag branches
+$bbseo_update_checker->setBranch('main');
