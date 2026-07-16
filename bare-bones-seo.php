@@ -157,15 +157,15 @@ function bare_bones_seo_render_dashboard() {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
     ?>
     <div class="wrap" style="max-width: 1200px;">
+        
+        <!-- FORCE SYSTEM NOTICES TO APPEAR ABOVE THIS LINE -->
+        <div class="wp-header-end"></div>
+
         <!-- Shared Header with your existing skull icon function -->
-        <h1 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+        <h1 style="display: flex; align-items: center; gap: 8px; margin-top: 15px; margin-bottom: 20px;">
             <?php echo bare_bones_seo_skull_icon(24); ?>
             <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
         </h1>
-
-        <!-- Inline clear wrapper forces WP to target and dump admin notices here, 
-             preventing notice boxes from breaking layout/causing gaps below. -->
-        <div class="clear"></div>
 
         <!-- Unified Tab Navigation -->
         <h2 class="nav-tab-wrapper" style="margin-bottom: 20px; margin-top: 10px;">
