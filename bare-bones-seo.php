@@ -335,11 +335,8 @@ function bbseo_prune_old_404_logs() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'bbseo_404_logs';
     
-    $wpdb->query(
-        $wpdb->prepare(
-            "DELETE FROM $table_name WHERE last_accessed < DATE_SUB(NOW(), INTERVAL 90 DAY)"
-        )
-    );
+    // Fixed: Prepared statement warning (removed wpdb::prepare on query with no variables)
+    $wpdb->query( "DELETE FROM $table_name WHERE last_accessed < DATE_SUB(NOW(), INTERVAL 90 DAY)" );
 }
 
 /**
@@ -389,32 +386,49 @@ function bbseo_log_old_slug_redirect_90_days() {
  * ============================================================================
  */
 
-// Handle filtering for post types and taxonomies
-function bare_bones_seo_filter_core_sitemaps( $provider, $name ) {
+// Handle filtering for post types (Only 1 parameter passes through here)
+function bare_bones_seo_filter_sitemap_post_types( $post_types ) {
     $options = get_option( 'bare_bones_seo_global_map', array() );
     if ( empty( $options ) ) {
-        return $provider;
+        return $post_types;
     }
 
     foreach ( $options as $key => $status ) {
-        // If status is 'no' or 'complicated_sitemap' (Remove from sitemap only)
         if ( in_array( $status, array( 'no', 'complicated_sitemap' ), true ) ) {
-            if ( isset( $provider[ $key ] ) ) {
-                unset( $provider[ $key ] );
+            if ( isset( $post_types[ $key ] ) ) {
+                unset( $post_types[ $key ] );
             }
         }
     }
 
-    return $provider;
+    return $post_types;
 }
-add_filter( 'wp_sitemaps_post_types', 'bare_bones_seo_filter_core_sitemaps', 10, 2 );
-add_filter( 'wp_sitemaps_taxonomies', 'bare_bones_seo_filter_core_sitemaps', 10, 2 );
+add_filter( 'wp_sitemaps_post_types', 'bare_bones_seo_filter_sitemap_post_types', 10, 1 );
+
+// Handle filtering for taxonomies (Only 1 parameter passes through here too)
+function bare_bones_seo_filter_sitemap_taxonomies( $taxonomies ) {
+    $options = get_option( 'bare_bones_seo_global_map', array() );
+    if ( empty( $options ) ) {
+        return $taxonomies;
+    }
+
+    foreach ( $options as $key => $status ) {
+        if ( in_array( $status, array( 'no', 'complicated_sitemap' ), true ) ) {
+            if ( isset( $taxonomies[ $key ] ) ) {
+                unset( $taxonomies[ $key ] );
+            }
+        }
+    }
+
+    return $taxonomies;
+}
+add_filter( 'wp_sitemaps_taxonomies', 'bare_bones_seo_filter_sitemap_taxonomies', 10, 1 );
 
 // Handle filtering for users (author archives)
 add_filter( 'wp_sitemaps_add_provider', function( $provider, $name ) {
     if ( 'users' === $name ) {
         $options = get_option( 'bare_bones_seo_global_map', array() );
-        $status  = isset( $options['user'] ) ? $options['user'] : 'no'; // Defaults to no index/no sitemap
+        $status  = isset( $options['user'] ) ? $options['user'] : 'no';
 
         if ( in_array( $status, array( 'no', 'complicated_sitemap' ), true ) ) {
             return false; // Safely removes the user provider from core
