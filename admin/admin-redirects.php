@@ -115,21 +115,30 @@ function render_bare_bones_redirects_tab() {
             <?php delete_transient('bb_redirect_notices'); // Clear queue after rendering ?>
         <?php endif; ?>
 
-        <div class="bb-redirects-container" style="max-width: 1200px;">
+        <!-- CONTAINER BOX -->
+        <div class="bb-redirects-container" style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; max-width: 1200px;">
             
+            <!-- Box Page Header -->
+            <div style="border-bottom:1px solid #f0f0f0; padding-bottom:15px; margin-bottom:20px;">
+                <h2 style="margin:0; font-size:16px; font-weight:600; color:#1d2327;">301 Redirect Manager</h2>
+                <p style="margin:5px 0 0; font-size:13px; color:#646970; line-height: 1.5;">
+                    Manage internal permanent routing links. All paths are written natively into core WordPress post metadata (<code>_wp_old_slug</code> rows)—meaning zero custom database tables, zero background router scripts, and no added processing bloat to your frontend load times.
+                </p>
+            </div>
+
             <!-- Manual Add Form -->
-            <div class="card" style="max-width: 100%; margin-bottom: 20px; padding: 16px; border: 1px solid #c3c4c7; box-shadow: none; background: #fff; border-radius: 4px;">
-                <h2 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 600;">Add New 301 Redirect</h2>
+            <div style="max-width: 100%; margin-bottom: 20px; padding: 16px; border: 1px solid #dcdcde; background: #fafafa; border-radius: 4px;">
+                <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color:#1d2327;">Add New 301 Redirect</h3>
                 <form method="post" action="" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
                     <?php wp_nonce_field('bb_add_redirect', 'bb_add_redirect_nonce'); ?>
                     
                     <div class="bb-field-group" style="margin: 0; flex: 1; min-width: 250px;">
-                        <label for="redirect_source" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px;">Original Path (Source)</label>
+                        <label for="redirect_source" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px; color:#1d2327;">Original Path (Source)</label>
                         <input type="text" id="redirect_source" name="redirect_source" class="regular-text bb-input" placeholder="/old-path/" required style="height: 32px; width: 100%;">
                     </div>
                     
                     <div class="bb-field-group" style="margin: 0; flex: 1; min-width: 250px;">
-                        <label for="redirect_target" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px;">Destination URL (Target Page)</label>
+                        <label for="redirect_target" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px; color:#1d2327;">Destination URL (Target Page)</label>
                         <input type="text" id="redirect_target" name="redirect_target" class="regular-text bb-input" placeholder="/new-destination/" required style="height: 32px; width: 100%;">
                     </div>
                     
@@ -140,7 +149,7 @@ function render_bare_bones_redirects_tab() {
             </div>
 
             <!-- Header sorting description -->
-            <div class="tablenav top" style="margin-bottom: 10px; height: auto; padding: 0;">
+            <div class="tablenav top" style="margin-bottom: 10px; height: auto; padding: 0; box-shadow: none; border: none; background: none;">
                 <div class="alignleft actions">
                     <span style="color: #646970; font-style: italic; font-size: 12px;">Existing native WordPress database redirects, sorted by 90-day hit volume.</span>
                 </div>
@@ -150,9 +159,9 @@ function render_bare_bones_redirects_tab() {
             <table class="wp-list-table widefat striped table-view-list" style="border: 1px solid #c3c4c7; box-shadow: none;">
                 <thead>
                     <tr>
-                        <th scope="col" style="width: 60%; padding: 10px 12px; font-weight: 600;">Target URL / Original Path</th>
-                        <th scope="col" style="width: 20%; padding: 10px 12px; text-align: right; font-weight: 600;">90-Day Hits</th>
-                        <th scope="col" style="width: 20%; padding: 10px 12px; text-align: right; padding-right: 20px; font-weight: 600;">Action</th>
+                        <th scope="col" style="width: 60%; padding: 10px 12px; font-weight: 600; color:#1d2327;">Target URL / Original Path</th>
+                        <th scope="col" style="width: 20%; padding: 10px 12px; text-align: right; font-weight: 600; color:#1d2327;">90-Day Hits</th>
+                        <th scope="col" style="width: 20%; padding: 10px 12px; text-align: right; padding-right: 20px; font-weight: 600; color:#1d2327;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -246,12 +255,6 @@ function render_bare_bones_redirects_tab() {
                     <?php endif; ?>
                 </tbody>
             </table>
-
-            <div class="tablenav bottom" style="margin-top: 10px;">
-                <div class="alignleft" style="color: #646970; font-size: 12px;">
-                    All redirects are stored natively within post metadata. No custom tables or external router queries are loaded.
-                </div>
-            </div>
         </div>
     </div>
     <?php
