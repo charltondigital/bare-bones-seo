@@ -188,7 +188,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     <?php endforeach; ?>
                     <div id="<?php echo esc_attr($uid); ?>-index-warning"
                          style="display:<?php echo ($effective_state === 'no') ? 'block' : 'none'; ?>; background:#fff5f5; border-left:3px solid #dc3232; padding:8px 12px; font-size:12px; color:#dc3232; border-radius:2px; margin-top:10px;">
-                        ⚠️ This page is currently hidden from Google.
+                        ⚠️ This page will be hidden from Google.
                     </div>
                 </div>
             </div>
