@@ -54,7 +54,8 @@
          * 2. INDEXING WARNING
          *
          * Show/hide the warning message when radio buttons change.
-         * Warning appears when anything other than YES is selected.
+         * Warning appears only when Noindex is selected (removed-from-sitemap
+         * stays indexed, so it isn't "hidden from Google").
          */
         document.addEventListener('change', function(e) {
             var radio = e.target;
@@ -65,36 +66,7 @@
 
             if (!warning) return;
 
-            warning.style.display = (radio.value !== 'yes') ? 'block' : 'none';
-        });
-
-        /**
-         * GLOBAL MAP: It's Complicated expansion
-         *
-         * When "It's Complicated" (value=advanced) radio is selected,
-         * show the sub-options row below.
-         * When YES or NO is selected, hide it.
-         * When a sub-option (complicated_noindex/complicated_sitemap) is
-         * selected, do nothing — row stays visible.
-         */
-        document.addEventListener('change', function(e) {
-            var radio = e.target;
-            if (!radio.name || radio.name.indexOf('section_index') === -1) return;
-
-            // Only handle the top-level yes/no/advanced radios
-            // Sub-options (complicated_*) should not trigger hide/show
-            if (radio.value === 'complicated_noindex' || radio.value === 'complicated_sitemap') return;
-
-            // Extract key from name="section_index[key]"
-            var match = radio.name.match(/\[([^\]]+)\]/);
-            if (!match) return;
-
-            var key = match[1];
-            var row = document.getElementById('bb-complicated-' + key);
-            if (!row) return;
-
-            // Show sub-options when advanced selected, hide otherwise
-            row.style.display = (radio.value === 'advanced') ? 'block' : 'none';
+            warning.style.display = (radio.value === 'no') ? 'block' : 'none';
         });
 
         /**
