@@ -169,10 +169,10 @@ function bare_bones_seo_get_sitemap_sections() {
  */
 function bare_bones_seo_get_section_description($key, $type) {
     $descriptions = array(
-        'post'     => 'Your blog posts and articles. Always indexed.',
-        'page'     => 'Your site pages (About, Contact, Services, etc.). Always indexed.',
+        'post'     => 'Your blog posts and articles. You\'ll almost always want these indexed.',
+        'page'     => 'Your site pages (About, Contact, Services, etc.). Normally keep these indexed.',
         'category' => 'Archive pages that organize your posts. Helps Google understand your site structure.',
-        'post_tag' => 'Often create thin or duplicate content. Noindexed by default to preserve crawl budget.',
+        'post_tag' => 'Often create thin or duplicate content. Consider noindexing to preserve crawl budget.',
         'user'     => 'Only index these if your author pages include a photo, bio, and original content.',
     );
 
@@ -237,10 +237,9 @@ function bare_bones_seo_render_global_map_screen() {
                         <thead>
                             <tr style="background:#f6f7f7;">
                                 <th style="font-weight:600; padding:15px; width:34%;">Section</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:13%;">YES</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:13%;">NO</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:20%;">Noindex Only</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:20%;">Remove from Sitemap Only</th>
+                                <th style="font-weight:600; text-align:center; padding:15px; width:16%;">YES</th>
+                                <th style="font-weight:600; text-align:center; padding:15px; width:16%;">NO</th>
+                                <th style="font-weight:600; text-align:center; padding:15px; width:34%;">Remove from Sitemap Only</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -274,27 +273,20 @@ function bare_bones_seo_render_global_map_screen() {
                                         <td style="text-align:center; vertical-align:middle;">
                                             <input type="radio"
                                                    name="section_index[<?php echo esc_attr($key); ?>]"
-                                                   value="complicated_noindex"
-                                                   <?php checked($status, 'complicated_noindex'); ?>
-                                                   <?php echo esc_attr($disabled); ?>>
-                                        </td>
-                                        <td style="text-align:center; vertical-align:middle;">
-                                            <input type="radio"
-                                                   name="section_index[<?php echo esc_attr($key); ?>]"
                                                    value="complicated_sitemap"
                                                    <?php checked($status, 'complicated_sitemap'); ?>
                                                    <?php echo esc_attr($disabled); ?>>
                                         </td>
                                     </tr>
                                     <tr style="background:#f9f9f9;">
-                                        <td colspan="5" style="padding:6px 15px 12px; font-size:12px; color:#666;">
+                                        <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
                                             <?php echo esc_html($description); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach;
                             else : ?>
                                 <tr>
-                                    <td colspan="5" style="padding:20px; color:#666; text-align:center;">
+                                    <td colspan="4" style="padding:20px; color:#666; text-align:center;">
                                         No sitemap sections found. Make sure you have published content.
                                     </td>
                                 </tr>
@@ -302,7 +294,7 @@ function bare_bones_seo_render_global_map_screen() {
 
                             <!-- DIVIDER: WordPress System Pages -->
                             <tr>
-                                <td colspan="5" style="padding:12px 15px 6px; background:#f0f0f0; border-top:2px solid #ddd;">
+                                <td colspan="4" style="padding:12px 15px 6px; background:#f0f0f0; border-top:2px solid #ddd;">
                                     <strong style="font-size:12px; color:#444; text-transform:uppercase; letter-spacing:0.05em;">WordPress System Pages</strong>
                                     <span style="font-size:11px; color:#888; margin-left:8px;">Never in sitemap — indexation control only</span>
                                 </td>
@@ -312,19 +304,11 @@ function bare_bones_seo_render_global_map_screen() {
                             $system_pages = array(
                                 'date'   => array(
                                     'label'       => 'Date Archives',
-                                    'description' => 'Pages organized by date (e.g. /2024/01/). Duplicate content — noindexed by default.',
-                                ),
-                                'search' => array(
-                                    'label'       => 'Search Results',
-                                    'description' => 'Pages generated by site search (e.g. /?s=keyword). Thin/duplicate content — noindexed by default.',
-                                ),
-                                '404'    => array(
-                                    'label'       => '404 Pages',
-                                    'description' => 'Pages that don\'t exist. No content — noindexed by default.',
+                                    'description' => 'Pages organized by date (e.g. /2024/01/). Often duplicate content — consider noindexing.',
                                 ),
                                 'paged'  => array(
                                     'label'       => 'Paginated Pages',
-                                    'description' => 'Page 2, 3, etc. of blog archives (/page/2/). Indexed by default — helps Google discover all your posts.',
+                                    'description' => 'Page 2, 3, etc. of archives (/page/2/). Usually best left indexed — helps Google find all your posts.',
                                 ),
                             );
 
@@ -345,14 +329,7 @@ function bare_bones_seo_render_global_map_screen() {
                                         <input type="radio"
                                                name="section_index[<?php echo esc_attr($key); ?>]"
                                                value="no"
-                                               disabled
-                                               style="opacity:0.3; cursor:not-allowed;">
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="complicated_noindex"
-                                               <?php checked($status, 'complicated_noindex'); ?>>
+                                               <?php checked($status, 'no'); ?>>
                                     </td>
                                     <td style="text-align:center; vertical-align:middle;">
                                         <input type="radio"
@@ -363,7 +340,7 @@ function bare_bones_seo_render_global_map_screen() {
                                     </td>
                                 </tr>
                                 <tr style="background:#f9f9f9;">
-                                    <td colspan="5" style="padding:6px 15px 12px; font-size:12px; color:#666;">
+                                    <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
                                         <?php echo esc_html($page['description']); ?>
                                     </td>
                                 </tr>
