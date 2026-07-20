@@ -40,6 +40,7 @@ define('BARE_BONES_SEO_VERSION', '1.0.12');
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
 require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php'; // Front-end noindex engine
+require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php'; // Front-end sitemap engine
 require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
@@ -376,64 +377,6 @@ function bbseo_log_old_slug_redirect_90_days() {
         }
     }
 }
-
-/**
- * ============================================================================
- * CORE SITEMAP FILTER ENGINE
- * Intercepts WordPress core sitemaps and removes sections based on global map options.
- * ============================================================================
- */
-
-// Handle filtering for post types (Only 1 parameter passes through here)
-function bare_bones_seo_filter_sitemap_post_types( $post_types ) {
-    $options = get_option( 'bare_bones_seo_global_map', array() );
-    if ( empty( $options ) ) {
-        return $post_types;
-    }
-
-    foreach ( $options as $key => $status ) {
-        if ( in_array( $status, array( 'no', 'complicated_sitemap' ), true ) ) {
-            if ( isset( $post_types[ $key ] ) ) {
-                unset( $post_types[ $key ] );
-            }
-        }
-    }
-
-    return $post_types;
-}
-add_filter( 'wp_sitemaps_post_types', 'bare_bones_seo_filter_sitemap_post_types', 10, 1 );
-
-// Handle filtering for taxonomies (Only 1 parameter passes through here too)
-function bare_bones_seo_filter_sitemap_taxonomies( $taxonomies ) {
-    $options = get_option( 'bare_bones_seo_global_map', array() );
-    if ( empty( $options ) ) {
-        return $taxonomies;
-    }
-
-    foreach ( $options as $key => $status ) {
-        if ( in_array( $status, array( 'no', 'complicated_sitemap' ), true ) ) {
-            if ( isset( $taxonomies[ $key ] ) ) {
-                unset( $taxonomies[ $key ] );
-            }
-        }
-    }
-
-    return $taxonomies;
-}
-add_filter( 'wp_sitemaps_taxonomies', 'bare_bones_seo_filter_sitemap_taxonomies', 10, 1 );
-
-// Handle filtering for users (author archives)
-add_filter( 'wp_sitemaps_add_provider', function( $provider, $name ) {
-    if ( 'users' === $name ) {
-        $options = get_option( 'bare_bones_seo_global_map', array() );
-        $status  = isset( $options['user'] ) ? $options['user'] : 'no';
-
-        if ( in_array( $status, array( 'no', 'complicated_sitemap' ), true ) ) {
-            return false; // Safely removes the user provider from core
-        }
-    }
-    return $provider;
-}, 10, 2 );
 
 /**
  * Initialize Single-File Over-The-Air Update Engine.
