@@ -39,6 +39,7 @@ define('BARE_BONES_SEO_VERSION', '1.0.12');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
+require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php'; // Front-end noindex engine
 require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
@@ -71,15 +72,12 @@ function bbseo_update_stored_plugin_size() {
  * Combined master activation setup routine.
  */
 function bare_bones_seo_master_activation() {
-    bare_bones_seo_activation_check();
     bbseo_create_404_table();
 
     delete_option('bbseo_plugin_disk_size');
     bbseo_update_stored_plugin_size();
 }
 register_activation_hook(__FILE__, 'bare_bones_seo_master_activation');
-
-function bare_bones_seo_activation_check() {}
 
 /**
  * Update calculation handler for updates and zip installations.
@@ -280,14 +278,14 @@ function bare_bones_seo_enqueue_admin_assets( $hook ) {
 			'bare-bones-seo-admin-css',
 			plugins_url( 'assets/admin-style.css', __FILE__ ),
 			array(),
-			'1.0.4'
+			BARE_BONES_SEO_VERSION
 		);
 
 		wp_enqueue_script(
 			'bare-bones-seo-admin-js',
 			plugins_url( 'assets/admin-script.js', __FILE__ ),
 			array( 'jquery' ),
-			'1.0.4',
+			BARE_BONES_SEO_VERSION,
 			true
 		);
 	}
@@ -440,5 +438,7 @@ add_filter( 'wp_sitemaps_add_provider', function( $provider, $name ) {
 /**
  * Initialize Single-File Over-The-Air Update Engine.
  */
-require_once BARE_BONES_SEO_PATH . 'includes/github-updater.php';
-new BBSEO_GitHub_Updater(__FILE__, 'charltondigital/bare-bones-seo');
+if ( is_admin() || wp_doing_cron() ) {
+    require_once BARE_BONES_SEO_PATH . 'includes/github-updater.php';
+    new BBSEO_GitHub_Updater(__FILE__, 'charltondigital/bare-bones-seo');
+}
