@@ -56,12 +56,6 @@ add_filter( 'wp_robots', 'bare_bones_seo_apply_noindex' );
 function bare_bones_seo_current_section_keys() {
 	$keys = array();
 
-	if ( is_404() ) {
-		$keys[] = '404';
-	}
-	if ( is_search() ) {
-		$keys[] = 'search';
-	}
 	if ( is_date() ) {
 		$keys[] = 'date';
 	}
