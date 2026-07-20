@@ -91,9 +91,21 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
     $index_options = array(
         'yes'                 => 'Yes',
         'no'                  => 'No',
-        'complicated_noindex' => 'Noindex Only',
         'complicated_sitemap' => 'Remove from Sitemap Only',
     );
+
+    // Ceiling rule: the site-level setting for this post type caps how visible
+    // this page can be. Offer only states at or below it, and show the effective
+    // (clamped) state as selected.
+    $site_state      = bare_bones_seo_get_site_state($post->post_type);
+    $effective_state = bare_bones_seo_get_effective_post_state($post->ID);
+
+    $allowed_options = array();
+    foreach ($index_options as $value => $label) {
+        if (bare_bones_seo_more_restrictive($site_state, $value) === $value) {
+            $allowed_options[$value] = $label;
+        }
+    }
 
     // Description placeholder: 2 blank lines when empty so preview box doesn't collapse
     $desc_placeholder_style = 'min-height: 2.5em;';
@@ -154,19 +166,28 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 </button>
                 <div id="<?php echo esc_attr($uid); ?>-indexing" style="display:none; padding:14px; border-top:1px solid #ddd;">
                     <p style="font-size:12px; font-weight:600; color:#444; margin:0 0 10px;">Should this page be indexed by Google?</p>
-                    <?php foreach ($index_options as $value => $label) : ?>
+                    <?php if ($site_state === 'no') : ?>
+                        <div style="background:#f0f6fc; border-left:3px solid #72aee6; padding:8px 12px; font-size:12px; color:#1d2327; border-radius:2px; margin-bottom:10px;">
+                            This section is set to <strong>Noindex</strong> at the site level, so this page is noindexed regardless. Change it on the Indexation tab.
+                        </div>
+                    <?php elseif ($site_state === 'complicated_sitemap') : ?>
+                        <div style="background:#f0f6fc; border-left:3px solid #72aee6; padding:8px 12px; font-size:12px; color:#1d2327; border-radius:2px; margin-bottom:10px;">
+                            This section is <strong>removed from the sitemap</strong> at the site level. Page settings can only add noindex.
+                        </div>
+                    <?php endif; ?>
+                    <?php foreach ($allowed_options as $value => $label) : ?>
                         <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; cursor:pointer;">
                             <input type="radio"
                                    name="bb_seo_should_index_<?php echo esc_attr($post->ID); ?>"
                                    class="bb-index-radio"
                                    data-uid="<?php echo esc_attr($uid); ?>"
                                    value="<?php echo esc_attr($value); ?>"
-                                   <?php checked($index_status, $value); ?>>
+                                   <?php checked($effective_state, $value); ?>>
                             <?php echo esc_html($label); ?>
                         </label>
                     <?php endforeach; ?>
                     <div id="<?php echo esc_attr($uid); ?>-index-warning"
-                         style="display:<?php echo ($index_status !== 'yes') ? 'block' : 'none'; ?>; background:#fff5f5; border-left:3px solid #dc3232; padding:8px 12px; font-size:12px; color:#dc3232; border-radius:2px; margin-top:10px;">
+                         style="display:<?php echo ($effective_state === 'no') ? 'block' : 'none'; ?>; background:#fff5f5; border-left:3px solid #dc3232; padding:8px 12px; font-size:12px; color:#dc3232; border-radius:2px; margin-top:10px;">
                         ⚠️ This page is currently hidden from Google.
                     </div>
                 </div>
