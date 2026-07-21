@@ -148,7 +148,6 @@ function bare_bones_seo_register_menus() {
 function bare_bones_seo_render_dashboard() {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
     
-    // Define all tabs and their callback functions
     $tabs = array(
         'overview'    => array('label' => __('Overview', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_overview_screen'),
         'indexation'  => array('label' => __('Indexation', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_global_map_screen'),
