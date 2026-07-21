@@ -26,7 +26,6 @@ function bare_bones_seo_render_tracking_screen() {
 }
 
 function bare_bones_seo_render_tracking_table($scripts, $input_name, $is_global = true) {
-    // This wrapper is key for the JS to work in both global and page-level screens
     ?>
     <div class="bbs-tracking-manager-wrapper">
         <table class="wp-list-table widefat fixed striped">
@@ -48,9 +47,7 @@ function bare_bones_seo_render_tracking_table($scripts, $input_name, $is_global 
         </table>
         
         <div style="margin-top:10px;">
-            <button type="button" class="button bb-add-script-row" 
-                    data-input-name="<?php echo esc_attr($input_name); ?>" 
-                    data-global="<?php echo $is_global ? '1' : '0'; ?>">+ Add Script</button>
+            <button type="button" class="button bb-add-script-row" data-input-name="<?php echo esc_attr($input_name); ?>">+ Add Script</button>
         </div>
 
         <script type="text/template" id="tpl-<?php echo esc_attr($input_name); ?>">
