@@ -281,3 +281,31 @@ function bbToggleRow(postId) {
         if (chevron) chevron.style.transform = 'rotate(90deg)';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Adding Rows
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-bbs-row')) {
+            const btn = e.target.closest('.add-bbs-row');
+            const container = document.getElementById(btn.dataset.target);
+            const tbody = container.querySelector('.bbs-tracking-rows');
+            const template = container.querySelector('.bbs-row-template').innerHTML;
+            
+            // Generate a unique index based on current row count
+            const index = tbody.children.length;
+            const newRowHtml = template.replace(/{{INDEX}}/g, index);
+            
+            tbody.insertAdjacentHTML('beforeend', newRowHtml);
+        }
+    });
+
+    // Handle Removing Rows
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.bbs-remove-row')) {
+            const row = e.target.closest('tr');
+            if (confirm('Are you sure you want to remove this script?')) {
+                row.remove();
+            }
+        }
+    });
+});
