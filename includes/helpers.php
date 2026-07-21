@@ -59,7 +59,8 @@ function bare_bones_seo_update_page_meta( $post_id, $data ) {
 }
 
 /**
- * Log 404 errors in database
+ * Log 404s. Stores the request path only (no host — it's always this site,
+ * and it's rebuilt with home_url() on display); skips common bot/scanner probes.
  */
 function bbseo_log_404_error() {
 	if ( ! is_404() ) {
@@ -69,23 +70,21 @@ function bbseo_log_404_error() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'bbseo_404_logs';
 
-	$requested_url = esc_url_raw( ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
-	$referer       = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( $_SERVER['HTTP_REFERER'] ) : '';
+	$path    = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+	$referer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
 
-	// Simple exclusion array for common vulnerability scanner paths
+	// Skip bot/scanner probe noise so the table stays lean.
 	$bot_patterns = array(
-		'.env', 'wp-config', 'xmlrpc.php', 'wp-admin', '.git', 'eval-stdin.php', 
-		'phpunit', 'autodiscover.xml', '.well-known', 'wp-login.php', '.php'
+		'.env', 'wp-config', 'xmlrpc.php', 'wp-admin', '.git', 'eval-stdin.php',
+		'phpunit', 'autodiscover.xml', '.well-known', 'wp-login.php', '.php',
 	);
-
 	foreach ( $bot_patterns as $pattern ) {
-		if ( false !== stripos( $requested_url, $pattern ) ) {
-			return; // Skip logging bot-probing noise
+		if ( false !== stripos( $path, $pattern ) ) {
+			return;
 		}
 	}
 
-	// Check if already logged
-	$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id, hits FROM `$table_name` WHERE url = %s", $requested_url ) );
+	$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id, hits FROM `$table_name` WHERE url = %s", $path ) );
 
 	if ( $existing ) {
 		$wpdb->update(
@@ -103,7 +102,7 @@ function bbseo_log_404_error() {
 		$wpdb->insert(
 			$table_name,
 			array(
-				'url'           => $requested_url,
+				'url'           => $path,
 				'hits'          => 1,
 				'last_accessed' => current_time( 'mysql' ),
 				'referer'       => $referer,
