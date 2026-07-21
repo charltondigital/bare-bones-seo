@@ -71,7 +71,9 @@ function bare_bones_seo_render_dashboard() {
     );
     ?>
     <div class="wrap" style="max-width: 1200px;">
-        <h1><?php echo bare_bones_seo_skull_icon(24); ?> Bare Bones SEO</h1>
+        <?php // Marker hoists admin notices ABOVE the title instead of below it. ?>
+        <div class="wp-header-end"></div>
+        <h1 style="font-size:46px; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48); ?> Bare Bones SEO</h1>
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
             <?php foreach ($tabs as $id => $t) : ?>
                 <a href="?page=bare-bones-seo<?php echo ($id == 'overview' ? '' : '&tab='.$id); ?>" class="nav-tab <?php echo ($active_tab == $id ? 'nav-tab-active' : ''); ?>"><?php echo $t['l']; ?></a>
@@ -85,48 +87,13 @@ function bare_bones_seo_render_dashboard() {
             <?php endforeach; ?>
         </div>
     </div>
-    <script>
-    jQuery(document).ready(function($){
-        // Tab Switching
-        $('.nav-tab-wrapper a').on('click', function(e){
-            if (window.location.search.indexOf('page=bare-bones-seo') === -1) return;
-            e.preventDefault();
-            var tabId = $(this).attr('href').split('tab=')[1] || 'overview';
-            window.history.pushState(null, null, $(this).attr('href'));
-            $('.nav-tab').removeClass('nav-tab-active'); $(this).addClass('nav-tab-active');
-            $('.bbseo-tab-content').hide(); $('#bbseo-tab-' + tabId).show();
-        });
-        // Add Tracking Script
-        $(document).on('click', '.bb-add-script-row', function(e){
-            e.preventDefault();
-            var name = $(this).attr('data-input-name');
-            var $tbody = $(this).closest('.bbs-tracking-manager').find('tbody.bb-tracking-rows');
-            var $template = $('#tpl-' + name);
-            if ($template.length) {
-                var html = $template.html().replace(/{{INDEX}}/g, Date.now());
-                $tbody.append(html);
-            }
-        });
-        // Remove Tracking Script
-        $(document).on('click', '.bb-remove-row', function(e){
-            e.preventDefault(); if(confirm('Delete script?')) $(this).closest('tr').remove();
-        });
-        // Section Toggles
-        $(document).on('click', '.bb-section-toggle', function(e){
-            e.preventDefault();
-            var target = $(this).attr('data-target');
-            var $target = $(document.getElementById(target));
-            var $icon = $(this).find('.bb-toggle-icon');
-            if($target.is(':visible')) { $target.hide(); $icon.text('+'); } else { $target.show(); $icon.text('−'); }
-        });
-    });
-    </script>
     <?php
 }
 
 add_action('admin_enqueue_scripts', function($hook) {
     if(strpos($hook, 'bare-bones-seo') !== false || in_array($hook, array('post.php', 'post-new.php'))) {
         wp_enqueue_style('bbs-css', plugins_url('assets/admin-style.css', __FILE__), array(), BARE_BONES_SEO_VERSION);
+        wp_enqueue_script('bbs-js', plugins_url('assets/admin-script.js', __FILE__), array('jquery'), BARE_BONES_SEO_VERSION, true);
     }
 });
 
