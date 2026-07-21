@@ -2,7 +2,6 @@
 /**
  * Tracking Scripts Tab — Bare Bones SEO
  */
-
 if (!defined('ABSPATH')) exit;
 
 function bare_bones_seo_render_tracking_screen() {
@@ -11,7 +10,6 @@ function bare_bones_seo_render_tracking_screen() {
         update_option(BARE_BONES_SEO_OPTION_TRACKING, bare_bones_seo_sanitize_tracking_scripts($scripts));
         echo '<div class="updated"><p>Tracking scripts updated.</p></div>';
     }
-
     $scripts = get_option(BARE_BONES_SEO_OPTION_TRACKING, array());
     ?>
     <div style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; margin-top:20px;">
@@ -27,7 +25,7 @@ function bare_bones_seo_render_tracking_screen() {
 
 function bare_bones_seo_render_tracking_table($scripts, $input_name, $is_global = true) {
     ?>
-    <div class="bbs-tracking-manager-wrapper">
+    <div class="bbs-tracking-manager">
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -45,11 +43,9 @@ function bare_bones_seo_render_tracking_table($scripts, $input_name, $is_global 
                 <?php endforeach; endif; ?>
             </tbody>
         </table>
-        
         <div style="margin-top:10px;">
             <button type="button" class="button bb-add-script-row" data-input-name="<?php echo esc_attr($input_name); ?>">+ Add Script</button>
         </div>
-
         <script type="text/template" id="tpl-<?php echo esc_attr($input_name); ?>">
             <?php bare_bones_seo_render_row('{{INDEX}}', array(), $input_name, $is_global); ?>
         </script>
@@ -65,26 +61,9 @@ function bare_bones_seo_render_row($index, $data, $input_name, $is_global) {
     <tr>
         <td><input type="text" name="<?php echo $name; ?>[label]" value="<?php echo esc_attr($label); ?>" class="widefat"></td>
         <td><textarea name="<?php echo $name; ?>[code]" rows="2" class="widefat code" style="font-size:11px;"><?php echo esc_textarea($code); ?></textarea></td>
-        <td>
-            <select name="<?php echo $name; ?>[loc]">
-                <option value="head" <?php selected($loc, 'head');?>>Head</option>
-                <option value="footer" <?php selected($loc, 'footer');?>>Footer</option>
-            </select>
-        </td>
-        <td>
-            <select name="<?php echo $name; ?>[status]">
-                <option value="active" <?php selected($status, 'active');?>>Active</option>
-                <option value="paused" <?php selected($status, 'paused');?>>Paused</option>
-            </select>
-        </td>
-        <?php if ($is_global): ?>
-        <td>
-            <select name="<?php echo $name; ?>[scope]">
-                <option value="all" <?php selected($scope, 'all');?>>Entire Site</option>
-                <option value="home" <?php selected($scope, 'home');?>>Home Only</option>
-            </select>
-        </td>
-        <?php endif; ?>
+        <td><select name="<?php echo $name; ?>[loc]"><option value="head" <?php selected($loc, 'head');?>>Head</option><option value="footer" <?php selected($loc, 'footer');?>>Footer</option></select></td>
+        <td><select name="<?php echo $name; ?>[status]"><option value="active" <?php selected($status, 'active');?>>Active</option><option value="paused" <?php selected($status, 'paused');?>>Paused</option></select></td>
+        <?php if ($is_global): ?><td><select name="<?php echo $name; ?>[scope]"><option value="all" <?php selected($scope, 'all');?>>Entire Site</option><option value="home" <?php selected($scope, 'home');?>>Home Only</option></select></td><?php endif; ?>
         <td><button type="button" class="bb-remove-row" style="color:#a00; border:none; background:none; cursor:pointer; font-size:20px;">&times;</button></td>
     </tr>
     <?php
@@ -93,20 +72,10 @@ function bare_bones_seo_render_row($index, $data, $input_name, $is_global) {
 function bare_bones_seo_sanitize_tracking_scripts($input) {
     if (!is_array($input)) return array();
     $clean = array();
-    $allowed = array(
-        'script'   => array('src' => true, 'type' => true, 'async' => true, 'defer' => true, 'id' => true, 'crossorigin' => true),
-        'noscript' => array(),
-        'meta'     => array('name' => true, 'content' => true, 'charset' => true, 'property' => true, 'http-equiv' => true)
-    );
+    $allowed = array('script' => array('src' => true, 'type' => true, 'async' => true, 'defer' => true, 'id' => true, 'crossorigin' => true), 'noscript' => array(), 'meta' => array('name' => true, 'content' => true, 'charset' => true, 'property' => true, 'http-equiv' => true));
     foreach ($input as $row) {
         if (empty($row['code'])) continue;
-        $clean[] = array(
-            'label'  => sanitize_text_field($row['label']),
-            'code'   => wp_kses($row['code'], $allowed),
-            'loc'    => in_array($row['loc'], array('head', 'footer')) ? $row['loc'] : 'head',
-            'status' => in_array($row['status'], array('active', 'paused')) ? $row['status'] : 'active',
-            'scope'  => isset($row['scope']) ? sanitize_key($row['scope']) : 'all'
-        );
+        $clean[] = array('label' => sanitize_text_field($row['label']), 'code' => wp_kses($row['code'], $allowed), 'loc' => $row['loc'], 'status' => $row['status'], 'scope' => $row['scope'] ?? 'all');
     }
     return $clean;
 }
