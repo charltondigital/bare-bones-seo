@@ -48,8 +48,10 @@ function bare_bones_seo_update_page_meta( $post_id, $data ) {
 		update_post_meta( $post_id, BARE_BONES_SEO_META_DESC, sanitize_text_field( $data['desc'] ) );
 	}
 	if ( isset( $data['schema'] ) ) {
-		// Keep raw text input for JSON schema, but run it through safe post-filtering
-		update_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, wp_kses_post( $data['schema'] ) );
+		// Store raw JSON. wp_kses_post is for HTML and would corrupt it; safety
+		// is enforced on output, where it's validated and re-encoded with tag
+		// escaping. update_post_meta unslashes for us.
+		update_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, trim( (string) $data['schema'] ) );
 	}
 	if ( isset( $data['should_index'] ) ) {
 		update_post_meta( $post_id, BARE_BONES_SEO_META_INDEX, sanitize_key( $data['should_index'] ) );
