@@ -1,47 +1,29 @@
 <?php
 /**
  * Plugin Name: Bare Bones SEO
- * Plugin URI:   https://github.com/charltondigital/bare-bones-seo
- * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     0.1.0
- * Author:       Charlton Digital
- * License:      GPLv2 or later
- * Text Domain: bare-bones-seo
- *
- * @package BareBonesSEO
+ * Author: Charlton Digital
+ * Version: 0.1.0
  */
 
-if (!defined('ABSPATH')) {
-    exit;
-}
+if (!defined('ABSPATH')) { exit; }
 
-// Post meta keys
+// Constants
 define('BARE_BONES_SEO_META_TITLE',  '_bare_bones_seo_title');
 define('BARE_BONES_SEO_META_DESC',   '_bare_bones_seo_desc');
 define('BARE_BONES_SEO_META_SCHEMA', '_bare_bones_seo_schema');
 define('BARE_BONES_SEO_META_INDEX',  '_bare_bones_seo_should_index');
 define('BARE_BONES_SEO_META_TRACKING', '_bare_bones_seo_page_scripts');
-
-// Option keys
 define('BARE_BONES_SEO_OPTION_GLOBAL_MAP', 'bare_bones_seo_global_map');
 define('BARE_BONES_SEO_OPTION_TRACKING', 'bare_bones_seo_tracking_scripts');
-
-// Nonce actions
-define('BARE_BONES_SEO_NONCE_PAGE',       'bare_bones_seo_save_nonce');
+define('BARE_BONES_SEO_NONCE_PAGE', 'bare_bones_seo_save_nonce');
 define('BARE_BONES_SEO_NONCE_GLOBAL_MAP', 'bb_global_map_nonce');
-define('BARE_BONES_SEO_NONCE_BULK_AJAX',  'bb_bulk_manager_nonce');
-
-// AJAX action
+define('BARE_BONES_SEO_NONCE_BULK_AJAX', 'bb_bulk_manager_nonce');
 define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
-
-// Plugin paths
-define('BARE_BONES_SEO_PATH',    plugin_dir_path(__FILE__));
-define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
+define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
+define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.0');
 
-/**
- * 1. Load Core Includes
- */
+// Load Core
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
 require_once BARE_BONES_SEO_PATH . 'includes/indexation-resolver.php';
 require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php';
@@ -49,11 +31,7 @@ require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php';
 require_once BARE_BONES_SEO_PATH . 'includes/page-meta-output.php';
 require_once BARE_BONES_SEO_PATH . 'includes/redirect-engine.php';
 
-/**
- * 2. Load Admin Files
- * We load Tracking FIRST so its table rendering functions are available 
- * to the Page Settings and Bulk Manager screens.
- */
+// Load Admin Logic
 require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php'; 
 require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
@@ -63,76 +41,10 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
 
-/**
- * Calculate and save the plugin size to the database.
- */
-function bbseo_update_stored_plugin_size() {
-    $plugin_dir = plugin_dir_path(__FILE__);
-    $total_size = 0;
-    if (is_dir($plugin_dir)) {
-        $directory = new RecursiveDirectoryIterator($plugin_dir, FilesystemIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($directory);
-        foreach ($files as $file) {
-            $total_size += $file->getSize();
-        }
-    }
-    $formatted_size = size_format($total_size, 1);
-    update_option('bbseo_plugin_disk_size', $formatted_size);
-}
-
-/**
- * Combined master activation setup routine.
- */
-function bare_bones_seo_master_activation() {
-    bbseo_create_404_table();
-    delete_option('bbseo_plugin_disk_size');
-    bbseo_update_stored_plugin_size();
-}
-register_activation_hook(__FILE__, 'bare_bones_seo_master_activation');
-
-/**
- * Update calculation handler for updates and zip installations.
- */
-function bbseo_update_size_on_upgrade($upgrader_object, $options) {
-    if (isset($options['action']) && $options['action'] === 'update' && $options['type'] === 'plugin') {
-        if (isset($options['plugins']) && is_array($options['plugins'])) {
-            foreach ($options['plugins'] as $plugin) {
-                if (strpos($plugin, 'bare-bones-seo.php') !== false) {
-                    delete_option('bbseo_plugin_disk_size');
-                    bbseo_update_stored_plugin_size();
-                    break;
-                }
-            }
-        }
-    }
-}
-add_action('upgrader_process_complete', 'bbseo_update_size_on_upgrade', 10, 2);
-
-/**
- * Return inline skull SVG for use in admin headings.
- */
-function bare_bones_seo_skull_icon($size = 18) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204" width="' . intval($size) . '" height="' . intval($size) . '" style="vertical-align:middle; margin-right:4px; position:relative; top:-1px;" aria-hidden="true">'
-        . '<path fill="currentColor" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/>'
-        . '</svg>';
-}
-
-/**
- * Admin menu registration.
- */
-add_action('admin_menu', 'bare_bones_seo_register_menus');
-function bare_bones_seo_register_menus() {
+// Menu Registration
+add_action('admin_menu', function() {
     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204"><path fill="white" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/></svg>';
-    add_menu_page(
-        'Bare Bones SEO',
-        'Bare Bones SEO',
-        'manage_options',
-        'bare-bones-seo',
-        'bare_bones_seo_render_dashboard',
-        'data:image/svg+xml;base64,' . base64_encode($svg),
-        24.6
-    );
-
+    add_menu_page('Bare Bones SEO', 'Bare Bones SEO', 'manage_options', 'bare-bones-seo', 'bare_bones_seo_render_dashboard', 'data:image/svg+xml;base64,' . base64_encode($svg), 24.6);
     add_submenu_page('bare-bones-seo', 'Overview', 'Overview', 'manage_options', 'bare-bones-seo', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', 'Indexation', 'Indexation', 'manage_options', 'bare-bones-seo&tab=indexation', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', 'Page Meta', 'Page Meta', 'manage_options', 'bare-bones-seo&tab=bulk', 'bare_bones_seo_render_dashboard');
@@ -140,150 +52,85 @@ function bare_bones_seo_register_menus() {
     add_submenu_page('bare-bones-seo', '404 Monitor', '404 Monitor', 'manage_options', 'bare-bones-seo&tab=404-monitor', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', 'Tracking', 'Tracking', 'manage_options', 'bare-bones-seo&tab=tracking', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', 'Other Tools', 'Other Tools', 'manage_options', 'bare-bones-seo&tab=other-tools', 'bare_bones_seo_render_dashboard');
+});
+
+function bare_bones_seo_skull_icon($size = 18) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204" width="' . intval($size) . '" height="' . intval($size) . '" style="vertical-align:middle; margin-right:4px;" aria-hidden="true"><path fill="currentColor" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/></svg>';
 }
 
-/**
- * Render the unified plugin dashboard.
- */
 function bare_bones_seo_render_dashboard() {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
-    
     $tabs = array(
-        'overview'    => array('label' => __('Overview', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_overview_screen'),
-        'indexation'  => array('label' => __('Indexation', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_global_map_screen'),
-        'bulk'        => array('label' => __('Page Meta', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_bulk_manager_screen'),
-        'redirects'   => array('label' => __('301 Redirects', 'bare-bones-seo'), 'callback' => 'render_bare_bones_redirects_tab'),
-        '404-monitor' => array('label' => __('404 Monitor', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_404_monitor_screen'),
-        'tracking'    => array('label' => __('Tracking', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_tracking_screen'),
-        'other-tools' => array('label' => __('Other Tools', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_other_tools_screen'),
+        'overview' => array('l' => 'Overview', 'c' => 'bare_bones_seo_render_overview_screen'),
+        'indexation' => array('l' => 'Indexation', 'c' => 'bare_bones_seo_render_global_map_screen'),
+        'bulk' => array('l' => 'Page Meta', 'c' => 'bare_bones_seo_render_bulk_manager_screen'),
+        'redirects' => array('l' => '301 Redirects', 'c' => 'render_bare_bones_redirects_tab'),
+        '404-monitor' => array('l' => '404 Monitor', 'c' => 'bare_bones_seo_render_404_monitor_screen'),
+        'tracking' => array('l' => 'Tracking', 'c' => 'bare_bones_seo_render_tracking_screen'),
+        'other-tools' => array('l' => 'Other Tools', 'c' => 'bare_bones_seo_render_other_tools_screen'),
     );
     ?>
-    <div class="wrap" style="max-width: 1200px; margin-top: 0; padding-top: 0;">
-        <div class="bbseo-header-wrapper" style="margin-top: 15px; margin-bottom: 15px;">
-            <h1 style="display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; font-size: 23px; font-weight: 400;">
-                <?php echo bare_bones_seo_skull_icon(24); ?> Bare Bones SEO
-            </h1>
-        </div>
-
-        <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
-            <?php foreach ($tabs as $id => $tab) : 
-                $url = ($id === 'overview') ? '?page=bare-bones-seo' : '?page=bare-bones-seo&tab=' . $id;
-                $active_class = ($active_tab === $id) ? 'nav-tab-active' : '';
-                ?>
-                <a href="<?php echo esc_url($url); ?>" class="nav-tab <?php echo $active_class; ?>"><?php echo esc_html($tab['label']); ?></a>
+    <div class="wrap" style="max-width: 1200px;">
+        <h1><?php echo bare_bones_seo_skull_icon(24); ?> Bare Bones SEO</h1>
+        <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
+            <?php foreach ($tabs as $id => $t) : ?>
+                <a href="?page=bare-bones-seo<?php echo ($id == 'overview' ? '' : '&tab='.$id); ?>" class="nav-tab <?php echo ($active_tab == $id ? 'nav-tab-active' : ''); ?>"><?php echo $t['l']; ?></a>
             <?php endforeach; ?>
         </h2>
-
         <div id="bbseo-tabs-container">
-            <?php foreach ($tabs as $id => $tab) : 
-                $display = ($active_tab === $id) ? 'block' : 'none';
-                ?>
-                <div id="bbseo-tab-<?php echo esc_attr($id); ?>" class="bbseo-tab-content" style="display: <?php echo $display; ?>;">
-                    <?php 
-                    if (function_exists($tab['callback'])) {
-                        call_user_func($tab['callback']);
-                    }
-                    ?>
+            <?php foreach ($tabs as $id => $t) : ?>
+                <div id="bbseo-tab-<?php echo $id; ?>" class="bbseo-tab-content" style="display:<?php echo ($active_tab == $id ? 'block' : 'none'); ?>;">
+                    <?php if (function_exists($t['c'])) { call_user_func($t['c']); } ?>
                 </div>
             <?php endforeach; ?>
         </div>
     </div>
+    <script>
+    jQuery(document).ready(function($){
+        // Tab Switching
+        $('.nav-tab-wrapper a').on('click', function(e){
+            if (window.location.search.indexOf('page=bare-bones-seo') === -1) return;
+            e.preventDefault();
+            var tabId = $(this).attr('href').split('tab=')[1] || 'overview';
+            window.history.pushState(null, null, $(this).attr('href'));
+            $('.nav-tab').removeClass('nav-tab-active'); $(this).addClass('nav-tab-active');
+            $('.bbseo-tab-content').hide(); $('#bbseo-tab-' + tabId).show();
+        });
+        // Add Tracking Script
+        $(document).on('click', '.bb-add-script-row', function(e){
+            e.preventDefault();
+            var name = $(this).attr('data-input-name');
+            var $tbody = $(this).closest('.bbs-tracking-manager').find('tbody.bb-tracking-rows');
+            var $template = $('#tpl-' + name);
+            if ($template.length) {
+                var html = $template.html().replace(/{{INDEX}}/g, Date.now());
+                $tbody.append(html);
+            }
+        });
+        // Remove Tracking Script
+        $(document).on('click', '.bb-remove-row', function(e){
+            e.preventDefault(); if(confirm('Delete script?')) $(this).closest('tr').remove();
+        });
+        // Section Toggles
+        $(document).on('click', '.bb-section-toggle', function(e){
+            e.preventDefault();
+            var target = $(this).attr('data-target');
+            var $target = $(document.getElementById(target));
+            var $icon = $(this).find('.bb-toggle-icon');
+            if($target.is(':visible')) { $target.hide(); $icon.text('+'); } else { $target.show(); $icon.text('−'); }
+        });
+    });
+    </script>
     <?php
 }
 
-/**
- * Enqueue admin scripts and styles.
- */
-add_action( 'admin_enqueue_scripts', 'bare_bones_seo_enqueue_admin_assets' );
-function bare_bones_seo_enqueue_admin_assets( $hook ) {
-    global $post_type;
-    $is_post_editor = false;
-    if ( in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
-        $public_types = get_post_types( array( 'public' => true ) );
-        if ( in_array( $post_type, $public_types, true ) ) {
-            $is_post_editor = true;
-        }
+add_action('admin_enqueue_scripts', function($hook) {
+    if(strpos($hook, 'bare-bones-seo') !== false || in_array($hook, array('post.php', 'post-new.php'))) {
+        wp_enqueue_style('bbs-css', plugins_url('assets/admin-style.css', __FILE__), array(), BARE_BONES_SEO_VERSION);
     }
-    $is_seo_dashboard = ( strpos( $hook, 'bare-bones-seo' ) !== false );
-    if ( $is_post_editor || $is_seo_dashboard ) {
-        wp_enqueue_style('bare-bones-seo-admin-css', plugins_url( 'assets/admin-style.css', __FILE__ ), array(), BARE_BONES_SEO_VERSION);
-        wp_enqueue_script('bare-bones-seo-admin-js', plugins_url( 'assets/admin-script.js', __FILE__ ), array( 'jquery' ), BARE_BONES_SEO_VERSION, true);
-    }
-}
+});
 
-/**
- * Create custom 404 logging table.
- */
-function bbseo_create_404_table() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'bbseo_404_logs';
-    $charset_collate = $wpdb->get_charset_collate();
-    $sql = "CREATE TABLE $table_name (
-        id bigint(20) NOT NULL AUTO_INCREMENT,
-        url varchar(2048) NOT NULL,
-        referer varchar(2048) NOT NULL,
-        hits int(11) DEFAULT 1 NOT NULL,
-        last_accessed datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-        PRIMARY KEY  (id),
-        KEY url (url(191)),
-        KEY last_accessed (last_accessed)
-    ) $charset_collate;";
-    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-    dbDelta($sql);
-    if (!wp_next_scheduled('bbseo_daily_cleanup_404_logs')) {
-        wp_schedule_event(time(), 'daily', 'bbseo_daily_cleanup_404_logs');
-    }
-}
-
-/**
- * Clear daily scheduled events on deactivation.
- */
-function bbseo_deactivation_cleanup() {
-    wp_clear_scheduled_hook('bbseo_daily_cleanup_404_logs');
-}
-register_deactivation_hook(__FILE__, 'bbseo_deactivation_cleanup');
-
-/**
- * Automatically prune logs older than 90 days.
- */
-add_action('bbseo_daily_cleanup_404_logs', 'bbseo_prune_old_404_logs');
-function bbseo_prune_old_404_logs() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'bbseo_404_logs';
-    $wpdb->query( "DELETE FROM $table_name WHERE last_accessed < DATE_SUB(NOW(), INTERVAL 90 DAY)" );
-}
-
-/**
- * Intercept WordPress template redirects on 404 to track hits over a rolling 90 days.
- */
-add_action('template_redirect', 'bbseo_log_old_slug_redirect_90_days', 5);
-function bbseo_log_old_slug_redirect_90_days() {
-    if (is_404() && '' !== get_query_var('name')) {
-        global $wpdb;
-        $query_slug = get_query_var('name');
-        $post_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_wp_old_slug' AND meta_value = %s LIMIT 1",
-            $query_slug
-        ));
-        if ($post_id) {
-            $meta_key = '_wp_old_slug_hits_' . sanitize_key($query_slug);
-            $hits = get_post_meta($post_id, $meta_key, true);
-            if (!is_array($hits)) { $hits = array(); }
-            $today = gmdate('Y-m-d');
-            $hits[$today] = isset($hits[$today]) ? (int) $hits[$today] + 1 : 1;
-            $cutoff = strtotime('-90 days');
-            foreach ($hits as $date => $count) {
-                if (strtotime($date) < $cutoff) { unset($hits[$date]); }
-            }
-            update_post_meta($post_id, $meta_key, $hits);
-        }
-    }
-}
-
-/**
- * Initialize Single-File Over-The-Air Update Engine.
- */
-if ( is_admin() || wp_doing_cron() ) {
+if (is_admin() || wp_doing_cron()) {
     require_once BARE_BONES_SEO_PATH . 'includes/github-updater.php';
     new BBSEO_GitHub_Updater(__FILE__, 'charltondigital/bare-bones-seo');
 }
