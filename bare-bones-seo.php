@@ -105,14 +105,8 @@ add_action('upgrader_process_complete', 'bbseo_update_size_on_upgrade', 10, 2);
  * Return inline skull SVG for use in admin headings.
  */
 function bare_bones_seo_skull_icon($size = 18) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="' . $size . '" height="' . $size . '" style="vertical-align:middle; margin-right:4px; position:relative; top:-1px;" aria-hidden="true">'
-        . '<path fill="currentColor" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z"/>'
-        . '<ellipse cx="7.5" cy="8" rx="1.8" ry="2" fill="white"/>'
-        . '<ellipse cx="12.5" cy="8" rx="1.8" ry="2" fill="white"/>'
-        . '<rect x="9.2" y="10" width="1.6" height="1.5" rx="0.4" fill="white"/>'
-        . '<rect x="6" y="15.5" width="1.5" height="1.5" rx="0.3" fill="currentColor"/>'
-        . '<rect x="8.5" y="15.5" width="1.5" height="1.5" rx="0.3" fill="currentColor"/>'
-        . '<rect x="12" y="15.5" width="1.5" height="1.5" rx="0.3" fill="currentColor"/>'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204" width="' . intval($size) . '" height="' . intval($size) . '" style="vertical-align:middle; margin-right:4px; position:relative; top:-1px;" aria-hidden="true">'
+        . '<path fill="currentColor" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/>'
         . '</svg>';
 }
 
@@ -121,8 +115,7 @@ function bare_bones_seo_skull_icon($size = 18) {
  */
 add_action('admin_menu', 'bare_bones_seo_register_menus');
 function bare_bones_seo_register_menus() {
-    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="white" fill-rule="evenodd" d="M10 1C6.13 1 3 4.13 3 8c0 2.38 1.19 4.47 3 5.74V14.5c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V13.74C15.81 12.47 17 10.38 17 8c0-3.87-3.13-7-7-7z M5.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M10.7 6.2c0-.99.81-1.8 1.8-1.8s1.8.81 1.8 1.8-.81 1.8-1.8 1.8-1.8-.81-1.8-1.8z M9.2 10c0-.28.22-.5.5-.5h.6c.28 0 .5.22.5.5v.8c0 .28-.22.5-.5.5h-.6c-.28 0-.5-.22-.5-.5V10z M6 15.5h1.5v1.5H6z M8.5 15.5H10v1.5H8.5z M12 15.5h1.5v1.5H12z"/></svg>';
-
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204"><path fill="white" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/></svg>';
     add_menu_page(
         'Bare Bones SEO',
         'Bare Bones SEO',
