@@ -19,7 +19,7 @@ jQuery(document).ready(function($) {
     $(document).on('click', '.bb-add-script-row', function(e) {
         e.preventDefault();
         var inputName = $(this).data('input-name');
-        var $wrapper = $(this).closest('.bbs-tracking-manager-wrapper');
+        var $wrapper = $(this).closest('.bbs-tracking-manager');
         var $tbody = $wrapper.find('.bb-tracking-rows');
         var $template = $('#tpl-' + inputName);
 
