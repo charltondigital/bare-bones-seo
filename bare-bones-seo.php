@@ -20,6 +20,8 @@ define('BARE_BONES_SEO_META_TITLE',  '_bare_bones_seo_title');
 define('BARE_BONES_SEO_META_DESC',   '_bare_bones_seo_desc');
 define('BARE_BONES_SEO_META_SCHEMA', '_bare_bones_seo_schema');
 define('BARE_BONES_SEO_META_INDEX',  '_bare_bones_seo_should_index');
+define('BARE_BONES_SEO_OPTION_TRACKING', 'bare_bones_seo_tracking_scripts');
+define('BARE_BONES_SEO_META_TRACKING',   '_bare_bones_seo_page_scripts');
 
 // Option keys
 define('BARE_BONES_SEO_OPTION_GLOBAL_MAP', 'bare_bones_seo_global_map');
@@ -51,6 +53,7 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php'; // New Redirect Manager Tab
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
+require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php';
 
 /**
  * Calculate and save the plugin size to the database.
@@ -216,6 +219,9 @@ function bare_bones_seo_render_dashboard() {
             <a href="?page=bare-bones-seo&tab=other-tools" class="nav-tab <?php echo $active_tab === 'other-tools' ? 'nav-tab-active' : ''; ?>">
                 <?php _e('Other Tools', 'bare-bones-seo'); ?>
             </a>
+	        <a href="?page=bare-bones-seo&tab=tracking" class="nav-tab <?php echo $active_tab === 'tracking' ? 'nav-tab-active' : ''; ?>">
+                <?php _e('Tracking', 'bare-bones-seo'); ?>
+            </a>
         </h2>
 
         <div class="bbseo-tab-content">
@@ -234,6 +240,9 @@ function bare_bones_seo_render_dashboard() {
                     break;
                 case '404-monitor':
                     bare_bones_seo_render_404_monitor_screen();
+                    break;
+				case 'tracking':
+                    bare_bones_seo_render_tracking_screen();
                     break;
                 case 'other-tools':
                     bare_bones_seo_render_other_tools_screen();
