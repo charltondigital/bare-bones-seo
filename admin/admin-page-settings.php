@@ -1,17 +1,15 @@
 <?php
 /**
- * Page-Level SEO Settings — Bare Bones SEO
- *
- * Shared render function used by both the meta box and bulk manager.
+ * Page-level SEO Settings UI — Bare Bones SEO
+ * 
+ * This file handles the Meta Box inside the Post Editor.
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-/**
- * Register meta box on all public post types.
- */
+// Register meta box on all public post types.
 add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
 function bare_bones_seo_register_meta_box() {
     $post_types = get_post_types(array('public' => true));
@@ -33,40 +31,28 @@ function bare_bones_seo_render_meta_box($post) {
 }
 
 /**
- * Shared field renderer.
+ * Shared field renderer for Meta Box and Bulk Manager
  */
 function bare_bones_seo_render_fields($post, $in_bulk = false) {
     $meta         = bare_bones_seo_get_page_meta($post->ID);
     $site_name    = html_entity_decode(get_bloginfo('name'), ENT_QUOTES, 'UTF-8');
-    $index_status = get_post_meta($post->ID, BARE_BONES_SEO_META_INDEX, true);
     $uid          = 'bb-' . $post->ID;
-
-    if ($index_status === '') { $index_status = 'yes'; }
-
-    $preview_title = $meta['title'] ? html_entity_decode($meta['title'], ENT_QUOTES, 'UTF-8') : html_entity_decode($post->post_title, ENT_QUOTES, 'UTF-8');
-
-    $site_state      = bare_bones_seo_get_site_state($post->post_type);
     $effective_state = bare_bones_seo_get_effective_post_state($post->ID);
+    $site_state      = bare_bones_seo_get_site_state($post->post_type);
 
-    $index_options = array('yes' => 'Yes', 'no' => 'No', 'complicated_sitemap' => 'Remove from Sitemap Only');
-    $allowed_options = array();
-    foreach ($index_options as $value => $label) {
-        if (bare_bones_seo_more_restrictive($site_state, $value) === $value) {
-            $allowed_options[$value] = $label;
-        }
-    }
+    $preview_title = $meta['title'] ? $meta['title'] : $post->post_title;
     ?>
 
-    <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; padding:<?php echo $in_bulk ? '0' : '8px 0'; ?>;">
+    <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; padding:10px 0;">
 
-        <!-- LEFT Column -->
+        <!-- LEFT Column: Controls -->
         <div>
-            <!-- Snippet Section -->
+            <!-- Snippet Builder -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
                 <button type="button" class="bb-section-toggle" aria-expanded="true" data-target="<?php echo $uid; ?>-snippet" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Snippet Builder <span class="bb-toggle-icon">−</span></button>
                 <div id="<?php echo $uid; ?>-snippet" style="padding:14px; border-top:1px solid #ddd;">
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">SEO Title</label>
-                    <input type="text" name="bb_seo_title_<?php echo $post->ID; ?>" class="bb-title-input" data-uid="<?php echo $uid; ?>" value="<?php echo esc_attr($meta['title']); ?>" placeholder="<?php echo esc_attr($post->post_title); ?>" style="width:100%; margin-bottom:12px;">
+                    <input type="text" name="bb_seo_title_<?php echo $post->ID; ?>" class="bb-title-input" data-uid="<?php echo $uid; ?>" value="<?php echo esc_attr($meta['title']); ?>" style="width:100%; margin-bottom:12px;">
                     
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Meta Description</label>
                     <textarea name="bb_seo_desc_<?php echo $post->ID; ?>" class="bb-desc-input" data-uid="<?php echo $uid; ?>" rows="3" style="width:100%;"><?php echo esc_textarea($meta['desc']); ?></textarea>
@@ -74,17 +60,21 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 </div>
             </div>
 
-            <!-- Indexing Section -->
+            <!-- Indexing -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
                 <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-indexing" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Indexing <span class="bb-toggle-icon">+</span></button>
                 <div id="<?php echo $uid; ?>-indexing" style="display:none; padding:14px; border-top:1px solid #ddd;">
-                    <?php foreach ($allowed_options as $val => $lab) : ?>
+                    <?php 
+                    $options = array('yes' => 'Yes', 'no' => 'No', 'complicated_sitemap' => 'Remove from Sitemap Only');
+                    foreach ($options as $val => $lab) : 
+                        if (bare_bones_seo_more_restrictive($site_state, $val) === $val) :
+                    ?>
                         <label style="display:block; margin-bottom:8px;"><input type="radio" name="bb_seo_should_index_<?php echo $post->ID; ?>" value="<?php echo $val; ?>" <?php checked($effective_state, $val); ?>> <?php echo $lab; ?></label>
-                    <?php endforeach; ?>
+                    <?php endif; endforeach; ?>
                 </div>
             </div>
 
-            <!-- Schema Section -->
+            <!-- Schema -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
                 <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
                 <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
