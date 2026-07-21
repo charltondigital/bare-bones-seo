@@ -40,12 +40,14 @@ define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.0');
 
 // Load files
+
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
 require_once BARE_BONES_SEO_PATH . 'includes/indexation-resolver.php'; // Shared indexation state resolver
 require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php'; // Front-end noindex engine
 require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php'; // Front-end sitemap engine
 require_once BARE_BONES_SEO_PATH . 'includes/page-meta-output.php'; // Front-end title/description/schema output
 require_once BARE_BONES_SEO_PATH . 'includes/redirect-engine.php'; // Front-end custom 301 redirects
+require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
@@ -53,7 +55,7 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php'; // New Redirect Manager Tab
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php';
+
 
 /**
  * Calculate and save the plugin size to the database.
