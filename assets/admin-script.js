@@ -7,6 +7,7 @@
  * 3. Snippet preview (desktop + mobile) on button click
  * 4. Bulk manager row expand/collapse
  * 5. Bulk manager AJAX save with collapsed row update
+ * 6. Schema JSON validity indicator
  *
  * All event listeners use event delegation on document so they work
  * for both the meta box and dynamically rendered bulk manager rows.
@@ -205,6 +206,47 @@
                 setTimeout(function() { btn.textContent = originalText; }, 3000);
             });
         });
+
+        /**
+         * 6. SCHEMA JSON VALIDITY
+         *
+         * Live "accepted or not" feedback for the schema box. Validates pure
+         * JSON — matches the front-end engine, which adds the <script> wrapper
+         * itself. Empty = no message; invalid = simply won't be output.
+         */
+        function bbValidateSchema(textarea) {
+            var uid    = textarea.getAttribute('data-uid');
+            var status = uid ? document.getElementById(uid + '-schema-status') : null;
+            if (!status) return;
+
+            var val = textarea.value.trim();
+            if (val === '') {
+                status.textContent = '';
+                return;
+            }
+
+            var valid = true;
+            try { JSON.parse(val); } catch (err) { valid = false; }
+
+            if (valid) {
+                status.textContent = '\u2713 Valid JSON \u2014 will be output';
+                status.style.color = '#118a00';
+            } else {
+                status.textContent = '\u2717 Not valid JSON \u2014 won\'t be output until fixed';
+                status.style.color = '#dc3232';
+            }
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('bb-schema-input')) {
+                bbValidateSchema(e.target);
+            }
+        });
+
+        var bbSchemaInputs = document.querySelectorAll('.bb-schema-input');
+        for (var bbI = 0; bbI < bbSchemaInputs.length; bbI++) {
+            bbValidateSchema(bbSchemaInputs[bbI]);
+        }
 
     });
 
