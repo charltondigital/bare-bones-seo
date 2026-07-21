@@ -26,31 +26,37 @@ function bare_bones_seo_render_tracking_screen() {
 }
 
 function bare_bones_seo_render_tracking_table($scripts, $input_name, $is_global = true) {
+    // This wrapper is key for the JS to work in both global and page-level screens
     ?>
-    <table class="wp-list-table widefat fixed striped">
-        <thead>
-            <tr>
-                <th style="width:20%;">Label</th>
-                <th>Code Snippet</th>
-                <th style="width:100px;">Location</th>
-                <th style="width:90px;">Status</th>
-                <?php if ($is_global): ?><th style="width:110px;">Scope</th><?php endif; ?>
-                <th style="width:40px;"></th>
-            </tr>
-        </thead>
-        <tbody class="bb-tracking-rows">
-            <?php if (!empty($scripts)): foreach ($scripts as $index => $s): ?>
-                <?php bare_bones_seo_render_row($index, $s, $input_name, $is_global); ?>
-            <?php endforeach; endif; ?>
-        </tbody>
-    </table>
-    <div style="margin-top:10px;">
-        <button type="button" class="button bb-add-script-row" data-input-name="<?php echo esc_attr($input_name); ?>" data-global="<?php echo $is_global ? '1' : '0'; ?>">+ Add Script</button>
-    </div>
+    <div class="bbs-tracking-manager-wrapper">
+        <table class="wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th style="width:20%;">Label</th>
+                    <th>Code Snippet</th>
+                    <th style="width:100px;">Location</th>
+                    <th style="width:90px;">Status</th>
+                    <?php if ($is_global): ?><th style="width:110px;">Scope</th><?php endif; ?>
+                    <th style="width:40px;"></th>
+                </tr>
+            </thead>
+            <tbody class="bb-tracking-rows">
+                <?php if (!empty($scripts) && is_array($scripts)): foreach ($scripts as $index => $s): ?>
+                    <?php bare_bones_seo_render_row($index, $s, $input_name, $is_global); ?>
+                <?php endforeach; endif; ?>
+            </tbody>
+        </table>
+        
+        <div style="margin-top:10px;">
+            <button type="button" class="button bb-add-script-row" 
+                    data-input-name="<?php echo esc_attr($input_name); ?>" 
+                    data-global="<?php echo $is_global ? '1' : '0'; ?>">+ Add Script</button>
+        </div>
 
-    <script type="text/template" id="tpl-<?php echo esc_attr($input_name); ?>">
-        <?php bare_bones_seo_render_row('{{INDEX}}', array(), $input_name, $is_global); ?>
-    </script>
+        <script type="text/template" id="tpl-<?php echo esc_attr($input_name); ?>">
+            <?php bare_bones_seo_render_row('{{INDEX}}', array(), $input_name, $is_global); ?>
+        </script>
+    </div>
     <?php
 }
 
