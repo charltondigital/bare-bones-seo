@@ -42,6 +42,7 @@ require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
 require_once BARE_BONES_SEO_PATH . 'includes/indexation-resolver.php'; // Shared indexation state resolver
 require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php'; // Front-end noindex engine
 require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php'; // Front-end sitemap engine
+require_once BARE_BONES_SEO_PATH . 'includes/page-meta-output.php'; // Front-end title/description/schema output
 require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
