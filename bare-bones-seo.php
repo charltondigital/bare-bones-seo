@@ -3,7 +3,7 @@
  * Plugin Name: Bare Bones SEO
  * Plugin URI:   https://github.com/charltondigital/bare-bones-seo
  * Description: A lightweight, performance-first SEO utility providing absolute indexing control without background bloat.
- * Version:     1.0.12
+ * Version:     0.1.0
  * Author:       Charlton Digital
  * License:      GPLv2 or later
  * Text Domain: bare-bones-seo
@@ -35,7 +35,7 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 // Plugin paths
 define('BARE_BONES_SEO_PATH',    plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',     plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '1.0.12');
+define('BARE_BONES_SEO_VERSION', '0.1.0');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
@@ -309,6 +309,7 @@ function bbseo_create_404_table() {
         hits int(11) DEFAULT 1 NOT NULL,
         last_accessed datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
         PRIMARY KEY  (id),
+        KEY url (url(191)),
         KEY last_accessed (last_accessed)
     ) $charset_collate;";
 
@@ -335,8 +336,7 @@ add_action('bbseo_daily_cleanup_404_logs', 'bbseo_prune_old_404_logs');
 function bbseo_prune_old_404_logs() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'bbseo_404_logs';
-    
-    // Fixed: Prepared statement warning (removed wpdb::prepare on query with no variables)
+
     $wpdb->query( "DELETE FROM $table_name WHERE last_accessed < DATE_SUB(NOW(), INTERVAL 90 DAY)" );
 }
 
