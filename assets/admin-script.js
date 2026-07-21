@@ -242,20 +242,57 @@ function bbToggleRow(postId) {
 
 
 jQuery(document).ready(function($) {
-    // Handling Add Row
-    $(document).on('click', '.bb-add-script-row', function() {
+    
+    // --- Tracking Scripts: Add Row ---
+    $(document).on('click', '.bb-add-script-row', function(e) {
+        e.preventDefault();
+        
         var inputName = $(this).data('input-name');
-        var tbody = $(this).closest('div').prev('table').find('.bb-tracking-rows');
-        var template = $('#tpl-' + inputName).html();
+        var isGlobal = $(this).data('global');
+        
+        // Find the table and tbody
+        var container = $(this).closest('div, .bb-section');
+        var tbody = container.find('.bb-tracking-rows');
+        
+        // Find the template (it's hidden in a script tag)
+        var templateSource = $('#tpl-' + inputName).html();
+        
+        if (!templateSource) {
+            console.error('BBS SEO: Template not found for ' + inputName);
+            return;
+        }
+
+        // Calculate next index
         var index = tbody.find('tr').length;
         
-        tbody.append(template.replace(/{{INDEX}}/g, index));
+        // Replace placeholder with index and append
+        var newRow = templateSource.replace(/{{INDEX}}/g, index);
+        tbody.append(newRow);
     });
 
-    // Handling Remove Row
-    $(document).on('click', '.bb-remove-row', function() {
-        if(confirm('Remove this tracking script?')) {
+    // --- Tracking Scripts: Remove Row ---
+    $(document).on('click', '.bb-remove-row', function(e) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to delete this script?')) {
             $(this).closest('tr').remove();
         }
     });
+
+    // --- Existing Section Toggles (Keep these for the meta boxes) ---
+    $(document).on('click', '.bb-section-toggle', function() {
+        var targetId = $(this).data('target');
+        var $target = $('#' + targetId);
+        var $icon = $(this).find('.bb-toggle-icon');
+        
+        if ($target.is(':visible')) {
+            $target.slideUp(150);
+            $(this).attr('aria-expanded', 'false');
+            $icon.text('+');
+        } else {
+            $target.slideDown(150);
+            $(this).attr('aria-expanded', 'true');
+            $icon.text('−');
+        }
+    });
+
 });
