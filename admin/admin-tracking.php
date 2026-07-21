@@ -13,7 +13,10 @@ function bare_bones_seo_render_tracking_screen() {
     $scripts = get_option(BARE_BONES_SEO_OPTION_TRACKING, array());
     ?>
     <div style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; margin-top:20px;">
-        <h2 style="margin:0 0 20px 0; font-size:16px; font-weight:600;">Global Tracking Scripts</h2>
+        <h2 style="margin:0 0 8px 0; font-size:16px; font-weight:600;">Global Tracking Scripts</h2>
+        <p style="margin:0 0 20px 0; color:#646970; max-width:820px;">
+            Paste analytics, verification, and pixel snippets here &mdash; Google Analytics, Search Console verification, Meta Pixel, and similar &mdash; exactly as the provider gives them to you. Each one loads site-wide, so add these once instead of editing your theme. Pick whether a snippet belongs in the <code>&lt;head&gt;</code> or the footer, set it to <strong>Paused</strong> to switch it off without deleting it, or scope it to the homepage only. To run a snippet on a single page instead, use the Tracking Scripts panel in that page's editor.
+        </p>
         <form method="post" action="">
             <?php wp_nonce_field('bb_tracking_nonce'); ?>
             <?php bare_bones_seo_render_tracking_table($scripts, 'bb_scripts', true); ?>
@@ -69,13 +72,30 @@ function bare_bones_seo_render_row($index, $data, $input_name, $is_global) {
     <?php
 }
 
+/**
+ * Code is stored raw (not run through wp_kses) because wp_kses corrupts inline
+ * JS — it entity-encodes & and eats < in comparisons, breaking GA/GTM/Pixel
+ * snippets. Access is gated by capability at the call sites instead: global
+ * scripts are manage_options only, page scripts require unfiltered_html.
+ */
 function bare_bones_seo_sanitize_tracking_scripts($input) {
     if (!is_array($input)) return array();
+    $input = wp_unslash($input);
+
+    $locs   = array('head', 'footer');
+    $stats  = array('active', 'paused');
+    $scopes = array('all', 'home');
+
     $clean = array();
-    $allowed = array('script' => array('src' => true, 'type' => true, 'async' => true, 'defer' => true, 'id' => true, 'crossorigin' => true), 'noscript' => array(), 'meta' => array('name' => true, 'content' => true, 'charset' => true, 'property' => true, 'http-equiv' => true));
     foreach ($input as $row) {
-        if (empty($row['code'])) continue;
-        $clean[] = array('label' => sanitize_text_field($row['label']), 'code' => wp_kses($row['code'], $allowed), 'loc' => $row['loc'], 'status' => $row['status'], 'scope' => $row['scope'] ?? 'all');
+        if (!is_array($row) || empty($row['code'])) continue;
+        $clean[] = array(
+            'label'  => sanitize_text_field($row['label'] ?? ''),
+            'code'   => trim($row['code']),
+            'loc'    => in_array($row['loc'] ?? '', $locs, true) ? $row['loc'] : 'head',
+            'status' => in_array($row['status'] ?? '', $stats, true) ? $row['status'] : 'active',
+            'scope'  => in_array($row['scope'] ?? '', $scopes, true) ? $row['scope'] : 'all',
+        );
     }
     return $clean;
 }
