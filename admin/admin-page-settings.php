@@ -28,7 +28,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
     ?>
     <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; padding:10px 0;">
         <div>
-            <!-- Section 1: Snippet -->
+            <!-- Section 1: Snippet Builder -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
                 <button type="button" class="bb-section-toggle" aria-expanded="true" data-target="<?php echo $uid; ?>-snippet" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Snippet Builder <span class="bb-toggle-icon">−</span></button>
                 <div id="<?php echo $uid; ?>-snippet" style="padding:14px; border-top:1px solid #ddd;">
@@ -39,6 +39,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     <button type="button" class="button bb-trigger-preview" data-uid="<?php echo $uid; ?>" style="margin-top:10px;">Generate Preview</button>
                 </div>
             </div>
+
             <!-- Section 2: Indexing -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
                 <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-indexing" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Indexing <span class="bb-toggle-icon">+</span></button>
@@ -51,7 +52,16 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     <?php endif; endforeach; ?>
                 </div>
             </div>
-            <!-- Section 3: Tracking Scripts (This Page) -->
+
+            <!-- Section 3: Schema Markup -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <textarea name="bb_seo_schema_<?php echo $post->ID; ?>" class="bb-schema-input" rows="4" style="width:100%; font-family:monospace;"><?php echo esc_textarea($meta['schema']); ?></textarea>
+                </div>
+            </div>
+
+            <!-- Section 4: Tracking Scripts (NEW) -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden;">
                 <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts (Page Only) <span class="bb-toggle-icon">+</span></button>
                 <div id="<?php echo $uid; ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
@@ -62,9 +72,10 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 </div>
             </div>
         </div>
-        <!-- Right Column: Preview -->
+
+        <!-- RIGHT Column: Preview -->
         <div>
-            <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:8px;">Live Preview</div>
+            <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:8px;">Live Search Preview</div>
             <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:14px; max-width:600px;">
                 <div id="<?php echo $uid; ?>-preview-desktop-title" style="font-family:arial; font-size:20px; color:#1a0dab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo esc_html($preview_title . ' — ' . $site_name); ?></div>
                 <div id="<?php echo $uid; ?>-preview-desktop-desc" style="font-family:arial; font-size:14px; color:#545454; line-height:1.58; min-height:2.5em;"><?php echo esc_html($meta['desc']); ?></div>
