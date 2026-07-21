@@ -44,7 +44,7 @@ function bare_bones_seo_process_bulk_ajax_save() {
     bare_bones_seo_update_page_meta($post_id, array(
         'title'        => isset($_POST['bb_seo_title'])        ? sanitize_text_field($_POST['bb_seo_title'])        : '',
         'desc'         => isset($_POST['bb_seo_desc'])         ? sanitize_text_field($_POST['bb_seo_desc'])         : '',
-        'schema'       => isset($_POST['bb_seo_schema'])       ? wp_kses_post($_POST['bb_seo_schema'])              : '',
+        'schema'       => isset($_POST['bb_seo_schema'])       ? $_POST['bb_seo_schema']                            : '',
         'should_index' => isset($_POST['bb_seo_should_index']) ? sanitize_key($_POST['bb_seo_should_index'])          : 'yes',
     ));
 
@@ -105,9 +105,9 @@ function bare_bones_seo_render_bulk_manager_screen() {
                         $post_type    = get_post_type_object(get_post_type());
                         $uid          = 'bb-' . $post->ID;
 
-                        // Show red ✗ ONLY when actively noindexed or removed from sitemap
-                        // Empty string = not set = default indexed = show nothing
-                        $show_x = in_array($index_status, array('no', 'complicated_noindex', 'complicated_sitemap'));
+                        // Show red ✗ whenever this page isn't plain "index"
+                        // (noindexed or removed from sitemap). Legacy values normalize to index.
+                        $show_x = bare_bones_seo_state_removes_from_sitemap($index_status);
                         $badge  = $show_x
                             ? '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>'
                             : '';
