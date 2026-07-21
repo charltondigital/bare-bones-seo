@@ -205,11 +205,16 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 </button>
                 <div id="<?php echo esc_attr($uid); ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
                     <textarea name="bb_seo_schema_<?php echo esc_attr($post->ID); ?>"
+                              class="bb-schema-input"
+                              data-uid="<?php echo esc_attr($uid); ?>"
                               rows="6"
-                              placeholder='<script type="application/ld+json">{"@context": "https://schema.org", ...}</script>'
+                              placeholder='{"@context": "https://schema.org", "@type": "Organization", "name": "Example"}'
                               style="width:100%; box-sizing:border-box; font-size:12px; font-family:monospace; resize:vertical; min-height:80px; max-height:200px; overflow-y:auto;"><?php echo esc_textarea($meta['schema']); ?></textarea>
+                    <p style="font-size:11px; margin:6px 0 0;">
+                        <span id="<?php echo esc_attr($uid); ?>-schema-status" class="bb-schema-status" style="font-weight:600;"></span>
+                    </p>
                     <p style="font-size:11px; color:#888; margin:6px 0 0;">
-                        Paste the complete JSON-LD block including the &lt;script&gt; wrapper tags.
+                        Paste only the JSON-LD object &mdash; the &lt;script&gt; wrapper is added automatically.
                         Browse types at <a href="https://schema.org" target="_blank" rel="noopener noreferrer">Schema.org</a> or validate with <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer">Google Rich Results Test</a>.
                     </p>
                 </div>
