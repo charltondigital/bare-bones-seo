@@ -39,6 +39,7 @@ define('BARE_BONES_SEO_VERSION', '1.0.12');
 
 // Load files
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
+require_once BARE_BONES_SEO_PATH . 'includes/indexation-resolver.php'; // Shared indexation state resolver
 require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php'; // Front-end noindex engine
 require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php'; // Front-end sitemap engine
 require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
