@@ -239,3 +239,23 @@ function bbToggleRow(postId) {
         if (chevron) chevron.style.transform = 'rotate(90deg)';
     }
 }
+
+
+jQuery(document).ready(function($) {
+    // Handling Add Row
+    $(document).on('click', '.bb-add-script-row', function() {
+        var inputName = $(this).data('input-name');
+        var tbody = $(this).closest('div').prev('table').find('.bb-tracking-rows');
+        var template = $('#tpl-' + inputName).html();
+        var index = tbody.find('tr').length;
+        
+        tbody.append(template.replace(/{{INDEX}}/g, index));
+    });
+
+    // Handling Remove Row
+    $(document).on('click', '.bb-remove-row', function() {
+        if(confirm('Remove this tracking script?')) {
+            $(this).closest('tr').remove();
+        }
+    });
+});
