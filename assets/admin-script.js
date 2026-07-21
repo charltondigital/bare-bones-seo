@@ -242,35 +242,51 @@ function bbToggleRow(postId) {
 
 
 jQuery(document).ready(function($) {
-    
-    // --- Tracking Scripts: Add Row ---
+
+    // --- 1. Snappy Tab Switching (No Reload) ---
+    $('.nav-tab-wrapper a.nav-tab').on('click', function(e) {
+        // Only trigger if we are on the BBS dashboard
+        if ($(this).attr('href').indexOf('tab=') === -1 && $(this).attr('href').indexOf('page=bare-bones-seo') === -1) return;
+        
+        e.preventDefault();
+
+        // Update URL without reloading (optional, keeps it clean)
+        var tabId = $(this).attr('href').split('tab=')[1] || 'overview';
+        window.history.pushState(null, null, $(this).attr('href'));
+
+        // Toggle Tabs
+        $('.nav-tab').removeClass('nav-tab-active');
+        $(this).addClass('nav-tab-active');
+
+        // Toggle Content
+        $('.bbseo-tab-content').hide();
+        $('#bbseo-tab-' + tabId).show();
+    });
+
+    // --- 2. Tracking Scripts: Add Row ---
     $(document).on('click', '.bb-add-script-row', function(e) {
         e.preventDefault();
         
-        var inputName = $(this).data('input-name');
-        var isGlobal = $(this).data('global');
+        var $button = $(this);
+        var inputName = $button.data('input-name');
         
-        // Find the table and tbody
-        var container = $(this).closest('div, .bb-section');
-        var tbody = container.find('.bb-tracking-rows');
-        
-        // Find the template (it's hidden in a script tag)
-        var templateSource = $('#tpl-' + inputName).html();
-        
-        if (!templateSource) {
-            console.error('BBS SEO: Template not found for ' + inputName);
+        // Find the correct container (works in both Dashboard and Meta Box)
+        var $container = $button.closest('.bbs-tracking-manager-wrapper');
+        var $tbody = $container.find('.bb-tracking-rows');
+        var $template = $('#tpl-' + inputName);
+
+        if (!$template.length) {
+            console.error('BBS SEO: Template not found for #tpl-' + inputName);
             return;
         }
 
-        // Calculate next index
-        var index = tbody.find('tr').length;
+        var index = $tbody.find('tr').length;
+        var newRow = $template.html().replace(/{{INDEX}}/g, index);
         
-        // Replace placeholder with index and append
-        var newRow = templateSource.replace(/{{INDEX}}/g, index);
-        tbody.append(newRow);
+        $tbody.append(newRow);
     });
 
-    // --- Tracking Scripts: Remove Row ---
+    // --- 3. Tracking Scripts: Remove Row ---
     $(document).on('click', '.bb-remove-row', function(e) {
         e.preventDefault();
         if (confirm('Are you sure you want to delete this script?')) {
@@ -278,7 +294,7 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // --- Existing Section Toggles (Keep these for the meta boxes) ---
+    // --- 4. Section Toggles (Meta Boxes) ---
     $(document).on('click', '.bb-section-toggle', function() {
         var targetId = $(this).data('target');
         var $target = $('#' + targetId);
@@ -286,13 +302,10 @@ jQuery(document).ready(function($) {
         
         if ($target.is(':visible')) {
             $target.slideUp(150);
-            $(this).attr('aria-expanded', 'false');
             $icon.text('+');
         } else {
             $target.slideDown(150);
-            $(this).attr('aria-expanded', 'true');
             $icon.text('−');
         }
     });
-
 });
