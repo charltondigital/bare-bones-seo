@@ -58,8 +58,10 @@ function bare_bones_seo_output_scripts_by_location($location) {
     $all = array_merge(is_array($global) ? $global : array(), is_array($page) ? $page : array());
 
     foreach ($all as $s) {
-        if ($s['status'] !== 'active' || $s['loc'] !== $location) continue;
-        if (isset($s['scope']) && $s['scope'] === 'home' && !is_front_page()) continue;
+        if (!is_array($s) || empty($s['code'])) continue;
+        if (($s['status'] ?? 'active') !== 'active') continue;
+        if (($s['loc'] ?? 'head') !== $location) continue;
+        if (($s['scope'] ?? 'all') === 'home' && !is_front_page()) continue;
 
         echo "\n" . $s['code'] . "\n";
     }
