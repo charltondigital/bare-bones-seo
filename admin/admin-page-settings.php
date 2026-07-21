@@ -60,9 +60,13 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden;">
                 <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts <span class="bb-toggle-icon">+</span></button>
                 <div id="<?php echo $uid; ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
-                    <?php 
-                    $p_scripts = get_post_meta($post->ID, BARE_BONES_SEO_META_TRACKING, true) ?: array();
-                    bare_bones_seo_render_tracking_table($p_scripts, 'bb_page_scripts_' . $post->ID, false); 
+                    <?php
+                    if (current_user_can('unfiltered_html')) {
+                        $p_scripts = get_post_meta($post->ID, BARE_BONES_SEO_META_TRACKING, true) ?: array();
+                        bare_bones_seo_render_tracking_table($p_scripts, 'bb_page_scripts_' . $post->ID, false);
+                    } else {
+                        echo '<p style="margin:0; color:#646970;">Adding tracking scripts to individual pages requires an administrator account.</p>';
+                    }
                     ?>
                 </div>
             </div>
@@ -83,9 +87,17 @@ function bare_bones_seo_save_meta_box_data($post_id) {
     if (!isset($_POST['bare_bones_seo_nonce']) || !wp_verify_nonce($_POST['bare_bones_seo_nonce'], BARE_BONES_SEO_NONCE_PAGE)) return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
-    $data = array('title' => $_POST['bb_seo_title_'.$post_id] ?? '', 'desc' => $_POST['bb_seo_desc_'.$post_id] ?? '', 'should_index' => $_POST['bb_seo_should_index_'.$post_id] ?? 'yes');
+    $data = array(
+        'title'        => $_POST['bb_seo_title_'.$post_id] ?? '',
+        'desc'         => $_POST['bb_seo_desc_'.$post_id] ?? '',
+        'schema'       => $_POST['bb_seo_schema_'.$post_id] ?? '',
+        'should_index' => $_POST['bb_seo_should_index_'.$post_id] ?? 'yes',
+    );
     bare_bones_seo_update_page_meta($post_id, $data);
-    if (isset($_POST['bb_page_scripts_' . $post_id])) {
-        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, bare_bones_seo_sanitize_tracking_scripts($_POST['bb_page_scripts_' . $post_id]));
+
+    if (current_user_can('unfiltered_html') && isset($_POST['bb_page_scripts_' . $post_id])) {
+        $scripts = bare_bones_seo_sanitize_tracking_scripts($_POST['bb_page_scripts_' . $post_id]);
+        // wp_slash offsets the unslash update_post_meta() applies internally, so raw code survives intact.
+        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));
     }
 }
