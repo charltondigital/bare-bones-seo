@@ -147,40 +147,46 @@ function bare_bones_seo_register_menus() {
  */
 function bare_bones_seo_render_dashboard() {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
+    
+    // Define all tabs and their callback functions
+    $tabs = array(
+        'overview'    => array('label' => __('Overview', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_overview_screen'),
+        'indexation'  => array('label' => __('Indexation', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_global_map_screen'),
+        'bulk'        => array('label' => __('Page Meta', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_bulk_manager_screen'),
+        'redirects'   => array('label' => __('301 Redirects', 'bare-bones-seo'), 'callback' => 'render_bare_bones_redirects_tab'),
+        '404-monitor' => array('label' => __('404 Monitor', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_404_monitor_screen'),
+        'tracking'    => array('label' => __('Tracking', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_tracking_screen'),
+        'other-tools' => array('label' => __('Other Tools', 'bare-bones-seo'), 'callback' => 'bare_bones_seo_render_other_tools_screen'),
+    );
     ?>
     <div class="wrap" style="max-width: 1200px; margin-top: 0; padding-top: 0;">
-        <div class="wp-header-end" style="height: 0; margin: 0; padding: 0; display: none;"></div>
-
         <div class="bbseo-header-wrapper" style="margin-top: 15px; margin-bottom: 15px;">
-            <h1 style="display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; font-size: 23px; font-weight: 400; line-height: 1.2;">
-                <?php echo bare_bones_seo_skull_icon(24); ?>
-                <?php _e('Bare Bones SEO', 'bare-bones-seo'); ?>
+            <h1 style="display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; font-size: 23px; font-weight: 400;">
+                <?php echo bare_bones_seo_skull_icon(24); ?> Bare Bones SEO
             </h1>
         </div>
 
-        <h2 class="nav-tab-wrapper" style="margin-bottom: 20px; margin-top: 10px;">
-            <a href="?page=bare-bones-seo" class="nav-tab <?php echo $active_tab === 'overview' ? 'nav-tab-active' : ''; ?>"><?php _e('Overview', 'bare-bones-seo'); ?></a>
-            <a href="?page=bare-bones-seo&tab=indexation" class="nav-tab <?php echo $active_tab === 'indexation' ? 'nav-tab-active' : ''; ?>"><?php _e('Indexation', 'bare-bones-seo'); ?></a>
-            <a href="?page=bare-bones-seo&tab=bulk" class="nav-tab <?php echo $active_tab === 'bulk' ? 'nav-tab-active' : ''; ?>"><?php _e('Page Meta', 'bare-bones-seo'); ?></a>
-            <a href="?page=bare-bones-seo&tab=redirects" class="nav-tab <?php echo $active_tab === 'redirects' ? 'nav-tab-active' : ''; ?>"><?php _e('301 Redirects', 'bare-bones-seo'); ?></a>
-            <a href="?page=bare-bones-seo&tab=404-monitor" class="nav-tab <?php echo $active_tab === '404-monitor' ? 'nav-tab-active' : ''; ?>"><?php _e('404 Monitor', 'bare-bones-seo'); ?></a>
-            <a href="?page=bare-bones-seo&tab=tracking" class="nav-tab <?php echo $active_tab === 'tracking' ? 'nav-tab-active' : ''; ?>"><?php _e('Tracking', 'bare-bones-seo'); ?></a>
-            <a href="?page=bare-bones-seo&tab=other-tools" class="nav-tab <?php echo $active_tab === 'other-tools' ? 'nav-tab-active' : ''; ?>"><?php _e('Other Tools', 'bare-bones-seo'); ?></a>
+        <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
+            <?php foreach ($tabs as $id => $tab) : 
+                $url = ($id === 'overview') ? '?page=bare-bones-seo' : '?page=bare-bones-seo&tab=' . $id;
+                $active_class = ($active_tab === $id) ? 'nav-tab-active' : '';
+                ?>
+                <a href="<?php echo esc_url($url); ?>" class="nav-tab <?php echo $active_class; ?>"><?php echo esc_html($tab['label']); ?></a>
+            <?php endforeach; ?>
         </h2>
 
-        <div class="bbseo-tab-content">
-            <?php
-            switch ($active_tab) {
-                case 'indexation': bare_bones_seo_render_global_map_screen(); break;
-                case 'bulk': bare_bones_seo_render_bulk_manager_screen(); break;
-                case 'redirects': render_bare_bones_redirects_tab(); break;
-                case '404-monitor': bare_bones_seo_render_404_monitor_screen(); break;
-                case 'tracking': bare_bones_seo_render_tracking_screen(); break;
-                case 'other-tools': bare_bones_seo_render_other_tools_screen(); break;
-                case 'overview':
-                default: bare_bones_seo_render_overview_screen(); break;
-            }
-            ?>
+        <div id="bbseo-tabs-container">
+            <?php foreach ($tabs as $id => $tab) : 
+                $display = ($active_tab === $id) ? 'block' : 'none';
+                ?>
+                <div id="bbseo-tab-<?php echo esc_attr($id); ?>" class="bbseo-tab-content" style="display: <?php echo $display; ?>;">
+                    <?php 
+                    if (function_exists($tab['callback'])) {
+                        call_user_func($tab['callback']);
+                    }
+                    ?>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php
