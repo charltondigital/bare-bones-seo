@@ -130,7 +130,7 @@ function bare_bones_seo_register_menus() {
         'bare-bones-seo',
         'bare_bones_seo_render_dashboard',
         'data:image/svg+xml;base64,' . base64_encode($svg),
-        80
+        24.6
     );
 
     add_submenu_page('bare-bones-seo', 'Overview', 'Overview', 'manage_options', 'bare-bones-seo', 'bare_bones_seo_render_dashboard');
