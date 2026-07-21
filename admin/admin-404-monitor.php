@@ -1,8 +1,6 @@
 <?php
 /**
- * Bare Bones SEO 404 Monitor View
- * 
- * Path: admin/admin-404-monitor.php
+ * 404 Monitor screen.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,22 +12,10 @@ function bare_bones_seo_render_404_monitor_screen() {
 	$table_name = $wpdb->prefix . 'bbseo_404_logs';
 
 	// 1. Handle actions
-	if ( isset( $_GET['action'] ) ) {
-		if ( 'delete' === $_GET['action'] && isset( $_GET['id'] ) ) {
-			$entry_id = absint( $_GET['id'] );
-			if ( check_admin_referer( 'bb_delete_404_' . $entry_id ) ) {
-				$wpdb->delete( $table_name, array( 'id' => $entry_id ), array( '%d' ) );
-				echo '<div class="notice notice-success is-dismissible"><p>404 log entry deleted.</p></div>';
-			}
-		}
-
-		if ( 'clear_all' === $_GET['action'] ) {
-			if ( check_admin_referer( 'bb_clear_all_404' ) ) {
-				// Secure execution of table truncate
-				$wpdb->query( "TRUNCATE TABLE `$table_name`" );
-				echo '<div class="notice notice-success is-dismissible"><p>All 404 logs successfully cleared.</p></div>';
-			}
-		}
+	if ( isset( $_GET['action'] ) && 'clear_all' === $_GET['action']
+		&& current_user_can( 'manage_options' ) && check_admin_referer( 'bb_clear_all_404' ) ) {
+		$wpdb->query( "TRUNCATE TABLE `$table_name`" );
+		echo '<div class="notice notice-success is-dismissible"><p>All 404 logs successfully cleared.</p></div>';
 	}
 
 	// 2. Query logs
@@ -52,11 +38,10 @@ function bare_bones_seo_render_404_monitor_screen() {
 		<table class="wp-list-table widefat fixed striped">
 			<thead>
 				<tr>
-					<th style="width: 45%;">Requested URL</th>
+					<th style="width: 50%;">Requested URL</th>
 					<th style="width: 25%;">Referer</th>
 					<th style="width: 10%; text-align: center;">Hits</th>
-					<th style="width: 12%;">Last Accessed</th>
-					<th style="width: 8%; text-align: right;">Action</th>
+					<th style="width: 15%;">Last Accessed</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -64,7 +49,7 @@ function bare_bones_seo_render_404_monitor_screen() {
 					<?php foreach ( $logs as $log ) : ?>
 						<tr>
 							<td style="word-wrap: break-word;">
-								<a href="<?php echo esc_url( $log->url ); ?>" target="_blank" style="text-decoration: none; font-weight: 600;">
+								<a href="<?php echo esc_url( home_url( $log->url ) ); ?>" target="_blank" style="text-decoration: none; font-weight: 600;">
 									<?php echo esc_html( $log->url ); ?>
 								</a>
 							</td>
@@ -75,19 +60,11 @@ function bare_bones_seo_render_404_monitor_screen() {
 							<td style="font-size: 12px; color: #646970;">
 								<?php echo esc_html( mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $log->last_accessed ) ); ?>
 							</td>
-							<td style="text-align: right;">
-								<a href="<?php echo esc_url( wp_nonce_url( '?page=bare-bones-seo&tab=404-monitor&action=delete&id=' . $log->id, 'bb_delete_404_' . $log->id ) ); ?>" 
-								   class="button button-small button-link-delete" 
-								   style="color: #d63638;"
-								   onclick="return confirm('Delete this log entry?');">
-									Delete
-								</a>
-							</td>
 						</tr>
 					<?php endforeach; ?>
 				<?php else : ?>
 					<tr>
-						<td colspan="5" style="text-align: center; padding: 30px; color: #646970;">
+						<td colspan="4" style="text-align: center; padding: 30px; color: #646970;">
 							🎉 No 404 errors recorded yet. Your visitors are finding everything they need!
 						</td>
 					</tr>
