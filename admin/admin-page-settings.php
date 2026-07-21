@@ -1,97 +1,142 @@
 <?php
 /**
- * Page-level meta output. 
- * Emits titles, descriptions, schema, and tracking scripts.
+ * Page-Level SEO Settings — Bare Bones SEO
+ *
+ * Shared render function used by both the meta box and bulk manager.
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
-
-// Replace the document <title>
-add_filter( 'pre_get_document_title', 'bare_bones_seo_filter_document_title' );
-function bare_bones_seo_filter_document_title( $title ) {
-	if ( ! is_singular() ) {
-		return $title;
-	}
-	$custom = get_post_meta( get_queried_object_id(), BARE_BONES_SEO_META_TITLE, true );
-	return ( is_string( $custom ) && '' !== trim( $custom ) ) ? $custom : $title;
-}
-
-// Emit Meta Description and Schema
-add_action( 'wp_head', 'bare_bones_seo_output_head_meta', 1 );
-function bare_bones_seo_output_head_meta() {
-	if ( ! is_singular() ) {
-		return;
-	}
-
-	$post_id = get_queried_object_id();
-
-	$desc = get_post_meta( $post_id, BARE_BONES_SEO_META_DESC, true );
-	if ( is_string( $desc ) && '' !== trim( $desc ) ) {
-		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
-	}
-
-	$schema = get_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, true );
-	if ( is_string( $schema ) && '' !== trim( $schema ) ) {
-		$decoded = json_decode( $schema );
-		if ( null !== $decoded ) {
-			echo '<script type="application/ld+json">'
-				. wp_json_encode( $decoded, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE )
-				. '</script>' . "\n";
-		}
-	}
+if (!defined('ABSPATH')) {
+    exit;
 }
 
 /**
- * --- TRACKING SCRIPTS OUTPUT ---
+ * Register meta box on all public post types.
  */
-
-// Hook tracking injection
-add_action('wp_head', 'bare_bones_seo_inject_head_scripts', 0); // High priority for GSC/Analytics
-add_action('wp_footer', 'bare_bones_seo_inject_footer_scripts', 99); // Low priority for Pixels
-
-function bare_bones_seo_inject_head_scripts() {
-    bare_bones_seo_output_scripts_by_location('head');
-}
-
-function bare_bones_seo_inject_footer_scripts() {
-    bare_bones_seo_output_scripts_by_location('footer');
-}
-
-/**
- * Logic to merge and print scripts based on location (head/footer)
- */
-function bare_bones_seo_output_scripts_by_location($location) {
-    // 1. Get Global Scripts
-    $global = get_option(BARE_BONES_SEO_OPTION_TRACKING, array());
-    
-    // 2. Get Page-Level Scripts
-    $page = array();
-    if (is_singular()) {
-        $page = get_post_meta(get_queried_object_id(), BARE_BONES_SEO_META_TRACKING, true);
+add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
+function bare_bones_seo_register_meta_box() {
+    $post_types = get_post_types(array('public' => true));
+    foreach ($post_types as $type) {
+        add_meta_box(
+            'bare-bones-seo-box',
+            'Page-Level SEO Settings — Bare Bones SEO',
+            'bare_bones_seo_render_meta_box',
+            $type,
+            'normal',
+            'high'
+        );
     }
+}
 
-    $all_scripts = array_merge(
-        is_array($global) ? $global : array(), 
-        is_array($page) ? $page : array()
-    );
+function bare_bones_seo_render_meta_box($post) {
+    wp_nonce_field(BARE_BONES_SEO_NONCE_PAGE, 'bare_bones_seo_nonce');
+    bare_bones_seo_render_fields($post);
+}
 
-    if (empty($all_scripts)) return;
+/**
+ * Shared field renderer.
+ */
+function bare_bones_seo_render_fields($post, $in_bulk = false) {
+    $meta         = bare_bones_seo_get_page_meta($post->ID);
+    $site_name    = html_entity_decode(get_bloginfo('name'), ENT_QUOTES, 'UTF-8');
+    $index_status = get_post_meta($post->ID, BARE_BONES_SEO_META_INDEX, true);
+    $uid          = 'bb-' . $post->ID;
 
-    foreach ($all_scripts as $script) {
-        // Validation: Must be active and match the location hook
-        if ($script['status'] !== 'active' || $script['loc'] !== $location) {
-            continue;
+    if ($index_status === '') { $index_status = 'yes'; }
+
+    $preview_title = $meta['title'] ? html_entity_decode($meta['title'], ENT_QUOTES, 'UTF-8') : html_entity_decode($post->post_title, ENT_QUOTES, 'UTF-8');
+
+    $site_state      = bare_bones_seo_get_site_state($post->post_type);
+    $effective_state = bare_bones_seo_get_effective_post_state($post->ID);
+
+    $index_options = array('yes' => 'Yes', 'no' => 'No', 'complicated_sitemap' => 'Remove from Sitemap Only');
+    $allowed_options = array();
+    foreach ($index_options as $value => $label) {
+        if (bare_bones_seo_more_restrictive($site_state, $value) === $value) {
+            $allowed_options[$value] = $label;
         }
+    }
+    ?>
 
-        // Scope check: If "home only" and we aren't on the home page, skip.
-        if (isset($script['scope']) && $script['scope'] === 'home' && !is_front_page()) {
-            continue;
-        }
+    <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; padding:<?php echo $in_bulk ? '0' : '8px 0'; ?>;">
 
-        // Print the code
-        echo "\n<!-- BB SEO Tracking: " . esc_html($script['label']) . " -->\n";
-        echo $script['code'] . "\n";
+        <!-- LEFT Column -->
+        <div>
+            <!-- Snippet Section -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" aria-expanded="true" data-target="<?php echo $uid; ?>-snippet" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Snippet Builder <span class="bb-toggle-icon">−</span></button>
+                <div id="<?php echo $uid; ?>-snippet" style="padding:14px; border-top:1px solid #ddd;">
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">SEO Title</label>
+                    <input type="text" name="bb_seo_title_<?php echo $post->ID; ?>" class="bb-title-input" data-uid="<?php echo $uid; ?>" value="<?php echo esc_attr($meta['title']); ?>" placeholder="<?php echo esc_attr($post->post_title); ?>" style="width:100%; margin-bottom:12px;">
+                    
+                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Meta Description</label>
+                    <textarea name="bb_seo_desc_<?php echo $post->ID; ?>" class="bb-desc-input" data-uid="<?php echo $uid; ?>" rows="3" style="width:100%;"><?php echo esc_textarea($meta['desc']); ?></textarea>
+                    <button type="button" class="button bb-trigger-preview" data-uid="<?php echo $uid; ?>" style="margin-top:10px;">Generate Preview</button>
+                </div>
+            </div>
+
+            <!-- Indexing Section -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-indexing" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Indexing <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-indexing" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <?php foreach ($allowed_options as $val => $lab) : ?>
+                        <label style="display:block; margin-bottom:8px;"><input type="radio" name="bb_seo_should_index_<?php echo $post->ID; ?>" value="<?php echo $val; ?>" <?php checked($effective_state, $val); ?>> <?php echo $lab; ?></label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Schema Section -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <textarea name="bb_seo_schema_<?php echo $post->ID; ?>" class="bb-schema-input" rows="4" style="width:100%; font-family:monospace;"><?php echo esc_textarea($meta['schema']); ?></textarea>
+                </div>
+            </div>
+
+            <!-- TRACKING SECTION (NEW) -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+                <button type="button" class="bb-section-toggle" aria-expanded="false" data-target="<?php echo $uid; ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts (Page Only) <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <?php 
+                    $page_scripts = get_post_meta($post->ID, BARE_BONES_SEO_META_TRACKING, true) ?: array();
+                    bare_bones_seo_render_tracking_table($page_scripts, 'bb_page_scripts_' . $post->ID, false); 
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT Column: Preview -->
+        <div>
+            <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:8px;">Live Search Preview</div>
+            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:14px; max-width:600px;">
+                <div id="<?php echo $uid; ?>-preview-desktop-title" style="font-family:arial; font-size:20px; color:#1a0dab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo esc_html($preview_title . ' — ' . $site_name); ?></div>
+                <div id="<?php echo $uid; ?>-preview-desktop-desc" style="font-family:arial; font-size:14px; color:#545454; line-height:1.58; min-height:2.5em;"><?php echo esc_html($meta['desc']); ?></div>
+            </div>
+        </div>
+    </div>
+    <script type="application/json" id="<?php echo $uid; ?>-meta-data"><?php echo wp_json_encode(array('uid' => $uid, 'site_name' => $site_name, 'post_title' => $post->post_title)); ?></script>
+    <?php
+}
+
+/**
+ * Save meta box data.
+ */
+add_action('save_post', 'bare_bones_seo_save_meta_box_data');
+function bare_bones_seo_save_meta_box_data($post_id) {
+    if (!isset($_POST['bare_bones_seo_nonce']) || !wp_verify_nonce($_POST['bare_bones_seo_nonce'], BARE_BONES_SEO_NONCE_PAGE)) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    $title  = isset($_POST['bb_seo_title_' . $post_id]) ? $_POST['bb_seo_title_' . $post_id] : '';
+    $desc   = isset($_POST['bb_seo_desc_' . $post_id]) ? $_POST['bb_seo_desc_' . $post_id] : '';
+    $schema = isset($_POST['bb_seo_schema_' . $post_id]) ? $_POST['bb_seo_schema_' . $post_id] : '';
+    $should_index = isset($_POST['bb_seo_should_index_' . $post_id]) ? $_POST['bb_seo_should_index_' . $post_id] : 'yes';
+
+    bare_bones_seo_update_page_meta($post_id, array(
+        'title' => $title, 'desc' => $desc, 'schema' => $schema, 'should_index' => $should_index,
+    ));
+
+    // Save Tracking Scripts
+    if (isset($_POST['bb_page_scripts_' . $post_id])) {
+        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, bare_bones_seo_sanitize_tracking_scripts($_POST['bb_page_scripts_' . $post_id]));
     }
 }
