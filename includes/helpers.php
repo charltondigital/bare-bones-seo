@@ -59,6 +59,56 @@ function bare_bones_seo_update_page_meta( $post_id, $data ) {
 }
 
 /**
+ * True when schema text is present but won't parse, meaning the output layer
+ * will silently skip it. Used to warn in the editor instead of failing quietly.
+ */
+function bare_bones_seo_schema_is_invalid( $schema ) {
+	$schema = trim( (string) $schema );
+	if ( '' === $schema ) {
+		return false;
+	}
+	json_decode( $schema );
+	return JSON_ERROR_NONE !== json_last_error();
+}
+
+/**
+ * Creates the 404 log table. Safe to call repeatedly — dbDelta only applies
+ * differences. Uses $wpdb->prefix, so each site on a network gets its own.
+ */
+function bare_bones_seo_install() {
+	global $wpdb;
+
+	$table_name      = $wpdb->prefix . 'bbseo_404_logs';
+	$charset_collate = $wpdb->get_charset_collate();
+
+	// dbDelta is whitespace-sensitive: two spaces after PRIMARY KEY, one field per line.
+	// url is indexed at 191 chars to stay under the InnoDB key limit on utf8mb4.
+	$sql = "CREATE TABLE $table_name (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		url varchar(255) NOT NULL DEFAULT '',
+		referer varchar(255) NOT NULL DEFAULT '',
+		hits bigint(20) unsigned NOT NULL DEFAULT 1,
+		last_accessed datetime NOT NULL,
+		PRIMARY KEY  (id),
+		KEY url (url(191))
+	) $charset_collate;";
+
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+
+	// Pages and Posts are no longer switchable in the Indexation screen. Any value
+	// stored before that change would still be honoured by the resolver with no UI
+	// left to undo it, so clear it out.
+	$map = get_option( BARE_BONES_SEO_OPTION_GLOBAL_MAP, array() );
+	if ( is_array( $map ) && ( isset( $map['page'] ) || isset( $map['post'] ) ) ) {
+		unset( $map['page'], $map['post'] );
+		update_option( BARE_BONES_SEO_OPTION_GLOBAL_MAP, $map );
+	}
+
+	update_option( BARE_BONES_SEO_DB_VERSION_OPTION, BARE_BONES_SEO_DB_VERSION );
+}
+
+/**
  * Log 404s. Stores the request path only (no host — it's always this site,
  * and it's rebuilt with home_url() on display); skips common bot/scanner probes.
  */
