@@ -88,6 +88,13 @@ if (!class_exists('BBSEO_GitHub_Updater')) {
          */
         private function get_remote_release() {
             $cache_key = 'bbseo_gh_release';
+
+            // "Check again" on the updates screen should mean it. Without this the
+            // 6-hour cache hides a release you just pushed.
+            if (isset($_GET['force-check'])) {
+                delete_site_transient($cache_key);
+            }
+
             $cached = get_site_transient($cache_key);
 
             if (false !== $cached) {
