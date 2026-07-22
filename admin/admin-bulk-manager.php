@@ -88,10 +88,9 @@ function bare_bones_seo_render_bulk_manager_screen() {
         
         <!-- Box Page Header -->
         <div style="border-bottom:1px solid #f0f0f0; padding-bottom:15px; margin-bottom:20px;">
-            <h2 style="margin:0; font-size:16px; font-weight:600; color:#1d2327;">Page-Level SEO Meta Manager</h2>
+            <h2 style="margin:0; font-size:16px; font-weight:600; color:#1d2327;">Page Meta</h2>
             <p style="margin:5px 0 0; font-size:13px; color:#646970; line-height: 1.5;">
-                These parameters append structural metadata directly into the HTML <code>&lt;head&gt;</code> of your live pages. 
-                You can manage overrides in bulk below, or access these exact fields inside the block/classic editor at the bottom of individual post edit screens.
+                Titles, descriptions, and schema for every published page and post. Click a row to edit it here, or find the same fields at the bottom of any individual edit screen.
             </p>
         </div>
 
@@ -133,7 +132,7 @@ function bare_bones_seo_render_bulk_manager_screen() {
                     <!-- COLLAPSED ROW -->
                     <tr id="<?php echo esc_attr($uid); ?>-collapsed"
                         style="cursor:pointer;"
-                        onclick="bbToggleRow(<?php echo esc_js($post->ID); ?>)">
+                        class="bb-row-toggle" data-post-id="<?php echo esc_attr($post->ID); ?>">
                         <td style="padding:10px 12px; vertical-align:middle;">
                             <span id="<?php echo esc_attr($uid); ?>-chevron"
                                   style="color:#999; margin-right:6px; font-size:11px; display:inline-block; transition:transform 0.15s;">▶</span>
@@ -165,7 +164,7 @@ function bare_bones_seo_render_bulk_manager_screen() {
                             <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end; border-top:1px solid #eee; padding-top:16px;">
                                 <button type="button"
                                         class="button"
-                                        onclick="bbToggleRow(<?php echo esc_js($post->ID); ?>)"
+                                        class="button bb-row-toggle" data-post-id="<?php echo esc_attr($post->ID); ?>"
                                         style="font-size:12px;">
                                     Cancel
                                 </button>
