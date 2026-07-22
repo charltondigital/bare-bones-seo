@@ -22,6 +22,8 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.0');
+define('BARE_BONES_SEO_DB_VERSION', '2');
+define('BARE_BONES_SEO_DB_VERSION_OPTION', 'bare_bones_seo_db_version');
 
 // Load Core
 require_once BARE_BONES_SEO_PATH . 'includes/helpers.php';
@@ -30,6 +32,7 @@ require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php';
 require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php';
 require_once BARE_BONES_SEO_PATH . 'includes/page-meta-output.php';
 require_once BARE_BONES_SEO_PATH . 'includes/redirect-engine.php';
+require_once BARE_BONES_SEO_PATH . 'includes/health-notice.php';
 
 // Load Admin Logic
 require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php'; 
@@ -40,6 +43,16 @@ require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
+
+register_activation_hook(__FILE__, 'bare_bones_seo_install');
+
+// Covers installs that skip activation (GitHub updater, manual upload) and any
+// site where the table was dropped or never created.
+add_action('admin_init', function() {
+    if (get_option(BARE_BONES_SEO_DB_VERSION_OPTION) !== BARE_BONES_SEO_DB_VERSION) {
+        bare_bones_seo_install();
+    }
+});
 
 // Menu Registration
 add_action('admin_menu', function() {
@@ -54,8 +67,8 @@ add_action('admin_menu', function() {
     add_submenu_page('bare-bones-seo', 'Other Tools', 'Other Tools', 'manage_options', 'bare-bones-seo&tab=other-tools', 'bare_bones_seo_render_dashboard');
 });
 
-function bare_bones_seo_skull_icon($size = 18) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204" width="' . intval($size) . '" height="' . intval($size) . '" style="vertical-align:middle; margin-right:4px;" aria-hidden="true"><path fill="currentColor" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/></svg>';
+function bare_bones_seo_skull_icon($size = 18, $color = 'currentColor') {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 169 204" width="' . intval($size) . '" height="' . intval($size) . '" style="vertical-align:middle; margin-right:4px;" aria-hidden="true"><path fill="' . esc_attr($color) . '" d="M55 204H33V180H55V204ZM94 204H72V180H94V204ZM134 204H112V180H134V204ZM84.5 0C131.168 0 169 38.9512 169 87C169 116.014 155.205 141.709 134 157.516V174H32V155.173C12.5036 139.236 0 114.622 0 87C0 38.9512 37.8319 0 84.5 0ZM84.5 117C73 117 72.5 137.5 73.5 141C74.5001 144.5 94.9999 144.5 95 141C95 137.5 96 117 84.5 117ZM46.5 62C34.0736 62 24 72.0736 24 84.5C24 96.9264 34.0736 107 46.5 107C58.9264 107 69 96.9264 69 84.5C69 72.0736 58.9264 62 46.5 62ZM120.5 62C108.074 62 98 72.0736 98 84.5C98 96.9264 108.074 107 120.5 107C132.926 107 143 96.9264 143 84.5C143 72.0736 132.926 62 120.5 62Z"/></svg>';
 }
 
 function bare_bones_seo_render_dashboard() {
@@ -73,7 +86,8 @@ function bare_bones_seo_render_dashboard() {
     <div class="wrap" style="max-width: 1200px;">
         <?php // Marker hoists admin notices ABOVE the title instead of below it. ?>
         <div class="wp-header-end"></div>
-        <h1 style="font-size:46px; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48); ?> Bare Bones SEO</h1>
+        <?php $bb_issues = bare_bones_seo_get_critical_issues(); ?>
+        <h1 style="font-size:46px; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48, $bb_issues ? '#d63638' : 'currentColor'); ?> Bare Bones SEO</h1>
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
             <?php foreach ($tabs as $id => $t) : ?>
                 <a href="?page=bare-bones-seo<?php echo ($id == 'overview' ? '' : '&tab='.$id); ?>" class="nav-tab <?php echo ($active_tab == $id ? 'nav-tab-active' : ''); ?>"><?php echo $t['l']; ?></a>
