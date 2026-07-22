@@ -5,7 +5,7 @@
 if (!defined('ABSPATH')) exit;
 
 function bare_bones_seo_render_tracking_screen() {
-    if (isset($_POST['bb_save_tracking']) && check_admin_referer('bb_tracking_nonce')) {
+    if (isset($_POST['bb_save_tracking']) && check_admin_referer('bb_tracking_nonce') && current_user_can('manage_options')) {
         $scripts = isset($_POST['bb_scripts']) ? $_POST['bb_scripts'] : array();
         update_option(BARE_BONES_SEO_OPTION_TRACKING, bare_bones_seo_sanitize_tracking_scripts($scripts));
         echo '<div class="updated"><p>Tracking scripts updated.</p></div>';
