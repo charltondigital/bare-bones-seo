@@ -75,23 +75,27 @@ function bare_bones_seo_render_overview_screen() {
             <!-- Left Column: Guide/How-To -->
             <div>
                 <div class="card" style="max-width: 100%; margin-top: 0; margin-bottom: 20px; padding: 20px;">
-                    <h3 style="font-size: 14px; margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f1; text-transform: uppercase; letter-spacing: 0.05em; color: #1d2327;">Core Toolset Overview</h3>
+                    <h3 style="font-size: 14px; margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f1; text-transform: uppercase; letter-spacing: 0.05em; color: #1d2327;">Tools Overview</h3>
                     <ul style="margin: 0; padding: 0; list-style: none;">
                         <li style="margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
-                            <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">🗺️ Indexation (Global Map)</strong>
-                            A bird's-eye view of your entire website's search footprint. Configure default, fallback index and sitemap rules across all custom post types from a single, centralized settings board.
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=indexation')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">Indexation <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
+                            A bird's-eye view of your site's search footprint. Set index and sitemap rules for every post type, taxonomy, and archive from one board.
                         </li>
                         <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
-                            <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">✏️ Page-Level Control</strong>
-                            Granular control over individual post and page metadata. Override global rules to set custom titles, descriptions, schema JSON, and indexation settings directly within the WordPress editor. <em>Includes a built-in <strong>Bulk Manager</strong> to quickly tweak these values across your entire site from a single, fast-loading screen.</em>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=bulk')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">Page Meta <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
+                            Titles, descriptions, schema, and indexing for individual posts and pages &mdash; editable one at a time in the editor, or in bulk from this screen.
                         </li>
                         <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
-                            <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">🔗 301 Redirects</strong>
-                            Manage custom redirects with ease. Safely forward old, dead paths straight to your modern pages and track absolute hits day-by-day inside a self-cleaning, rolling 90-day archive.
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=redirects')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">301 Redirects <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
+                            Forward old and dead paths to live pages, with hit counts kept in a rolling 90-day window.
+                        </li>
+                        <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=404-monitor')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">404 Monitor <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
+                            A passive listener for broken links, filtering out bot probes and vulnerability scans so only real visitor misses are logged.
                         </li>
                         <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 0; font-size: 13px; line-height: 1.5;">
-                            <strong style="display: block; font-size: 14px; color: #1d2327; margin-bottom: 2px;">🚫 404 Monitor</strong>
-                            A silent listener tracking broken links across your environment. It automatically filters out common background bot exploits and vulnerability scans, logging only high-value user metrics.
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=tracking')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">Tracking <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
+                            Analytics, verification, and pixel snippets for the whole site or a single page, without editing your theme.
                         </li>
                     </ul>
                 </div>
