@@ -41,14 +41,27 @@ function bare_bones_seo_process_bulk_ajax_save() {
         return;
     }
 
+    // Field names carry the post ID suffix because bare_bones_seo_render_fields()
+    // renders many rows on one screen and the names have to stay unique.
+    $title  = 'bb_seo_title_' . $post_id;
+    $desc   = 'bb_seo_desc_' . $post_id;
+    $schema = 'bb_seo_schema_' . $post_id;
+    $index  = 'bb_seo_should_index_' . $post_id;
+
     bare_bones_seo_update_page_meta($post_id, array(
-        'title'        => isset($_POST['bb_seo_title'])        ? sanitize_text_field($_POST['bb_seo_title'])        : '',
-        'desc'         => isset($_POST['bb_seo_desc'])         ? sanitize_text_field($_POST['bb_seo_desc'])         : '',
-        'schema'       => isset($_POST['bb_seo_schema'])       ? $_POST['bb_seo_schema']                            : '',
-        'should_index' => isset($_POST['bb_seo_should_index']) ? sanitize_key($_POST['bb_seo_should_index'])          : 'yes',
+        'title'        => isset($_POST[$title])  ? sanitize_text_field($_POST[$title]) : '',
+        'desc'         => isset($_POST[$desc])   ? sanitize_text_field($_POST[$desc])  : '',
+        'schema'       => isset($_POST[$schema]) ? $_POST[$schema]                     : '',
+        'should_index' => isset($_POST[$index])  ? sanitize_key($_POST[$index])        : 'yes',
     ));
 
-    wp_send_json_success(array('message' => 'Saved'));
+    $saved = bare_bones_seo_get_page_meta($post_id);
+
+    wp_send_json_success(array(
+        'desc'     => $saved['desc'],
+        'schema'   => $saved['schema'],
+        'noindexed' => bare_bones_seo_state_removes_from_sitemap($saved['index']),
+    ));
 }
 
 /**
@@ -57,12 +70,17 @@ function bare_bones_seo_process_bulk_ajax_save() {
  * @since 1.0.0
  */
 function bare_bones_seo_render_bulk_manager_screen() {
+    $per_page = 50;
+    $paged    = isset($_GET['bb_paged']) ? max(1, intval($_GET['bb_paged'])) : 1;
+
     $query = new WP_Query(array(
         'post_type'      => array('page', 'post'),
-        'posts_per_page' => -1,
+        'posts_per_page' => $per_page,
+        'paged'          => $paged,
         'post_status'    => 'publish',
         'orderby'        => 'title',
         'order'          => 'ASC',
+        'no_found_rows'  => false,
     ));
     ?>
     <!-- CONTAINER BOX -->
@@ -174,8 +192,26 @@ function bare_bones_seo_render_bulk_manager_screen() {
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
 
-    <?php wp_nonce_field(BARE_BONES_SEO_NONCE_BULK_AJAX, 'bb_bulk_nonce_field'); ?>
+        <?php if ($query->max_num_pages > 1) :
+            $base = add_query_arg('bb_paged', '%#%');
+            ?>
+            <div class="tablenav bottom" style="margin-top:12px;">
+                <div class="tablenav-pages" style="float:none; text-align:right;">
+                    <span class="displaying-num"><?php echo esc_html(number_format_i18n($query->found_posts)); ?> items</span>
+                    <?php
+                    echo paginate_links(array(
+                        'base'      => $base,
+                        'format'    => '',
+                        'prev_text' => '&laquo;',
+                        'next_text' => '&raquo;',
+                        'total'     => $query->max_num_pages,
+                        'current'   => $paged,
+                    ));
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
     <?php
 }
