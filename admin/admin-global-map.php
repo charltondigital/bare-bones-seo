@@ -251,7 +251,25 @@ function bare_bones_seo_render_global_map_screen() {
                                     $description = bare_bones_seo_get_section_description($key, $section['type']);
                                     $status      = isset($current_options[$key]) ? $current_options[$key] : 'yes';
                                     $disabled    = $has_conflict ? 'disabled' : '';
-                                ?>
+
+                                    // Core content is deliberately not switchable here. Blocking a whole site
+                                    // belongs in WordPress's own Reading setting, where it's expected, reversible,
+                                    // and flagged by the warning at the top of every admin screen.
+                                    if (in_array($key, array('page', 'post'), true)) : ?>
+                                    <tr>
+                                        <td style="padding:15px; vertical-align:top;">
+                                            <strong><?php echo esc_html($label); ?> (<?php echo esc_html($count); ?>)</strong>
+                                        </td>
+                                        <td style="text-align:center; vertical-align:middle; color:#46b450; font-weight:600;">Always</td>
+                                        <td style="text-align:center; vertical-align:middle; color:#c3c4c7;">&mdash;</td>
+                                        <td style="text-align:center; vertical-align:middle; color:#c3c4c7;">&mdash;</td>
+                                    </tr>
+                                    <tr style="background:#f9f9f9;">
+                                        <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
+                                            Always indexed &mdash; there's no version of a live site where hiding all of these is the right call. To hide the whole site while it's in development, use WordPress's <a href="<?php echo esc_url(admin_url('options-reading.php')); ?>">Reading settings</a>, which Bare Bones SEO will warn you about for as long as it stays on.
+                                        </td>
+                                    </tr>
+                                    <?php else : ?>
                                     <tr>
                                         <td style="padding:15px; vertical-align:top;">
                                             <strong><?php echo esc_html($label); ?> (<?php echo esc_html($count); ?>)</strong>
@@ -283,6 +301,7 @@ function bare_bones_seo_render_global_map_screen() {
                                             <?php echo esc_html($description); ?>
                                         </td>
                                     </tr>
+                                    <?php endif; ?>
                                 <?php endforeach;
                             else : ?>
                                 <tr>
