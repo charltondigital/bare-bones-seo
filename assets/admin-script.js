@@ -52,4 +52,63 @@ jQuery(document).ready(function($) {
             $icon.text('−');
         }
     });
+
+    // --- 5. Bulk Manager: expand / collapse a row ---
+    // Global because the table markup calls it from inline onclick attributes.
+    window.bbToggleRow = function(postId) {
+        var uid = 'bb-' + postId;
+        var $expanded = $('#' + uid + '-expanded');
+        var $chevron  = $('#' + uid + '-chevron');
+
+        if ($expanded.is(':visible')) {
+            $expanded.hide();
+            $chevron.css('transform', 'rotate(0deg)');
+        } else {
+            $expanded.show();
+            $chevron.css('transform', 'rotate(90deg)');
+        }
+    };
+
+    // --- 6. Bulk Manager: save a row over AJAX ---
+    $(document).on('click', '.bb-bulk-save', function(e) {
+        e.preventDefault();
+
+        if (typeof bbSeoData === 'undefined') { return; }
+
+        var $btn   = $(this);
+        var postId = $btn.data('post-id');
+        var uid    = $btn.data('uid');
+        var $row   = $('#' + uid + '-expanded');
+
+        // serialize() preserves the post-ID-suffixed field names the server expects.
+        var payload = $row.find('input, textarea, select').serialize()
+            + '&action=' + encodeURIComponent(bbSeoData.ajaxAction)
+            + '&security=' + encodeURIComponent(bbSeoData.nonce)
+            + '&post_id=' + encodeURIComponent(postId);
+
+        $btn.prop('disabled', true).text('Saving…');
+
+        $.post(ajaxurl, payload)
+            .done(function(response) {
+                if (!response || !response.success) {
+                    $btn.prop('disabled', false).text('Error — retry');
+                    return;
+                }
+                $('#' + uid + '-desc-preview').text(response.data.desc || '');
+                $('#' + uid + '-schema-preview').text(response.data.schema || '');
+                $('#' + uid + '-badge-cell').html(
+                    response.data.noindexed
+                        ? '<span style="color:#dc3232; font-size:16px; font-weight:700;">\u2717</span>'
+                        : ''
+                );
+                $btn.text('Saved');
+                setTimeout(function() {
+                    $btn.prop('disabled', false).text('Update');
+                    window.bbToggleRow(postId);
+                }, 600);
+            })
+            .fail(function() {
+                $btn.prop('disabled', false).text('Error — retry');
+            });
+    });
 });
