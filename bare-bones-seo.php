@@ -23,7 +23,7 @@ define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.0');
 // Measured per release with the Plugin Size Meter tool. Update alongside VERSION.
-define('BARE_BONES_SEO_SIZE', '124 KB');
+define('BARE_BONES_SEO_SIZE', '127 KB');
 define('BARE_BONES_SEO_DB_VERSION', '2');
 define('BARE_BONES_SEO_DB_VERSION_OPTION', 'bare_bones_seo_db_version');
 
@@ -96,7 +96,7 @@ function bare_bones_seo_render_dashboard() {
         <?php // Marker hoists admin notices ABOVE the title instead of below it. ?>
         <div class="wp-header-end"></div>
         <?php $bb_issues = bare_bones_seo_get_critical_issues(); ?>
-        <h1 style="font-size:46px; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48, $bb_issues ? '#d63638' : 'currentColor'); ?> Bare Bones SEO</h1>
+        <h1 style="font-size:46px; font-weight:700; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48, $bb_issues ? '#d63638' : 'currentColor'); ?> Bare Bones SEO</h1>
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
             <?php foreach ($tabs as $id => $t) : ?>
                 <a href="?page=bare-bones-seo<?php echo ($id == 'overview' ? '' : '&tab='.$id); ?>" class="nav-tab <?php echo ($active_tab == $id ? 'nav-tab-active' : ''); ?>"><?php echo $t['l']; ?></a>
