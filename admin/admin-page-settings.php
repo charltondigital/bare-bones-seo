@@ -54,6 +54,9 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                 <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
                 <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
                     <textarea name="bb_seo_schema_<?php echo $post->ID; ?>" rows="4" style="width:100%; font-family:monospace;"><?php echo esc_textarea($meta['schema']); ?></textarea>
+                    <?php if (bare_bones_seo_schema_is_invalid($meta['schema'])) : ?>
+                        <p style="margin:6px 0 0; color:#b32d2e;"><strong>This JSON is not valid</strong> and will not be added to the page. Check for a missing comma, bracket, or quote.</p>
+                    <?php endif; ?>
                 </div>
             </div>
             <!-- Section 4: Tracking Scripts -->
@@ -65,7 +68,7 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                         $p_scripts = get_post_meta($post->ID, BARE_BONES_SEO_META_TRACKING, true) ?: array();
                         bare_bones_seo_render_tracking_table($p_scripts, 'bb_page_scripts_' . $post->ID, false);
                     } else {
-                        echo '<p style="margin:0; color:#646970;">Adding tracking scripts to individual pages requires an administrator account.</p>';
+                        echo '<p style="margin:0; color:#646970;">Adding tracking scripts to individual pages requires permission to post unfiltered HTML, which some hosts and security plugins disable. Global tracking scripts are unaffected &mdash; add them under Bare Bones SEO &rarr; Tracking.</p>';
                     }
                     ?>
                 </div>
