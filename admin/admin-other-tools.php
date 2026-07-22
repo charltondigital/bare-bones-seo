@@ -1,66 +1,59 @@
 <?php
 /**
- * Renders the "Other Tools" tab for Bare Bones SEO.
+ * "Other Tools" tab — Bare Bones SEO
  *
- * @package BareBonesSEO
- * @subpackage Admin
+ * Explains what this plugin deliberately does not do, and points at off-server
+ * tools for the jobs that would otherwise cost the host real processing time.
  */
 
-if (!defined('ABSPATH')) {
-    exit;
-}
+if (!defined('ABSPATH')) exit;
 
-/**
- * Render the Other Tools screen.
- *
- * @since 1.0.11
- */
 function bare_bones_seo_render_other_tools_screen() {
     ?>
-    <div class="wrap bare-bones-seo-wrap" style="padding: 0; margin-top: 10px;">
-        
-        <p style="color: #2c3338; font-size: 13px; line-height: 1.5; margin-bottom: 20px; max-width: 1200px;">
-            Bare Bones SEO is built to be fast, lightweight, and focused purely on indexation control. For advanced tasks, we recommend pairing our plugin with these best-in-class, specialized external utilities.
+    <div style="background:#fff; border:1px solid #c3c4c7; padding:24px 28px; border-radius:4px; margin-top:20px; max-width:900px;">
+
+        <h2 style="margin:0 0 12px; font-size:18px; font-weight:600; color:#1d2327;">
+            The Bare Bones Philosophy on "Extra" Tools
+        </h2>
+
+        <p style="margin:0 0 12px; font-size:14px; line-height:1.6; color:#3c434a;">
+            We're not here to stuff your WordPress database with heavy algorithms, background crawlers, or $100/mo upsell widgets that slow down your site.
         </p>
 
-        <!-- Other Tools Grid Container -->
-        <div class="bb-other-tools-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; max-width: 1200px;">
-            
-            <!-- On-Page Keyword Optimization Card -->
-            <div class="card" style="margin: 0; padding: 24px; border: 1px solid #c3c4c7; box-shadow: none; background: #fff; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px;">
-                <div>
-                    <h2 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                        <span class="dashicons dashicons-editor-bold" style="color: #2271b1; font-size: 20px; width: 20px; height: 20px;"></span>
-                        On-Page Keyword Optimization
-                    </h2>
-                    <p style="color: #2c3338; font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
-                        Writing content is only half the battle. Tools like <strong>Surfer SEO</strong> or <strong>PageOptimizer Pro (POP)</strong> analyze top-ranking pages for your target keywords. They tell you exactly how many times to use primary terms, variations, and headings to match search engine expectations.
-                    </p>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f1; padding-top: 15px; margin-top: auto;">
-                    <span style="font-size: 10px; font-weight: bold; letter-spacing: 0.5px; color: #646970; background: #f0f0f1; padding: 3px 8px; border-radius: 3px;">CONTENT</span>
-                    <a href="https://surferseo.com" target="_blank" class="button button-secondary" style="border-color: #2271b1; color: #2271b1;">Explore Tools</a>
-                </div>
-            </div>
+        <p style="margin:0 0 24px; font-size:14px; line-height:1.6; color:#3c434a;">
+            For specialized tasks that require heavy processing, we recommend using off-server utilities that keep your host fast and clean:
+        </p>
 
-            <!-- Broken Link Detection Card -->
-            <div class="card" style="margin: 0; padding: 24px; border: 1px solid #c3c4c7; box-shadow: none; background: #fff; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px;">
-                <div>
-                    <h2 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                        <span class="dashicons dashicons-warning" style="color: #dba617; font-size: 20px; width: 20px; height: 20px;"></span>
-                        Broken Link Detection
-                    </h2>
-                    <p style="color: #2c3338; font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
-                        Broken internal and external links frustrate users and block search spiders from properly crawling your site. We are currently developing our own lightning-fast, server-friendly broken link detection utility that won't bog down your database.
-                    </p>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f1; padding-top: 15px; margin-top: auto;">
-                    <span style="font-size: 10px; font-weight: bold; letter-spacing: 0.5px; color: #2271b1; background: #f0f6fc; padding: 3px 8px; border-radius: 3px;">COMING SOON</span>
-                    <span style="color: #646970; font-style: italic; font-size: 12px;">In Development</span>
-                </div>
-            </div>
-
+        <div style="border-top:1px solid #f0f0f1; padding-top:20px; margin-bottom:24px;">
+            <h3 style="margin:0 0 8px; font-size:15px; font-weight:600; color:#1d2327;">
+                On-Page Content Optimization
+            </h3>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                Rather than bloating your editor with arbitrary "green light" algorithms, focus on core on-page targets (Title, H1, Meta, and URL).
+            </p>
+            <p style="margin:0; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>For heavy semantic &amp; entity research:</strong> We recommend using external cloud tools like
+                <strong>Surfer SEO</strong> or <strong>PageOptimizer Pro</strong>. They handle the heavy lifting on their servers &mdash; not yours.
+            </p>
         </div>
+
+        <div style="border-top:1px solid #f0f0f1; padding-top:20px;">
+            <h3 style="margin:0 0 8px; font-size:15px; font-weight:600; color:#1d2327;">
+                Broken Link Audits
+            </h3>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                Background link checkers are the #1 cause of server strain in traditional SEO plugins.
+            </p>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>Passive Detection:</strong> Our built-in
+                <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=404-monitor')); ?>">404 Monitor</a>
+                automatically captures broken links as real visitors hit them.
+            </p>
+            <p style="margin:0; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>Full Site Audits:</strong> For deep scans, run <strong>Screaming Frog SEO Spider</strong> (Free Version) locally from your desktop. It scans your site in seconds without using a single byte of server memory.
+            </p>
+        </div>
+
     </div>
     <?php
 }
