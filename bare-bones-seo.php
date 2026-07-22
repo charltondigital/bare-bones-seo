@@ -32,17 +32,24 @@ require_once BARE_BONES_SEO_PATH . 'includes/noindex-control.php';
 require_once BARE_BONES_SEO_PATH . 'includes/sitemap-control.php';
 require_once BARE_BONES_SEO_PATH . 'includes/page-meta-output.php';
 require_once BARE_BONES_SEO_PATH . 'includes/redirect-engine.php';
-require_once BARE_BONES_SEO_PATH . 'includes/health-notice.php';
 
 // Load Admin Logic
-require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php'; 
-require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
+// These two register hooks that can fire outside a plugin screen (meta box save,
+// and the tracking table/sanitizer they share), so they always load.
+require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php';
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
-require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
+
+// Everything below is admin-screen rendering only — no reason to parse it on
+// front-end requests.
+if (is_admin()) {
+    require_once BARE_BONES_SEO_PATH . 'includes/health-notice.php';
+    require_once BARE_BONES_SEO_PATH . 'admin/admin-overview.php';
+    require_once BARE_BONES_SEO_PATH . 'admin/admin-global-map.php';
+    require_once BARE_BONES_SEO_PATH . 'admin/admin-bulk-manager.php';
+    require_once BARE_BONES_SEO_PATH . 'admin/admin-404-monitor.php';
+    require_once BARE_BONES_SEO_PATH . 'admin/admin-redirects.php';
+    require_once BARE_BONES_SEO_PATH . 'admin/admin-other-tools.php';
+}
 
 register_activation_hook(__FILE__, 'bare_bones_seo_install');
 
@@ -108,6 +115,10 @@ add_action('admin_enqueue_scripts', function($hook) {
     if(strpos($hook, 'bare-bones-seo') !== false || in_array($hook, array('post.php', 'post-new.php'))) {
         wp_enqueue_style('bbs-css', plugins_url('assets/admin-style.css', __FILE__), array(), BARE_BONES_SEO_VERSION);
         wp_enqueue_script('bbs-js', plugins_url('assets/admin-script.js', __FILE__), array('jquery'), BARE_BONES_SEO_VERSION, true);
+        wp_localize_script('bbs-js', 'bbSeoData', array(
+            'ajaxAction' => BARE_BONES_SEO_AJAX_ACTION,
+            'nonce'      => wp_create_nonce(BARE_BONES_SEO_NONCE_BULK_AJAX),
+        ));
     }
 });
 
