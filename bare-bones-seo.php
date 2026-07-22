@@ -22,6 +22,8 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.0');
+// Measured per release with the Plugin Size Meter tool. Update alongside VERSION.
+define('BARE_BONES_SEO_SIZE', '124 KB');
 define('BARE_BONES_SEO_DB_VERSION', '2');
 define('BARE_BONES_SEO_DB_VERSION_OPTION', 'bare_bones_seo_db_version');
 
