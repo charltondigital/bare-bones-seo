@@ -20,18 +20,14 @@ if (!defined('ABSPATH')) {
 function bare_bones_seo_render_overview_screen() {
     // Get the current monitor status dynamically
     $monitor_active = has_action('template_redirect', 'bbseo_log_404_error') ? 'Active' : 'Disabled';
-    
-    // Check if redirect hit-tracking is hooked and active
-    $redirect_tracking = has_action('template_redirect', 'bbseo_log_old_slug_redirect_90_days') ? 'Active' : 'Disabled';
 
-    // Check footprint estimate
-    $version = '1.0.12';
-    if (defined('BARE_BONES_SEO_VERSION')) {
-        $version = BARE_BONES_SEO_VERSION;
-    }
+    // The custom redirect engine, not a hook that never existed.
+    $redirect_tracking = has_action('template_redirect', 'bare_bones_seo_apply_redirects') ? 'Active' : 'Disabled';
 
-    // Fetch the cached plugin size computed at hook installation/update (Defaulting to 100 KB)
-    $plugin_size = get_option('bbseo_plugin_disk_size', '100 KB');
+    $version = defined('BARE_BONES_SEO_VERSION') ? BARE_BONES_SEO_VERSION : 'unknown';
+
+    // Measured from disk, cached for a day.
+    $plugin_size = bare_bones_seo_get_disk_size();
 
     // Split size into numeric and unit segments dynamically for the styling layout
     $size_number = preg_replace('/[^0-9.]/', '', $plugin_size);
