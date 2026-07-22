@@ -1,371 +1,108 @@
 <?php
 /**
- * Indexation — Bare Bones SEO
- *
- * Controls built from WordPress internals matching core sitemap logic.
- * Only shows sections with at least 1 published item.
- * Right column shows source of truth — all sections with ✗ for removed ones.
- *
- * @package BareBonesSEO
- * @subpackage Admin
+ * Page-Level SEO Settings — Bare Bones SEO
  */
+if (!defined('ABSPATH')) { exit; }
 
-if (!defined('ABSPATH')) {
-    exit;
+add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
+function bare_bones_seo_register_meta_box() {
+    $post_types = get_post_types(array('public' => true));
+    foreach ($post_types as $type) {
+        add_meta_box('bare-bones-seo-box', 'Page-Level SEO Settings — Bare Bones SEO', 'bare_bones_seo_render_meta_box', $type, 'normal', 'high');
+    }
 }
 
-/**
- * Build the list of sections that WordPress would include in its sitemap.
- *
- * Matches WordPress core sitemap logic exactly:
- * - Public post types with at least 1 published post
- * - Public taxonomies with at least 1 term that has published posts
- * - Users (author archives) only if at least 1 published post exists
- *
- * Sections with zero items are excluded — they won't be in the sitemap
- * and would just clutter the UI.
- *
- * @since 1.0.3
- * @return array Array of section data keyed by section key
- */
-function bare_bones_seo_get_sitemap_sections() {
-    $sections = array();
-
-    // POST TYPES
-    $post_types_public = get_post_types(array('public' => true), 'objects');
-    $post_types_queryable = get_post_types(array('publicly_queryable' => true), 'objects');
-    $post_types = array_merge($post_types_public, $post_types_queryable);
-
-    foreach ($post_types as $post_type) {
-        // Skip attachments — WordPress excludes these from sitemaps
-        if ($post_type->name === 'attachment') {
-            continue;
-        }
-
-        $count = wp_count_posts($post_type->name);
-        $published = isset($count->publish) ? (int) $count->publish : 0;
-
-        // Only include if at least 1 published post
-        if ($published === 0) {
-            continue;
-        }
-
-        $sections[$post_type->name] = array(
-            'key'   => $post_type->name,
-            'type'  => 'posts',
-            'label' => $post_type->label,
-            'count' => $published,
-            'url'   => home_url('/wp-sitemap-posts-' . $post_type->name . '-1.xml'),
-        );
-    }
-
-    // TAXONOMIES
-    $taxonomies = get_taxonomies(array('public' => true), 'objects');
-
-    foreach ($taxonomies as $taxonomy) {
-        $count = wp_count_terms(array(
-            'taxonomy'   => $taxonomy->name,
-            'hide_empty' => true, // Only count terms with published posts
-        ));
-
-        if (is_wp_error($count) || (int) $count === 0) {
-            continue;
-        }
-
-        $sections[$taxonomy->name] = array(
-            'key'   => $taxonomy->name,
-            'type'  => 'taxonomies',
-            'label' => $taxonomy->label,
-            'count' => (int) $count,
-            'url'   => home_url('/wp-sitemap-taxonomies-' . $taxonomy->name . '-1.xml'),
-        );
-    }
-
-    // USERS (Author Archives)
-    $published_posts = wp_count_posts('post');
-    $total_published = isset($published_posts->publish) ? (int) $published_posts->publish : 0;
-
-    if ($total_published > 0) {
-        $user_data = count_users();
-        $user_count = (int) ($user_data['total_users'] ?? 0);
-
-        if ($user_count > 0) {
-            $sections['user'] = array(
-                'key'   => 'user',
-                'type'  => 'users',
-                'label' => 'Author Archives',
-                'count' => $user_count,
-                'url'   => home_url('/wp-sitemap-users-1.xml'),
-            );
-        }
-    }
-
-    return $sections;
+function bare_bones_seo_render_meta_box($post) {
+    wp_nonce_field(BARE_BONES_SEO_NONCE_PAGE, 'bare_bones_seo_nonce');
+    bare_bones_seo_render_fields($post);
 }
 
-/**
- * Get plain-English description for a section.
- *
- * @since 1.0.3
- * @param string $key
- * @param string $type
- * @return string
- */
-function bare_bones_seo_get_section_description($key, $type) {
-    $descriptions = array(
-        'post'     => 'Your blog posts and articles. You\'ll almost always want these indexed.',
-        'page'     => 'Your site pages (About, Contact, Services, etc.). Normally keep these indexed.',
-        'category' => 'Archive pages that organize your posts. Helps Google understand your site structure.',
-        'post_tag' => 'Often create thin or duplicate content. Consider noindexing to preserve crawl budget.',
-        'user'     => 'Only index these if your author pages include a photo, bio, and original content.',
-    );
-
-    return $descriptions[$key] ?? 'Index if these are actual pages with unique, valuable content that should appear in Google as standalone pages.';
-}
-
-/**
- * Render the Indexation screen.
- *
- * @since 1.0.0
- */
-function bare_bones_seo_render_global_map_screen() {
-    // Handle save
-    if (isset($_POST['bb_save_global_map']) && check_admin_referer(BARE_BONES_SEO_NONCE_GLOBAL_MAP)) {
-        $submitted = isset($_POST['section_index']) ? $_POST['section_index'] : array();
-        $clean     = array();
-        foreach ($submitted as $key => $val) {
-            $clean[sanitize_key($key)] = sanitize_text_field($val);
-        }
-        update_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, $clean);
-
-        // Clear native core sitemap cached transients to apply changes instantly
-        global $wpdb;
-        $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wp_sitemaps_%'" );
-        flush_rewrite_rules( false );
-
-        echo '<div class="updated"><p>Your settings have been saved and sitemaps rebuilt instantly!</p></div>';
-    }
-
-    $current_options = get_option(BARE_BONES_SEO_OPTION_GLOBAL_MAP, array());
-    $conflict        = bare_bones_seo_detect_sitemap_conflict();
-    $has_conflict    = $conflict['conflict'];
-    $conflict_plugin = $conflict['plugin_name'];
-    $sections        = bare_bones_seo_get_sitemap_sections();
+function bare_bones_seo_render_fields($post, $in_bulk = false) {
+    $meta = bare_bones_seo_get_page_meta($post->ID);
+    $site_name = html_entity_decode(get_bloginfo('name'), ENT_QUOTES, 'UTF-8');
+    $uid = 'bb-' . $post->ID;
+    $site_state = bare_bones_seo_get_site_state($post->post_type);
+    $effective_state = bare_bones_seo_get_effective_post_state($post->ID);
+    $preview_title = $meta['title'] ? $meta['title'] : $post->post_title;
     ?>
-    
-    <?php if ($has_conflict) : ?>
-        <div style="background:#fff5f5; border-left:4px solid #dc3232; padding:15px 20px; border-radius:3px; margin-bottom:20px;">
-            <strong>⚠️ <?php echo esc_html($conflict_plugin); ?> sitemap is overriding your built-in WordPress sitemap.</strong>
-            Please deactivate your <?php echo esc_html($conflict_plugin); ?> sitemap before making changes here.
-        </div>
-    <?php endif; ?>
-
-    <!-- CONTAINER BOX -->
-    <div style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; margin-top:20px;">
-        
-        <!-- Box Page Header -->
-        <div style="border-bottom:1px solid #f0f0f0; padding-bottom:15px; margin-bottom:20px;">
-            <h2 style="margin:0; font-size:16px; font-weight:600; color:#1d2327;">Global Indexation Settings</h2>
-            <p style="margin:5px 0 0; font-size:13px; color:#646970;">Should search engines and AI scrapers index these sections? Review each section description below to configure your routing rules.</p>
-        </div>
-
-        <!-- TWO-COLUMN LAYOUT -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
-
-            <!-- LEFT: Controls -->
-            <div>
-                <form method="post" action="">
-                    <?php wp_nonce_field(BARE_BONES_SEO_NONCE_GLOBAL_MAP); ?>
-
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr style="background:#f6f7f7;">
-                                <th style="font-weight:600; padding:15px; width:34%;">Section</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:16%;">YES</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:16%;">NO</th>
-                                <th style="font-weight:600; text-align:center; padding:15px; width:34%;">Remove from Sitemap Only</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($sections)) :
-                                foreach ($sections as $section) :
-                                    $key         = $section['key'];
-                                    $label       = $section['label'];
-                                    $count       = $section['count'];
-                                    $description = bare_bones_seo_get_section_description($key, $section['type']);
-                                    $status      = isset($current_options[$key]) ? $current_options[$key] : 'yes';
-                                    $disabled    = $has_conflict ? 'disabled' : '';
-
-                                    // Core content is deliberately not switchable here. Blocking a whole site
-                                    // belongs in WordPress's own Reading setting, where it's expected, reversible,
-                                    // and flagged by the warning at the top of every admin screen.
-                                    if (in_array($key, array('page', 'post'), true)) : ?>
-                                    <tr>
-                                        <td style="padding:15px; vertical-align:top;">
-                                            <strong><?php echo esc_html($label); ?> (<?php echo esc_html($count); ?>)</strong>
-                                        </td>
-                                        <td style="text-align:center; vertical-align:middle; color:#46b450; font-weight:600;">Always</td>
-                                        <td style="text-align:center; vertical-align:middle; color:#c3c4c7;">&mdash;</td>
-                                        <td style="text-align:center; vertical-align:middle; color:#c3c4c7;">&mdash;</td>
-                                    </tr>
-                                    <tr style="background:#f9f9f9;">
-                                        <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
-                                            Always indexed &mdash; there's no version of a live site where hiding all of these is the right call. To hide the whole site while it's in development, use WordPress's <a href="<?php echo esc_url(admin_url('options-reading.php')); ?>">Reading settings</a>, which Bare Bones SEO will warn you about for as long as it stays on.
-                                        </td>
-                                    </tr>
-                                    <?php else : ?>
-                                    <tr>
-                                        <td style="padding:15px; vertical-align:top;">
-                                            <strong><?php echo esc_html($label); ?> (<?php echo esc_html($count); ?>)</strong>
-                                        </td>
-                                        <td style="text-align:center; vertical-align:middle;">
-                                            <input type="radio"
-                                                   name="section_index[<?php echo esc_attr($key); ?>]"
-                                                   value="yes"
-                                                   <?php checked($status, 'yes'); ?>
-                                                   <?php echo esc_attr($disabled); ?>>
-                                        </td>
-                                        <td style="text-align:center; vertical-align:middle;">
-                                            <input type="radio"
-                                                   name="section_index[<?php echo esc_attr($key); ?>]"
-                                                   value="no"
-                                                   <?php checked($status, 'no'); ?>
-                                                   <?php echo esc_attr($disabled); ?>>
-                                        </td>
-                                        <td style="text-align:center; vertical-align:middle;">
-                                            <input type="radio"
-                                                   name="section_index[<?php echo esc_attr($key); ?>]"
-                                                   value="complicated_sitemap"
-                                                   <?php checked($status, 'complicated_sitemap'); ?>
-                                                   <?php echo esc_attr($disabled); ?>>
-                                        </td>
-                                    </tr>
-                                    <tr style="background:#f9f9f9;">
-                                        <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
-                                            <?php echo esc_html($description); ?>
-                                        </td>
-                                    </tr>
-                                    <?php endif; ?>
-                                <?php endforeach;
-                            else : ?>
-                                <tr>
-                                    <td colspan="4" style="padding:20px; color:#666; text-align:center;">
-                                        No sitemap sections found. Make sure you have published content.
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-
-                            <!-- DIVIDER: WordPress System Pages -->
-                            <tr>
-                                <td colspan="4" style="padding:12px 15px 6px; background:#f0f0f0; border-top:2px solid #ddd;">
-                                    <strong style="font-size:12px; color:#444; text-transform:uppercase; letter-spacing:0.05em;">WordPress System Pages</strong>
-                                    <span style="font-size:11px; color:#888; margin-left:8px;">Never in sitemap — indexation control only</span>
-                                </td>
-                            </tr>
-
-                            <?php
-                            $system_pages = array(
-                                'date'   => array(
-                                    'label'       => 'Date Archives',
-                                    'description' => 'Pages organized by date (e.g. /2024/01/). Often duplicate content — consider noindexing.',
-                                ),
-                                'paged'  => array(
-                                    'label'       => 'Paginated Pages',
-                                    'description' => 'Page 2, 3, etc. of archives (/page/2/). Usually best left indexed — helps Google find all your posts.',
-                                ),
-                            );
-
-                            foreach ($system_pages as $key => $page) :
-                                $status = isset($current_options[$key]) ? $current_options[$key] : 'yes';
-                            ?>
-                                <tr>
-                                    <td style="padding:15px; vertical-align:top;">
-                                        <strong><?php echo esc_html($page['label']); ?></strong>
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="yes"
-                                               <?php checked($status, 'yes'); ?>>
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="no"
-                                               <?php checked($status, 'no'); ?>>
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="complicated_sitemap"
-                                               disabled
-                                               style="opacity:0.3; cursor:not-allowed;">
-                                    </td>
-                                </tr>
-                                <tr style="background:#f9f9f9;">
-                                    <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
-                                        <?php echo esc_html($page['description']); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-
-                        </tbody>
-                    </table>
-
-                    <?php if (!$has_conflict && !empty($sections)) : ?>
-                        <p class="submit" style="margin-top:20px;">
-                            <input type="submit" name="bb_save_global_map" class="button button-primary button-large" value="Save Settings">
-                        </p>
-                    <?php endif; ?>
-                </form>
+    <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; padding:10px 0;">
+        <div>
+            <!-- Section 1: Snippet Builder -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-snippet" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Snippet Builder <span class="bb-toggle-icon">−</span></button>
+                <div id="<?php echo $uid; ?>-snippet" style="padding:14px; border-top:1px solid #ddd;">
+                    <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;">SEO TITLE</label>
+                    <input type="text" name="bb_seo_title_<?php echo $post->ID; ?>" value="<?php echo esc_attr($meta['title']); ?>" style="width:100%; margin-bottom:12px;">
+                    <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;">META DESCRIPTION</label>
+                    <textarea name="bb_seo_desc_<?php echo $post->ID; ?>" rows="3" style="width:100%;"><?php echo esc_textarea($meta['desc']); ?></textarea>
+                </div>
             </div>
-
-            <!-- RIGHT: Source of truth sitemap preview -->
-            <div style="background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:20px; height:fit-content; position:sticky; top:20px;">
-                <h3 style="margin-top:0; margin-bottom:15px; font-size:14px; color:#333;">
-                    🗺️ This is what you're pushing to search engines and AI
-                </h3>
-
-                <div style="background:white; border:1px solid #e0e0e0; border-radius:3px; padding:15px; font-size:12px; line-height:2; color:#333; max-height:600px; overflow-y:auto;">
-                    <?php if ($has_conflict) : ?>
-                        <div style="color:#dc3232; padding:10px 0;">
-                            ⚠️ Sitemap controlled by <?php echo esc_html($conflict_plugin); ?>
-                        </div>
-                    <?php elseif (empty($sections)) : ?>
-                        <div style="color:#888; padding:10px 0;">
-                            No published content found.
-                        </div>
-                    <?php else : ?>
-                        <div style="color:#666; margin-bottom:10px; font-family:monospace;">
-                            <a href="<?php echo esc_url(home_url('/wp-sitemap.xml')); ?>" target="_blank" style="color:#0073aa; text-decoration:none;">
-                                /wp-sitemap.xml
-                            </a>
-                        </div>
-                        <?php foreach ($sections as $section) :
-                            $key    = $section['key'];
-                            $status = isset($current_options[$key]) ? $current_options[$key] : 'yes';
-
-                            $removed_from_sitemap = in_array($status, array('no', 'complicated_sitemap'));
-                            $icon  = $removed_from_sitemap ? '✗' : '✓';
-                            $color = $removed_from_sitemap ? '#d63638' : '#46b450';
-                        ?>
-                            <div style="color:<?php echo esc_attr($color); ?>; margin-bottom:8px; font-family:monospace;">
-                                <span style="font-weight:bold;"><?php echo esc_html($icon); ?></span>
-                                <a href="<?php echo esc_url($section['url']); ?>" target="_blank" style="color:#0073aa; text-decoration:none;">
-                                    <?php echo esc_html(basename($section['url'])); ?>
-                                </a>
-                                <span style="color:#999; font-size:11px;">(<?php echo esc_html($section['count']); ?>)</span>
-                            </div>
-                        <?php endforeach; ?>
+            <!-- Section 2: Indexing -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-indexing" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Indexing <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-indexing" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <?php 
+                    $opts = array('yes' => 'Yes', 'no' => 'No', 'complicated_sitemap' => 'Remove from Sitemap Only');
+                    foreach ($opts as $v => $l) : 
+                        if (bare_bones_seo_more_restrictive($site_state, $v) === $v) : ?>
+                            <label style="display:block; margin-bottom:8px;"><input type="radio" name="bb_seo_should_index_<?php echo $post->ID; ?>" value="<?php echo $v; ?>" <?php checked($effective_state, $v); ?>> <?php echo $l; ?></label>
+                    <?php endif; endforeach; ?>
+                </div>
+            </div>
+            <!-- Section 3: Schema -->
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <textarea name="bb_seo_schema_<?php echo $post->ID; ?>" rows="4" style="width:100%; font-family:monospace;"><?php echo esc_textarea($meta['schema']); ?></textarea>
+                    <?php if (bare_bones_seo_schema_is_invalid($meta['schema'])) : ?>
+                        <p style="margin:6px 0 0; color:#b32d2e;"><strong>This JSON is not valid</strong> and will not be added to the page. Check for a missing comma, bracket, or quote.</p>
                     <?php endif; ?>
                 </div>
-
-                <p style="margin-top:15px; font-size:11px; color:#666; line-height:1.6;">
-                    <strong>✓</strong> = In sitemap &nbsp;|&nbsp; <strong>✗</strong> = Removed from sitemap<br>
-                    Click any link to preview what Google sees.
-                </p>
+            </div>
+            <!-- Section 4: Tracking Scripts -->
+            <?php if (!$in_bulk) : ?>
+            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo $uid; ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <?php
+                    if (current_user_can('unfiltered_html')) {
+                        $p_scripts = get_post_meta($post->ID, BARE_BONES_SEO_META_TRACKING, true) ?: array();
+                        bare_bones_seo_render_tracking_table($p_scripts, 'bb_page_scripts_' . $post->ID, false);
+                    } else {
+                        echo '<p style="margin:0; color:#646970;">Adding tracking scripts to individual pages requires permission to post unfiltered HTML, which some hosts and security plugins disable. Global tracking scripts are unaffected &mdash; add them under Bare Bones SEO &rarr; Tracking.</p>';
+                    }
+                    ?>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <div>
+            <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:8px;">Live Preview</div>
+            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:14px; max-width:600px;">
+                <div style="font-family:arial; font-size:20px; color:#1a0dab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo esc_html($preview_title . ' — ' . $site_name); ?></div>
+                <div style="font-family:arial; font-size:14px; color:#545454; line-height:1.58; min-height:2.5em;"><?php echo esc_html($meta['desc']); ?></div>
             </div>
         </div>
     </div>
     <?php
+}
+
+add_action('save_post', 'bare_bones_seo_save_meta_box_data');
+function bare_bones_seo_save_meta_box_data($post_id) {
+    if (!isset($_POST['bare_bones_seo_nonce']) || !wp_verify_nonce($_POST['bare_bones_seo_nonce'], BARE_BONES_SEO_NONCE_PAGE)) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+    $data = array(
+        'title'        => $_POST['bb_seo_title_'.$post_id] ?? '',
+        'desc'         => $_POST['bb_seo_desc_'.$post_id] ?? '',
+        'schema'       => $_POST['bb_seo_schema_'.$post_id] ?? '',
+        'should_index' => $_POST['bb_seo_should_index_'.$post_id] ?? 'yes',
+    );
+    bare_bones_seo_update_page_meta($post_id, $data);
+
+    if (current_user_can('unfiltered_html') && isset($_POST['bb_page_scripts_' . $post_id])) {
+        $scripts = bare_bones_seo_sanitize_tracking_scripts($_POST['bb_page_scripts_' . $post_id]);
+        // wp_slash offsets the unslash update_post_meta() applies internally, so raw code survives intact.
+        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));
+    }
 }
