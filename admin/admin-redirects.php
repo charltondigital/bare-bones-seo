@@ -30,7 +30,7 @@ function bb_handle_redirect_actions() {
         return;
     }
 
-    $notices = get_transient('bb_redirect_notices');
+    $notices = get_transient('bb_redirect_notices_' . get_current_user_id());
     if (!is_array($notices)) {
         $notices = array();
     }
@@ -52,8 +52,8 @@ function bb_handle_redirect_actions() {
         if (count($notices) > 5) {
             array_shift($notices);
         }
-        set_transient('bb_redirect_notices', $notices, 300);
-        wp_redirect(remove_query_arg(array('action', 'post_id', 'slug', '_wpnonce')));
+        set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+        wp_safe_redirect(remove_query_arg(array('action', 'post_id', 'slug', '_wpnonce')));
         exit;
     }
 
@@ -61,7 +61,7 @@ function bb_handle_redirect_actions() {
     if (
         isset($_GET['action']) && $_GET['action'] === 'delete_custom' && isset($_GET['source'])
     ) {
-        $source = trim(parse_url(wp_unslash($_GET['source']), PHP_URL_PATH), '/');
+        $source = trim((string) parse_url(wp_unslash($_GET['source']), PHP_URL_PATH), '/');
         check_admin_referer('bb_delete_custom_' . $source);
 
         $redirects = get_option('bare_bones_seo_redirects', array());
@@ -74,8 +74,8 @@ function bb_handle_redirect_actions() {
         if (count($notices) > 5) {
             array_shift($notices);
         }
-        set_transient('bb_redirect_notices', $notices, 300);
-        wp_redirect(remove_query_arg(array('action', 'source', '_wpnonce')));
+        set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+        wp_safe_redirect(remove_query_arg(array('action', 'source', '_wpnonce')));
         exit;
     }
 
@@ -85,8 +85,10 @@ function bb_handle_redirect_actions() {
         isset($_POST['bb_add_redirect_nonce']) &&
         wp_verify_nonce($_POST['bb_add_redirect_nonce'], 'bb_add_redirect')
     ) {
-        $source = trim(parse_url(wp_unslash($_POST['redirect_source']), PHP_URL_PATH), '/');
-        $target = esc_url_raw(trim(wp_unslash($_POST['redirect_target'])));
+        $raw_source = isset($_POST['redirect_source']) ? wp_unslash($_POST['redirect_source']) : '';
+        $raw_target = isset($_POST['redirect_target']) ? wp_unslash($_POST['redirect_target']) : '';
+        $source = trim((string) parse_url($raw_source, PHP_URL_PATH), '/');
+        $target = esc_url_raw(trim($raw_target));
 
         $target_host = parse_url($target, PHP_URL_HOST);
         $target_path = trim((string) parse_url($target, PHP_URL_PATH), '/');
@@ -107,11 +109,11 @@ function bb_handle_redirect_actions() {
             if (count($notices) > 5) {
                 array_shift($notices);
             }
-            set_transient('bb_redirect_notices', $notices, 300);
-            wp_redirect(remove_query_arg(array('bb_add_redirect_nonce', 'add_redirect')));
+            set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+            wp_safe_redirect(remove_query_arg(array('bb_add_redirect_nonce', 'add_redirect')));
             exit;
         }
-        set_transient('bb_redirect_notices', $notices, 300);
+        set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
     }
 }
 
@@ -121,7 +123,7 @@ function bb_handle_redirect_actions() {
 function render_bare_bones_redirects_tab() {
     global $wpdb;
 
-    $notices = get_transient('bb_redirect_notices');
+    $notices = get_transient('bb_redirect_notices_' . get_current_user_id());
     ?>
     <div class="wrap bare-bones-seo-wrap" style="padding: 0; margin-top: 10px;">
 
@@ -134,7 +136,7 @@ function render_bare_bones_redirects_tab() {
                     <p style="margin: 0; padding: 2px 0; font-size: 13px;"><?php echo $clean_notice; ?></p>
                 </div>
             <?php endforeach; ?>
-            <?php delete_transient('bb_redirect_notices'); ?>
+            <?php delete_transient('bb_redirect_notices_' . get_current_user_id()); ?>
         <?php endif; ?>
 
         <div class="bb-redirects-container" style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; max-width: 1200px;">
@@ -229,6 +231,13 @@ function render_bare_bones_redirects_tab() {
                     ");
 
                     $redirect_groups = array();
+
+                    // One cache prime instead of a get_permalink()/get_post_meta()
+                    // round trip per row.
+                    if ( ! empty( $db_results ) ) {
+                        $prime_ids = array_unique( wp_list_pluck( $db_results, 'post_id' ) );
+                        _prime_post_caches( $prime_ids, false, true );
+                    }
 
                     foreach ($db_results as $row) {
                         $post_id  = $row->post_id;
