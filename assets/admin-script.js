@@ -54,8 +54,7 @@ jQuery(document).ready(function($) {
     });
 
     // --- 5. Bulk Manager: expand / collapse a row ---
-    // Global because the table markup calls it from inline onclick attributes.
-    window.bbToggleRow = function(postId) {
+    function bbToggleRow(postId) {
         var uid = 'bb-' + postId;
         var $expanded = $('#' + uid + '-expanded');
         var $chevron  = $('#' + uid + '-chevron');
@@ -67,7 +66,13 @@ jQuery(document).ready(function($) {
             $expanded.show();
             $chevron.css('transform', 'rotate(90deg)');
         }
-    };
+    }
+
+    // Delegated so it works regardless of script load order.
+    $(document).on('click', '.bb-row-toggle', function(e) {
+        e.preventDefault();
+        bbToggleRow($(this).data('post-id'));
+    });
 
     // --- 6. Bulk Manager: save a row over AJAX ---
     $(document).on('click', '.bb-bulk-save', function(e) {
@@ -104,7 +109,7 @@ jQuery(document).ready(function($) {
                 $btn.text('Saved');
                 setTimeout(function() {
                     $btn.prop('disabled', false).text('Update');
-                    window.bbToggleRow(postId);
+                    bbToggleRow(postId);
                 }, 600);
             })
             .fail(function() {
