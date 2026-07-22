@@ -65,7 +65,7 @@ function bare_bones_seo_render_404_monitor_screen() {
 				<?php else : ?>
 					<tr>
 						<td colspan="4" style="text-align: center; padding: 30px; color: #646970;">
-							🎉 No 404 errors recorded yet. Your visitors are finding everything they need!
+							No 404 errors recorded yet. Your visitors are finding everything they need!
 						</td>
 					</tr>
 				<?php endif; ?>
