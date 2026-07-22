@@ -26,8 +26,9 @@ function bare_bones_seo_render_overview_screen() {
 
     $version = defined('BARE_BONES_SEO_VERSION') ? BARE_BONES_SEO_VERSION : 'unknown';
 
-    // Measured from disk, cached for a day.
-    $plugin_size = bare_bones_seo_get_disk_size();
+    // Hardcoded per release — measuring at runtime cost a directory walk and an
+    // options row for a number that only changes when the plugin does.
+    $plugin_size = defined('BARE_BONES_SEO_SIZE') ? BARE_BONES_SEO_SIZE : '';
 
     // Split size into numeric and unit segments dynamically for the styling layout
     $size_number = preg_replace('/[^0-9.]/', '', $plugin_size);
