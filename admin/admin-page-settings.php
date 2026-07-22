@@ -8,7 +8,9 @@ add_action('add_meta_boxes', 'bare_bones_seo_register_meta_box');
 function bare_bones_seo_register_meta_box() {
     $post_types = get_post_types(array('public' => true));
     foreach ($post_types as $type) {
-        add_meta_box('bare-bones-seo-box', 'Page-Level SEO Settings — Bare Bones SEO', 'bare_bones_seo_render_meta_box', $type, 'normal', 'high');
+        // Meta box titles are echoed unescaped by core, so the inline SVG renders.
+        $title = bare_bones_seo_skull_icon(20) . ' Bare Bones SEO';
+        add_meta_box('bare-bones-seo-box', $title, 'bare_bones_seo_render_meta_box', $type, 'normal', 'high');
     }
 }
 
