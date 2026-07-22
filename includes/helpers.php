@@ -10,6 +10,97 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Detect plugins that override the WordPress core sitemap. Lives here rather
+ * than in the admin screen because the front-end noindex filter needs it too.
+ *
+ * @return array { conflict: bool, plugin_name: string }
+ */
+function bare_bones_seo_detect_sitemap_conflict() {
+    $plugins = array(
+        array(
+            'name'  => 'Yoast SEO',
+            'check' => function() {
+                return class_exists('WPSEO_Sitemaps') ||
+                       (function_exists('wpseo_init') && get_option('wpseo_xml') !== false);
+            },
+        ),
+        array(
+            'name'  => 'Rank Math',
+            'check' => function() {
+                return class_exists('RankMath\Sitemap\Sitemap');
+            },
+        ),
+        array(
+            'name'  => 'All in One SEO',
+            'check' => function() {
+                return class_exists('AIOSEO\Plugin\Common\Sitemap\Sitemap');
+            },
+        ),
+        array(
+            'name'  => 'Google XML Sitemaps',
+            'check' => function() {
+                return function_exists('sm_init') || class_exists('GoogleSitemapGeneratorLoader');
+            },
+        ),
+        array(
+            'name'  => 'Simple Sitemap',
+            'check' => function() {
+                return class_exists('Simple_Sitemap');
+            },
+        ),
+        array(
+            'name'  => 'Slim SEO',
+            'check' => function() {
+                return class_exists('SlimSEO\Sitemap\Sitemap');
+            },
+        ),
+    );
+
+    foreach ($plugins as $plugin) {
+        if (call_user_func($plugin['check'])) {
+            return array('conflict' => true, 'plugin_name' => $plugin['name']);
+        }
+    }
+
+    return array('conflict' => false, 'plugin_name' => '');
+}
+
+/**
+ * Actual on-disk size of the plugin, cached for a day. Previously this screen
+ * read an option nothing ever wrote, so it always showed a hardcoded number.
+ *
+ * @return string e.g. "96 KB"
+ */
+function bare_bones_seo_get_disk_size() {
+	$cached = get_transient( 'bbseo_disk_size' );
+	if ( false !== $cached ) {
+		return $cached;
+	}
+
+	$bytes = 0;
+
+	try {
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( BARE_BONES_SEO_PATH, FilesystemIterator::SKIP_DOTS )
+		);
+		foreach ( $iterator as $file ) {
+			if ( $file->isFile() ) {
+				$bytes += $file->getSize();
+			}
+		}
+	} catch ( Exception $e ) {
+		return 'n/a';
+	}
+
+	$size = ( $bytes >= 1048576 )
+		? round( $bytes / 1048576, 1 ) . ' MB'
+		: round( $bytes / 1024 ) . ' KB';
+
+	set_transient( 'bbseo_disk_size', $size, DAY_IN_SECONDS );
+	return $size;
+}
+
+/**
  * Get SEO metadata for a specific post with sensible defaults.
  *
  * @param int $post_id The ID of the post.
