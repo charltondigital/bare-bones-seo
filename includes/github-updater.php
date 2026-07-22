@@ -35,8 +35,20 @@ if (!class_exists('BBSEO_GitHub_Updater')) {
         public function normalize_github_zip_folder($source, $remote_source, $upgrader, $hook_extra = array()) {
             global $wp_filesystem;
 
-            // Target only this repository's extraction process
-            if (empty($source) || strpos($source, basename($this->repo)) === false) {
+            // This filter fires for every plugin and theme update on the site, so
+            // confirm the package being installed is actually ours before moving
+            // any directory.
+            $this_plugin = plugin_basename($this->file);
+            $is_ours = isset($hook_extra['plugin']) && $hook_extra['plugin'] === $this_plugin;
+
+            if (!$is_ours) {
+                // Fresh installs have no 'plugin' key; fall back to a path match.
+                if (!empty($hook_extra) && !isset($hook_extra['plugin'])) {
+                    $is_ours = !empty($source) && strpos($source, basename($this->repo)) !== false;
+                }
+            }
+
+            if (!$is_ours || empty($source) || !is_object($wp_filesystem)) {
                 return $source;
             }
 
@@ -68,26 +80,53 @@ if (!class_exists('BBSEO_GitHub_Updater')) {
             return '0.0.0';
         }
 
-        public function check_for_updates($transient) {
-            if (empty($transient)) {
-                $transient = new \stdClass();
+        /**
+         * Fetches the latest release, cached for 6 hours. GitHub allows 60
+         * unauthenticated requests per hour per IP — shared across every site on
+         * a shared host — and a rate-limited response looks identical to "no
+         * update", so an uncached check fails silently and permanently.
+         */
+        private function get_remote_release() {
+            $cache_key = 'bbseo_gh_release';
+            $cached = get_site_transient($cache_key);
+
+            if (false !== $cached) {
+                return is_object($cached) ? $cached : null;
             }
 
-            // Fixed Warning 2: Safely parse repo path using hash boundaries
             $repo_path = trim($this->repo, '/');
             $api_url = 'https://api.github.com/repos/' . $repo_path . '/releases/latest';
-            
+
             $response = wp_remote_get($api_url, array(
                 'headers' => array('User-Agent' => 'Bare-Bones-SEO-Updater-v1'),
                 'timeout' => 10
             ));
 
             if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-                return $transient;
+                // Cache the failure briefly so a slow or throttled API doesn't get
+                // re-hit on every admin page load.
+                set_site_transient($cache_key, 'none', 30 * MINUTE_IN_SECONDS);
+                return null;
             }
 
             $release = json_decode(wp_remote_retrieve_body($response));
+
             if (empty($release) || empty($release->tag_name)) {
+                set_site_transient($cache_key, 'none', 30 * MINUTE_IN_SECONDS);
+                return null;
+            }
+
+            set_site_transient($cache_key, $release, 6 * HOUR_IN_SECONDS);
+            return $release;
+        }
+
+        public function check_for_updates($transient) {
+            if (empty($transient)) {
+                $transient = new \stdClass();
+            }
+
+            $release = $this->get_remote_release();
+            if (null === $release) {
                 return $transient;
             }
 
