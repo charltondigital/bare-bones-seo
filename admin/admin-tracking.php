@@ -15,7 +15,7 @@ function bare_bones_seo_render_tracking_screen() {
     <div style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; margin-top:20px;">
         <h2 style="margin:0 0 8px 0; font-size:16px; font-weight:600;">Global Tracking Scripts</h2>
         <p style="margin:0 0 20px 0; color:#646970; max-width:820px;">
-            Paste analytics, verification, and pixel snippets here &mdash; Google Analytics, Search Console verification, Meta Pixel, and similar &mdash; exactly as the provider gives them to you. Each one loads site-wide, so add these once instead of editing your theme. Pick whether a snippet belongs in the <code>&lt;head&gt;</code> or the footer, set it to <strong>Paused</strong> to switch it off without deleting it, or scope it to the homepage only. To run a snippet on a single page instead, use the Tracking Scripts panel in that page's editor.
+            Paste analytics, verification, and pixel snippets exactly as the provider gives them to you &mdash; Google Analytics, Search Console, Meta Pixel and the like. These load on every page, so you only add them once instead of editing your theme. For a snippet that should run on one page only, use the Tracking Scripts panel in that page's editor.
         </p>
         <form method="post" action="">
             <?php wp_nonce_field('bb_tracking_nonce'); ?>
