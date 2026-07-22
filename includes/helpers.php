@@ -66,41 +66,6 @@ function bare_bones_seo_detect_sitemap_conflict() {
 }
 
 /**
- * Actual on-disk size of the plugin, cached for a day. Previously this screen
- * read an option nothing ever wrote, so it always showed a hardcoded number.
- *
- * @return string e.g. "96 KB"
- */
-function bare_bones_seo_get_disk_size() {
-	$cached = get_transient( 'bbseo_disk_size' );
-	if ( false !== $cached ) {
-		return $cached;
-	}
-
-	$bytes = 0;
-
-	try {
-		$iterator = new RecursiveIteratorIterator(
-			new RecursiveDirectoryIterator( BARE_BONES_SEO_PATH, FilesystemIterator::SKIP_DOTS )
-		);
-		foreach ( $iterator as $file ) {
-			if ( $file->isFile() ) {
-				$bytes += $file->getSize();
-			}
-		}
-	} catch ( Exception $e ) {
-		return 'n/a';
-	}
-
-	$size = ( $bytes >= 1048576 )
-		? round( $bytes / 1048576, 1 ) . ' MB'
-		: round( $bytes / 1024 ) . ' KB';
-
-	set_transient( 'bbseo_disk_size', $size, DAY_IN_SECONDS );
-	return $size;
-}
-
-/**
  * Get SEO metadata for a specific post with sensible defaults.
  *
  * @param int $post_id The ID of the post.
