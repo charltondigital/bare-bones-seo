@@ -15,62 +15,6 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Detect plugins that override the WordPress core sitemap.
- *
- * @since 1.0.3
- * @return array { conflict: bool, plugin_name: string }
- */
-function bare_bones_seo_detect_sitemap_conflict() {
-    $plugins = array(
-        array(
-            'name'  => 'Yoast SEO',
-            'check' => function() {
-                return class_exists('WPSEO_Sitemaps') ||
-                       (function_exists('wpseo_init') && get_option('wpseo_xml') !== false);
-            },
-        ),
-        array(
-            'name'  => 'Rank Math',
-            'check' => function() {
-                return class_exists('RankMath\Sitemap\Sitemap');
-            },
-        ),
-        array(
-            'name'  => 'All in One SEO',
-            'check' => function() {
-                return class_exists('AIOSEO\Plugin\Common\Sitemap\Sitemap');
-            },
-        ),
-        array(
-            'name'  => 'Google XML Sitemaps',
-            'check' => function() {
-                return function_exists('sm_init') || class_exists('GoogleSitemapGeneratorLoader');
-            },
-        ),
-        array(
-            'name'  => 'Simple Sitemap',
-            'check' => function() {
-                return class_exists('Simple_Sitemap');
-            },
-        ),
-        array(
-            'name'  => 'Slim SEO',
-            'check' => function() {
-                return class_exists('SlimSEO\Sitemap\Sitemap');
-            },
-        ),
-    );
-
-    foreach ($plugins as $plugin) {
-        if (call_user_func($plugin['check'])) {
-            return array('conflict' => true, 'plugin_name' => $plugin['name']);
-        }
-    }
-
-    return array('conflict' => false, 'plugin_name' => '');
-}
-
-/**
  * Build the list of sections that WordPress would include in its sitemap.
  *
  * Matches WordPress core sitemap logic exactly:
