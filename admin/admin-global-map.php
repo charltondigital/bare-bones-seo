@@ -104,6 +104,26 @@ function bare_bones_seo_get_sitemap_sections() {
 }
 
 /**
+ * Archive views the noindex engine understands but that WordPress core does not
+ * put in a sitemap. Without these rows the keys existed only in code, so the
+ * settings always resolved to the 'yes' default and could never be switched off.
+ */
+function bare_bones_seo_get_archive_sections() {
+    return array(
+        'paged' => array(
+            'key'   => 'paged',
+            'type'  => 'archives',
+            'label' => 'Paginated Archives',
+        ),
+        'date' => array(
+            'key'   => 'date',
+            'type'  => 'archives',
+            'label' => 'Date Archives',
+        ),
+    );
+}
+
+/**
  * Get plain-English description for a section.
  *
  * @since 1.0.3
@@ -118,6 +138,8 @@ function bare_bones_seo_get_section_description($key, $type) {
         'category' => 'Archive pages that organize your posts. Helps Google understand your site structure.',
         'post_tag' => 'Often create thin or duplicate content. Consider noindexing to preserve crawl budget.',
         'user'     => 'Only index these if your author pages include a photo, bio, and original content.',
+        'paged'    => 'Page 2, 3, 4... of any archive. These repeat content from page one and are a common source of duplicate-content dilution.',
+        'date'     => 'Year, month, and day archives. Rarely useful to searchers and almost always duplicate content already covered elsewhere.',
     );
 
     return $descriptions[$key] ?? 'Index if these are actual pages with unique, valuable content that should appear in Google as standalone pages.';
@@ -247,6 +269,32 @@ function bare_bones_seo_render_global_map_screen() {
                                     </tr>
                                     <?php endif; ?>
                                 <?php endforeach;
+
+                                foreach (bare_bones_seo_get_archive_sections() as $section) :
+                                    $key         = $section['key'];
+                                    $label       = $section['label'];
+                                    $description = bare_bones_seo_get_section_description($key, $section['type']);
+                                    $status      = isset($current_options[$key]) ? $current_options[$key] : 'yes';
+                                    $disabled    = $has_conflict ? 'disabled' : '';
+                                ?>
+                                    <tr>
+                                        <td style="padding:15px; vertical-align:top;">
+                                            <strong><?php echo esc_html($label); ?></strong>
+                                        </td>
+                                        <td style="text-align:center; vertical-align:middle;">
+                                            <input type="radio" name="section_index[<?php echo esc_attr($key); ?>]" value="yes" <?php checked($status, 'yes'); ?> <?php echo $disabled; ?>>
+                                        </td>
+                                        <td style="text-align:center; vertical-align:middle;">
+                                            <input type="radio" name="section_index[<?php echo esc_attr($key); ?>]" value="no" <?php checked($status, 'no'); ?> <?php echo $disabled; ?>>
+                                        </td>
+                                        <td style="text-align:center; vertical-align:middle; color:#c3c4c7;" title="These views are never in the sitemap, so there is nothing to remove.">&mdash;</td>
+                                    </tr>
+                                    <tr style="background:#f9f9f9;">
+                                        <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
+                                            <?php echo esc_html($description); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach;
                             else : ?>
                                 <tr>
                                     <td colspan="4" style="padding:20px; color:#666; text-align:center;">
@@ -323,7 +371,7 @@ function bare_bones_seo_render_global_map_screen() {
             <!-- RIGHT: Source of truth sitemap preview -->
             <div style="background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:20px; height:fit-content; position:sticky; top:20px;">
                 <h3 style="margin-top:0; margin-bottom:15px; font-size:14px; color:#333;">
-                    🗺️ This is what you're pushing to search engines and AI
+                    This is what you're pushing to search engines and AI
                 </h3>
 
                 <div style="background:white; border:1px solid #e0e0e0; border-radius:3px; padding:15px; font-size:12px; line-height:2; color:#333; max-height:600px; overflow-y:auto;">
