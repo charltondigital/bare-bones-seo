@@ -25,7 +25,6 @@ if (!defined('ABSPATH')) {
  * Sections with zero items are excluded — they won't be in the sitemap
  * and would just clutter the UI.
  *
- * @since 1.0.3
  * @return array Array of section data keyed by section key
  */
 function bare_bones_seo_get_sitemap_sections() {
@@ -126,7 +125,6 @@ function bare_bones_seo_get_archive_sections() {
 /**
  * Get plain-English description for a section.
  *
- * @since 1.0.3
  * @param string $key
  * @param string $type
  * @return string
@@ -147,8 +145,6 @@ function bare_bones_seo_get_section_description($key, $type) {
 
 /**
  * Render the Indexation screen.
- *
- * @since 1.0.0
  */
 function bare_bones_seo_render_global_map_screen() {
     // Handle save
@@ -282,10 +278,10 @@ function bare_bones_seo_render_global_map_screen() {
                                             <strong><?php echo esc_html($label); ?></strong>
                                         </td>
                                         <td style="text-align:center; vertical-align:middle;">
-                                            <input type="radio" name="section_index[<?php echo esc_attr($key); ?>]" value="yes" <?php checked($status, 'yes'); ?> <?php echo $disabled; ?>>
+                                            <input type="radio" name="section_index[<?php echo esc_attr($key); ?>]" value="yes" <?php checked($status, 'yes'); ?> <?php echo esc_attr($disabled); ?>>
                                         </td>
                                         <td style="text-align:center; vertical-align:middle;">
-                                            <input type="radio" name="section_index[<?php echo esc_attr($key); ?>]" value="no" <?php checked($status, 'no'); ?> <?php echo $disabled; ?>>
+                                            <input type="radio" name="section_index[<?php echo esc_attr($key); ?>]" value="no" <?php checked($status, 'no'); ?> <?php echo esc_attr($disabled); ?>>
                                         </td>
                                         <td style="text-align:center; vertical-align:middle; color:#c3c4c7;" title="These views are never in the sitemap, so there is nothing to remove.">&mdash;</td>
                                     </tr>
@@ -302,60 +298,6 @@ function bare_bones_seo_render_global_map_screen() {
                                     </td>
                                 </tr>
                             <?php endif; ?>
-
-                            <!-- DIVIDER: WordPress System Pages -->
-                            <tr>
-                                <td colspan="4" style="padding:12px 15px 6px; background:#f0f0f0; border-top:2px solid #ddd;">
-                                    <strong style="font-size:12px; color:#444; text-transform:uppercase; letter-spacing:0.05em;">WordPress System Pages</strong>
-                                    <span style="font-size:11px; color:#888; margin-left:8px;">Never in sitemap — indexation control only</span>
-                                </td>
-                            </tr>
-
-                            <?php
-                            $system_pages = array(
-                                'date'   => array(
-                                    'label'       => 'Date Archives',
-                                    'description' => 'Pages organized by date (e.g. /2024/01/). Often duplicate content — consider noindexing.',
-                                ),
-                                'paged'  => array(
-                                    'label'       => 'Paginated Pages',
-                                    'description' => 'Page 2, 3, etc. of archives (/page/2/). Usually best left indexed — helps Google find all your posts.',
-                                ),
-                            );
-
-                            foreach ($system_pages as $key => $page) :
-                                $status = isset($current_options[$key]) ? $current_options[$key] : 'yes';
-                            ?>
-                                <tr>
-                                    <td style="padding:15px; vertical-align:top;">
-                                        <strong><?php echo esc_html($page['label']); ?></strong>
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="yes"
-                                               <?php checked($status, 'yes'); ?>>
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="no"
-                                               <?php checked($status, 'no'); ?>>
-                                    </td>
-                                    <td style="text-align:center; vertical-align:middle;">
-                                        <input type="radio"
-                                               name="section_index[<?php echo esc_attr($key); ?>]"
-                                               value="complicated_sitemap"
-                                               disabled
-                                               style="opacity:0.3; cursor:not-allowed;">
-                                    </td>
-                                </tr>
-                                <tr style="background:#f9f9f9;">
-                                    <td colspan="4" style="padding:6px 15px 12px; font-size:12px; color:#666;">
-                                        <?php echo esc_html($page['description']); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
 
                         </tbody>
                     </table>
