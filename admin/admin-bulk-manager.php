@@ -17,8 +17,6 @@ if (!defined('ABSPATH')) {
 
 /**
  * AJAX handler: Save all four SEO fields for a single post.
- *
- * @since 1.0.3
  */
 add_action('wp_ajax_' . BARE_BONES_SEO_AJAX_ACTION, 'bare_bones_seo_process_bulk_ajax_save');
 function bare_bones_seo_process_bulk_ajax_save() {
@@ -55,6 +53,14 @@ function bare_bones_seo_process_bulk_ajax_save() {
         'should_index' => isset($_POST[$index])  ? sanitize_key($_POST[$index])        : 'yes',
     ));
 
+    // Same marker rule as the meta box: only touch tracking when the panel was
+    // actually loaded into the row, so an unopened panel can't wipe stored scripts.
+    if (current_user_can('unfiltered_html') && !empty($_POST['bb_page_scripts_loaded_' . $post_id])) {
+        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array();
+        $scripts   = bare_bones_seo_sanitize_tracking_scripts($submitted);
+        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));
+    }
+
     $saved = bare_bones_seo_get_page_meta($post_id);
 
     wp_send_json_success(array(
@@ -65,9 +71,31 @@ function bare_bones_seo_process_bulk_ajax_save() {
 }
 
 /**
+ * AJAX handler: render the tracking panel for one post on demand.
+ */
+add_action('wp_ajax_' . BARE_BONES_SEO_AJAX_TRACKING, 'bare_bones_seo_load_tracking_panel');
+function bare_bones_seo_load_tracking_panel() {
+    check_ajax_referer(BARE_BONES_SEO_NONCE_BULK_AJAX, 'security');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+
+    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+    if ($post_id <= 0 || !get_post($post_id)) {
+        wp_send_json_error('Invalid post ID');
+        return;
+    }
+
+    ob_start();
+    bare_bones_seo_render_page_tracking_panel($post_id);
+    wp_send_json_success(array('html' => ob_get_clean()));
+}
+
+/**
  * Render the Bulk Manager screen.
- *
- * @since 1.0.0
  */
 function bare_bones_seo_render_bulk_manager_screen() {
     $per_page = 50;
@@ -99,16 +127,16 @@ function bare_bones_seo_render_bulk_manager_screen() {
                 <col style="width:20%;">
                 <col style="width:27%;">
                 <col style="width:10%;">
-                <col style="width:33%;">
-                <col style="width:10%;">
+                <col style="width:31%;">
+                <col style="width:12%;">
             </colgroup>
             <thead>
                 <tr>
                     <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">Title</th>
                     <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">Description</th>
-                    <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">Indexation</th>
+                    <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; text-align:center;">Indexation</th>
                     <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">Schema</th>
-                    <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;"></th>
+                    <th style="padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; text-align:right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -125,9 +153,7 @@ function bare_bones_seo_render_bulk_manager_screen() {
                         // Show red ✗ whenever this page isn't plain "index"
                         // (noindexed or removed from sitemap). Legacy values normalize to index.
                         $show_x = bare_bones_seo_state_removes_from_sitemap($index_status);
-                        $badge  = $show_x
-                            ? '<span style="color:#dc3232; font-size:16px; font-weight:700;">✗</span>'
-                            : '';
+                        $badge  = $show_x ? '<span class="bb-index-flag">&#10007;</span>' : '';
                 ?>
                     <!-- COLLAPSED ROW -->
                     <tr id="<?php echo esc_attr($uid); ?>-collapsed"
@@ -145,7 +171,7 @@ function bare_bones_seo_render_bulk_manager_screen() {
                                 <?php echo esc_html($meta['desc']); ?>
                             </span>
                         </td>
-                        <td style="padding:10px 12px; vertical-align:middle;" id="<?php echo esc_attr($uid); ?>-badge-cell">
+                        <td style="padding:10px 12px; vertical-align:middle; text-align:center;" id="<?php echo esc_attr($uid); ?>-badge-cell">
                             <?php echo $badge; ?>
                         </td>
                         <td style="padding:10px 12px; vertical-align:middle; overflow:hidden;">
@@ -154,7 +180,11 @@ function bare_bones_seo_render_bulk_manager_screen() {
                                 <?php echo esc_html($meta['schema']); ?>
                             </span>
                         </td>
-                        <td style="padding:10px 12px; vertical-align:middle;"></td>
+                        <td class="bb-row-actions" style="padding:10px 12px; vertical-align:middle; text-align:right; white-space:nowrap;">
+                            <a href="<?php echo esc_url(get_permalink($post->ID)); ?>" target="_blank" rel="noopener">View</a>
+                            <span style="color:#c3c4c7; margin:0 4px;">|</span>
+                            <a href="<?php echo esc_url(get_edit_post_link($post->ID)); ?>">Edit</a>
+                        </td>
                     </tr>
 
                     <!-- EXPANDED ROW -->
@@ -163,8 +193,8 @@ function bare_bones_seo_render_bulk_manager_screen() {
                             <?php bare_bones_seo_render_fields($post, true); ?>
                             <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end; border-top:1px solid #eee; padding-top:16px;">
                                 <button type="button"
-                                        class="button"
-                                        class="button bb-row-toggle" data-post-id="<?php echo esc_attr($post->ID); ?>"
+                                        class="button bb-row-toggle"
+                                        data-post-id="<?php echo esc_attr($post->ID); ?>"
                                         style="font-size:12px;">
                                     Cancel
                                 </button>
@@ -193,7 +223,9 @@ function bare_bones_seo_render_bulk_manager_screen() {
         </table>
 
         <?php if ($query->max_num_pages > 1) :
-            $base = add_query_arg('bb_paged', '%#%');
+            // Built from the tab URL, not the current request — every tab renders on
+            // every load, so add_query_arg() would pick up another tab's args.
+            $base = admin_url('admin.php?page=bare-bones-seo&tab=bulk&bb_paged=%#%');
             ?>
             <div class="tablenav bottom" style="margin-top:12px;">
                 <div class="tablenav-pages" style="float:none; text-align:right;">
