@@ -56,6 +56,27 @@ function bare_bones_seo_render_tracking_table($scripts, $input_name, $is_global 
     <?php
 }
 
+/**
+ * The page-level tracking panel. Shared by the post editor meta box and the
+ * Page Meta screen's lazy loader so both render identical markup and names.
+ *
+ * The hidden marker tells the save handlers this panel was actually on screen.
+ * Without it, an empty table is indistinguishable from a panel that never
+ * rendered, and deleting every script would silently not save.
+ */
+function bare_bones_seo_render_page_tracking_panel($post_id) {
+    $post_id = (int) $post_id;
+
+    if (!current_user_can('unfiltered_html')) {
+        echo '<p style="margin:0; color:#646970;">Adding tracking scripts to individual pages requires permission to post unfiltered HTML, which some hosts and security plugins disable. Global tracking scripts are unaffected &mdash; add them under Bare Bones SEO &rarr; Tracking.</p>';
+        return;
+    }
+
+    $scripts = get_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, true) ?: array();
+    echo '<input type="hidden" name="bb_page_scripts_loaded_' . esc_attr($post_id) . '" value="1">';
+    bare_bones_seo_render_tracking_table($scripts, 'bb_page_scripts_' . $post_id, false);
+}
+
 function bare_bones_seo_render_row($index, $data, $input_name, $is_global) {
     $label = $data['label'] ?? ''; $code = $data['code'] ?? ''; $loc = $data['loc'] ?? 'head';
     $status = $data['status'] ?? 'active'; $scope = $data['scope'] ?? 'all';
