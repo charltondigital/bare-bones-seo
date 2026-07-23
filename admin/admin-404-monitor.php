@@ -19,7 +19,21 @@ function bare_bones_seo_render_404_monitor_screen() {
 	}
 
 	// 2. Query logs
-	$logs = $wpdb->get_results( "SELECT * FROM `$table_name` ORDER BY hits DESC LIMIT 150" );
+	// Own page param: every tab renders on every request, so sharing one with
+	// the Page Meta table would page both at once.
+	$per_page = 50;
+	$total    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `$table_name`" );
+	$pages    = max( 1, (int) ceil( $total / $per_page ) );
+	$paged    = isset( $_GET['bb_404_paged'] ) ? max( 1, intval( $_GET['bb_404_paged'] ) ) : 1;
+	$paged    = min( $paged, $pages );
+
+	$logs = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT * FROM `$table_name` ORDER BY hits DESC, last_accessed DESC LIMIT %d OFFSET %d",
+			$per_page,
+			( $paged - 1 ) * $per_page
+		)
+	);
 	?>
 	<div style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; border-radius: 4px;">
 		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -71,6 +85,28 @@ function bare_bones_seo_render_404_monitor_screen() {
 				<?php endif; ?>
 			</tbody>
 		</table>
+
+		<?php if ( $total > 0 ) : ?>
+			<div class="tablenav bottom" style="margin-top:12px;">
+				<div class="tablenav-pages" style="float:none; text-align:right;">
+					<span class="displaying-num"><?php echo esc_html( number_format_i18n( $total ) ); ?> items</span>
+					<?php
+					// Built from the tab URL rather than the current request, so the
+					// links stay on this tab no matter which one is being viewed.
+					echo paginate_links(
+						array(
+							'base'      => admin_url( 'admin.php?page=bare-bones-seo&tab=404-monitor&bb_404_paged=%#%' ),
+							'format'    => '',
+							'prev_text' => '&laquo;',
+							'next_text' => '&raquo;',
+							'total'     => $pages,
+							'current'   => $paged,
+						)
+					);
+					?>
+				</div>
+			</div>
+		<?php endif; ?>
 	</div>
 	<?php
 }
