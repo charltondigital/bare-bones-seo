@@ -14,8 +14,6 @@ if (!defined('ABSPATH')) {
 
 /**
  * Render the Overview screen.
- *
- * @since 1.0.11
  */
 function bare_bones_seo_render_overview_screen() {
     // Get the current monitor status dynamically
