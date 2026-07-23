@@ -54,22 +54,74 @@ jQuery(document).ready(function($) {
     });
 
     // --- 5. Bulk Manager: expand / collapse a row ---
+    function bbCloseAllRows(exceptUid) {
+        $('tr[id^="bb-"][id$="-expanded"]:visible').each(function() {
+            var uid = this.id.replace(/-expanded$/, '');
+            if (uid === exceptUid) { return; }
+            $(this).hide();
+            $('#' + uid + '-chevron').css('transform', 'rotate(0deg)');
+        });
+    }
+
+    // Tracking tables are pulled in per row on first open rather than rendered
+    // for every row up front. Failures leave the row unflagged so the next
+    // open retries.
+    function bbLoadTracking(postId) {
+        if (typeof bbSeoData === 'undefined') { return; }
+
+        var $lazy = $('#bb-' + postId + '-expanded')
+            .find('.bb-tracking-lazy')
+            .not('.bb-loaded, .bb-loading');
+
+        if (!$lazy.length) { return; }
+
+        $lazy.addClass('bb-loading');
+
+        $.post(ajaxurl, {
+            action:   bbSeoData.trackingAction,
+            security: bbSeoData.nonce,
+            post_id:  postId
+        })
+            .done(function(response) {
+                if (response && response.success) {
+                    $lazy.html(response.data.html).removeClass('bb-loading').addClass('bb-loaded');
+                } else {
+                    bbTrackingError($lazy);
+                }
+            })
+            .fail(function() {
+                bbTrackingError($lazy);
+            });
+    }
+
+    function bbTrackingError($lazy) {
+        $lazy.removeClass('bb-loading').html(
+            '<p style="margin:0; color:#b32d2e;">Could not load tracking scripts. ' +
+            'Close and reopen this row to try again.</p>'
+        );
+    }
+
     function bbToggleRow(postId) {
         var uid = 'bb-' + postId;
         var $expanded = $('#' + uid + '-expanded');
         var $chevron  = $('#' + uid + '-chevron');
 
         if ($expanded.is(':visible')) {
-            $expanded.hide();
-            $chevron.css('transform', 'rotate(0deg)');
-        } else {
-            $expanded.show();
-            $chevron.css('transform', 'rotate(90deg)');
+            bbCloseAllRows();
+            return;
         }
+
+        // Only one editor open at a time — stacked open rows are unreadable.
+        bbCloseAllRows(uid);
+        $expanded.show();
+        $chevron.css('transform', 'rotate(90deg)');
+        bbLoadTracking(postId);
     }
 
     // Delegated so it works regardless of script load order.
     $(document).on('click', '.bb-row-toggle', function(e) {
+        // The View / Edit links live inside the clickable row.
+        if ($(e.target).closest('.bb-row-actions').length) { return; }
         e.preventDefault();
         bbToggleRow($(this).data('post-id'));
     });
@@ -102,9 +154,7 @@ jQuery(document).ready(function($) {
                 $('#' + uid + '-desc-preview').text(response.data.desc || '');
                 $('#' + uid + '-schema-preview').text(response.data.schema || '');
                 $('#' + uid + '-badge-cell').html(
-                    response.data.noindexed
-                        ? '<span style="color:#dc3232; font-size:16px; font-weight:700;">\u2717</span>'
-                        : ''
+                    response.data.noindexed ? '<span class="bb-index-flag">\u2717</span>' : ''
                 );
                 $btn.text('Saved');
                 setTimeout(function() {
