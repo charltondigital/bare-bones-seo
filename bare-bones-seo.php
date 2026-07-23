@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bare Bones SEO
  * Author: Charlton Digital
- * Version: 0.1.0
+ * Version: 0.1.2
  */
 
 if (!defined('ABSPATH')) { exit; }
@@ -19,9 +19,10 @@ define('BARE_BONES_SEO_NONCE_PAGE', 'bare_bones_seo_save_nonce');
 define('BARE_BONES_SEO_NONCE_GLOBAL_MAP', 'bb_global_map_nonce');
 define('BARE_BONES_SEO_NONCE_BULK_AJAX', 'bb_bulk_manager_nonce');
 define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
+define('BARE_BONES_SEO_AJAX_TRACKING', 'bb_seo_load_tracking');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '0.1.0');
+define('BARE_BONES_SEO_VERSION', '0.1.2');
 // Measured per release with the Plugin Size Meter tool. Update alongside VERSION.
 define('BARE_BONES_SEO_SIZE', '127 KB');
 define('BARE_BONES_SEO_DB_VERSION', '2');
@@ -118,8 +119,9 @@ add_action('admin_enqueue_scripts', function($hook) {
         wp_enqueue_style('bbs-css', plugins_url('assets/admin-style.css', __FILE__), array(), BARE_BONES_SEO_VERSION);
         wp_enqueue_script('bbs-js', plugins_url('assets/admin-script.js', __FILE__), array('jquery'), BARE_BONES_SEO_VERSION, true);
         wp_localize_script('bbs-js', 'bbSeoData', array(
-            'ajaxAction' => BARE_BONES_SEO_AJAX_ACTION,
-            'nonce'      => wp_create_nonce(BARE_BONES_SEO_NONCE_BULK_AJAX),
+            'ajaxAction'     => BARE_BONES_SEO_AJAX_ACTION,
+            'trackingAction' => BARE_BONES_SEO_AJAX_TRACKING,
+            'nonce'          => wp_create_nonce(BARE_BONES_SEO_NONCE_BULK_AJAX),
         ));
     }
 });
