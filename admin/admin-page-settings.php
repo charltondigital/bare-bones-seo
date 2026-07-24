@@ -55,10 +55,24 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
                 <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
                 <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
-                    <textarea name="bb_seo_schema_<?php echo $post->ID; ?>" rows="4" style="width:100%; font-family:monospace;"><?php echo esc_textarea($meta['schema']); ?></textarea>
-                    <?php if (bare_bones_seo_schema_is_invalid($meta['schema'])) : ?>
-                        <p style="margin:6px 0 0; color:#b32d2e;"><strong>This JSON is not valid</strong> and will not be added to the page. Check for a missing comma, bracket, or quote.</p>
-                    <?php endif; ?>
+                    <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;" for="<?php echo $uid; ?>-schema-input">SCHEMA MARKUP (JSON-LD)</label>
+                    <textarea id="<?php echo $uid; ?>-schema-input" name="bb_seo_schema_<?php echo $post->ID; ?>" rows="4" style="width:100%; font-family:monospace;" placeholder='{"@context": "https://schema.org", "@type": "Person"}'><?php echo esc_textarea($meta['schema']); ?></textarea>
+                    <p style="margin:6px 0 0; font-size:12px; color:#646970;">
+                        Paste the raw JSON only &mdash; no <code>&lt;script&gt;</code> tags and no <code>```</code> code fences. Invalid JSON is not added to the page.
+                        <a href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer">Check your schema</a>
+                    </p>
+                    <?php // Always rendered so the save handler can reveal it without injecting markup. ?>
+                    <p id="<?php echo $uid; ?>-schema-error"
+                       style="margin:6px 0 0; color:#b32d2e;<?php echo bare_bones_seo_schema_is_invalid($meta['schema']) ? '' : ' display:none;'; ?>">
+                        <strong>This JSON is not valid</strong> and will not be added to the page. Check for a missing comma, bracket, or quote.
+                    </p>
+                    <details style="margin-top:10px;">
+                        <summary style="cursor:pointer; font-size:12px; color:#2271b1;">Need help writing this?</summary>
+                        <p style="margin:8px 0 4px; font-size:12px; color:#646970;">Paste this into an AI assistant and fill in the blanks:</p>
+                        <p style="margin:0; padding:10px; background:#f6f7f7; border:1px solid #ddd; border-radius:3px; font-family:monospace; font-size:11px; line-height:1.5; color:#333;">
+                            Write JSON-LD schema markup for a web page. Output only the raw JSON object &mdash; no &lt;script&gt; tags, no markdown code fences, no explanation before or after. Page title: [title]. Page URL: [url]. What the page is about: [description]. Schema type: [Person / Organization / LocalBusiness / Article / Product].
+                        </p>
+                    </details>
                 </div>
             </div>
             <!-- Section 4: Tracking Scripts -->
