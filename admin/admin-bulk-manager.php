@@ -64,9 +64,12 @@ function bare_bones_seo_process_bulk_ajax_save() {
     $saved = bare_bones_seo_get_page_meta($post_id);
 
     wp_send_json_success(array(
-        'desc'     => $saved['desc'],
-        'schema'   => $saved['schema'],
+        'desc'      => $saved['desc'],
+        'schema'    => $saved['schema'],
         'noindexed' => bare_bones_seo_state_removes_from_sitemap($saved['index']),
+        // The row stays open and warns when this is true — otherwise bad JSON
+        // saves and closes exactly like good JSON, with nothing to notice.
+        'schema_invalid' => bare_bones_seo_schema_is_invalid($saved['schema']),
     ));
 }
 
