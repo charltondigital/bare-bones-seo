@@ -156,6 +156,24 @@ jQuery(document).ready(function($) {
                 $('#' + uid + '-badge-cell').html(
                     response.data.noindexed ? '<span class="bb-index-flag">\u2717</span>' : ''
                 );
+
+                // The save succeeded either way — the schema just won't publish.
+                // Reveal the warning and leave the row open instead of closing
+                // on what looks like a clean save.
+                var $schemaError = $('#' + uid + '-schema-error');
+                if (response.data.schema_invalid) {
+                    $schemaError.show();
+                    var $schemaPanel = $('#' + uid + '-schema');
+                    if (!$schemaPanel.is(':visible')) {
+                        $schemaPanel.slideDown(150);
+                        $('.bb-section-toggle[data-target="' + uid + '-schema"]')
+                            .find('.bb-toggle-icon').text('\u2212');
+                    }
+                    $btn.prop('disabled', false).text('Saved — check schema');
+                    return;
+                }
+
+                $schemaError.hide();
                 $btn.text('Saved');
                 setTimeout(function() {
                     $btn.prop('disabled', false).text('Update');
