@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Bare Bones SEO
  * Author: Charlton Digital
- * Version: 0.1.2
+ * Version: 0.1.3
  */
 
 if (!defined('ABSPATH')) { exit; }
@@ -22,7 +22,7 @@ define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
 define('BARE_BONES_SEO_AJAX_TRACKING', 'bb_seo_load_tracking');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '0.1.2');
+define('BARE_BONES_SEO_VERSION', '0.1.3');
 // Measured per release with the Plugin Size Meter tool. Update alongside VERSION.
 define('BARE_BONES_SEO_SIZE', '127 KB');
 define('BARE_BONES_SEO_DB_VERSION', '2');
