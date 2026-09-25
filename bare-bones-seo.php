@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Bare Bones SEO
- * Description:       A minimal SEO plugin: indexation controls, page meta, sitemaps, redirects, a 404 monitor, schema, and tracking snippets.
+ * Description:       A minimal SEO plugin: indexation controls, page meta, sitemaps, redirects, a 404 monitor, and schema.
  * Version:           0.1.3
  * Requires at least: 6.2
  * Requires PHP:      7.4
@@ -18,6 +18,9 @@ define('BARE_BONES_SEO_META_TITLE',  '_bare_bones_seo_title');
 define('BARE_BONES_SEO_META_DESC',   '_bare_bones_seo_desc');
 define('BARE_BONES_SEO_META_SCHEMA', '_bare_bones_seo_schema');
 define('BARE_BONES_SEO_META_INDEX',  '_bare_bones_seo_should_index');
+// Tracking-code insertion was removed before WordPress.org submission. These two
+// keys are no longer read or written; they stay defined so any snippets saved by
+// beta versions can be found (and cleaned up later, if that's ever added).
 define('BARE_BONES_SEO_META_TRACKING', '_bare_bones_seo_page_scripts');
 define('BARE_BONES_SEO_OPTION_GLOBAL_MAP', 'bare_bones_seo_global_map');
 define('BARE_BONES_SEO_OPTION_TRACKING', 'bare_bones_seo_tracking_scripts');
@@ -25,7 +28,6 @@ define('BARE_BONES_SEO_NONCE_PAGE', 'bare_bones_seo_save_nonce');
 define('BARE_BONES_SEO_NONCE_GLOBAL_MAP', 'bb_global_map_nonce');
 define('BARE_BONES_SEO_NONCE_BULK_AJAX', 'bb_bulk_manager_nonce');
 define('BARE_BONES_SEO_AJAX_ACTION', 'bare_bones_seo_bulk_save');
-define('BARE_BONES_SEO_AJAX_TRACKING', 'bare_bones_seo_load_tracking');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.3');
@@ -43,9 +45,7 @@ require_once BARE_BONES_SEO_PATH . 'includes/page-meta-output.php';
 require_once BARE_BONES_SEO_PATH . 'includes/redirect-engine.php';
 
 // Load Admin Logic
-// These two register hooks that can fire outside a plugin screen (meta box save,
-// and the tracking table/sanitizer they share), so they always load.
-require_once BARE_BONES_SEO_PATH . 'admin/admin-tracking.php';
+// Registers the save_post hook, which can fire outside a plugin screen, so it always loads.
 require_once BARE_BONES_SEO_PATH . 'admin/admin-page-settings.php';
 
 // Everything below is admin-screen rendering only — no reason to parse it on
@@ -79,7 +79,6 @@ add_action('admin_menu', function() {
     add_submenu_page('bare-bones-seo', 'Page Meta', 'Page Meta', 'manage_options', 'bare-bones-seo&tab=bulk', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', '301 Redirects', '301 Redirects', 'manage_options', 'bare-bones-seo&tab=redirects', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', '404 Monitor', '404 Monitor', 'manage_options', 'bare-bones-seo&tab=404-monitor', 'bare_bones_seo_render_dashboard');
-    add_submenu_page('bare-bones-seo', 'Tracking', 'Tracking', 'manage_options', 'bare-bones-seo&tab=tracking', 'bare_bones_seo_render_dashboard');
     add_submenu_page('bare-bones-seo', 'Other Tools', 'Other Tools', 'manage_options', 'bare-bones-seo&tab=other-tools', 'bare_bones_seo_render_dashboard');
 });
 
@@ -96,7 +95,6 @@ function bare_bones_seo_render_dashboard() {
         'bulk' => array('l' => 'Page Meta', 'c' => 'bare_bones_seo_render_bulk_manager_screen'),
         'redirects' => array('l' => '301 Redirects', 'c' => 'bare_bones_seo_render_redirects_tab'),
         '404-monitor' => array('l' => '404 Monitor', 'c' => 'bare_bones_seo_render_404_monitor_screen'),
-        'tracking' => array('l' => 'Tracking', 'c' => 'bare_bones_seo_render_tracking_screen'),
         'other-tools' => array('l' => 'Other Tools', 'c' => 'bare_bones_seo_render_other_tools_screen'),
     );
     ?>
@@ -127,7 +125,6 @@ add_action('admin_enqueue_scripts', function($hook) {
         wp_enqueue_script('bare-bones-seo-admin', plugins_url('assets/admin-script.js', __FILE__), array('jquery'), BARE_BONES_SEO_VERSION, true);
         wp_localize_script('bare-bones-seo-admin', 'bbSeoData', array(
             'ajaxAction'     => BARE_BONES_SEO_AJAX_ACTION,
-            'trackingAction' => BARE_BONES_SEO_AJAX_TRACKING,
             'nonce'          => wp_create_nonce(BARE_BONES_SEO_NONCE_BULK_AJAX),
         ));
     }

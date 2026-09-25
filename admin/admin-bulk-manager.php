@@ -54,14 +54,6 @@ function bare_bones_seo_process_bulk_ajax_save() {
         'should_index' => isset($_POST[$index])  ? sanitize_key(wp_unslash($_POST[$index]))        : 'yes',
     ));
 
-    // Same marker rule as the meta box: only touch tracking when the panel was
-    // actually loaded into the row, so an unopened panel can't wipe stored scripts.
-    if (current_user_can('unfiltered_html') && !empty($_POST['bb_page_scripts_loaded_' . $post_id])) {
-        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- unslashed and sanitized in bare_bones_seo_sanitize_tracking_scripts().
-        $scripts   = bare_bones_seo_sanitize_tracking_scripts($submitted);
-        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));
-    }
-
     $saved = bare_bones_seo_get_page_meta($post_id);
 
     wp_send_json_success(array(
@@ -74,29 +66,6 @@ function bare_bones_seo_process_bulk_ajax_save() {
     ));
 }
 
-/**
- * AJAX handler: render the tracking panel for one post on demand.
- */
-add_action('wp_ajax_' . BARE_BONES_SEO_AJAX_TRACKING, 'bare_bones_seo_load_tracking_panel');
-function bare_bones_seo_load_tracking_panel() {
-    check_ajax_referer(BARE_BONES_SEO_NONCE_BULK_AJAX, 'security');
-
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Insufficient permissions');
-        return;
-    }
-
-    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-
-    if ($post_id <= 0 || !get_post($post_id)) {
-        wp_send_json_error('Invalid post ID');
-        return;
-    }
-
-    ob_start();
-    bare_bones_seo_render_page_tracking_panel($post_id);
-    wp_send_json_success(array('html' => ob_get_clean()));
-}
 
 /**
  * Render the Bulk Manager screen.

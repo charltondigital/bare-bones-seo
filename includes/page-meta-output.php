@@ -36,34 +36,3 @@ function bare_bones_seo_output_head_meta() {
 		}
 	}
 }
-
-/**
- * --- TRACKING SCRIPTS OUTPUT ---
- */
-add_action('wp_head', 'bare_bones_seo_inject_head_scripts', 0);
-add_action('wp_footer', 'bare_bones_seo_inject_footer_scripts', 99);
-
-function bare_bones_seo_inject_head_scripts() {
-    bare_bones_seo_output_scripts_by_location('head');
-}
-
-function bare_bones_seo_inject_footer_scripts() {
-    bare_bones_seo_output_scripts_by_location('footer');
-}
-
-function bare_bones_seo_output_scripts_by_location($location) {
-    $global = get_option(BARE_BONES_SEO_OPTION_TRACKING, array());
-    $page   = is_singular() ? get_post_meta(get_queried_object_id(), BARE_BONES_SEO_META_TRACKING, true) : array();
-    
-    $all = array_merge(is_array($global) ? $global : array(), is_array($page) ? $page : array());
-
-    foreach ($all as $s) {
-        if (!is_array($s) || empty($s['code'])) continue;
-        if (($s['status'] ?? 'active') !== 'active') continue;
-        if (($s['loc'] ?? 'head') !== $location) continue;
-        if (($s['scope'] ?? 'all') === 'home' && !is_front_page()) continue;
-
-        // Raw by design: tracking snippets are JavaScript. Saving requires unfiltered_html.
-        echo "\n" . $s['code'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-    }
-}

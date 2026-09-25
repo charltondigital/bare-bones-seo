@@ -87,13 +87,9 @@ function bare_bones_seo_render_overview_screen() {
                             <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=redirects')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">301 Redirects <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
                             Forward old and dead paths to live pages, with hit counts kept in a rolling 90-day window.
                         </li>
-                        <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
+                        <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 0; font-size: 13px; line-height: 1.5;">
                             <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=404-monitor')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">404 Monitor <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
                             A passive listener for broken links, filtering out bot probes and vulnerability scans so only real visitor misses are logged.
-                        </li>
-                        <li style="border-top: 1px solid #f0f0f1; padding-top: 15px; margin-bottom: 0; font-size: 13px; line-height: 1.5;">
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=bare-bones-seo&tab=tracking')); ?>" style="display: block; font-size: 14px; font-weight: 600; color: #1d2327; margin-bottom: 2px; text-decoration: none;">Tracking <span style="color: #a7aaad; font-weight: 400;">&rsaquo;</span></a>
-                            Analytics, verification, and pixel snippets for the whole site or a single page, without editing your theme.
                         </li>
                     </ul>
                 </div>

@@ -25,7 +25,6 @@ Built for developers and agencies managing sites where precision matters more th
 * **Bulk Page Meta Editor:** Audit and edit titles, descriptions, and indexing across your entire site in a paginated AJAX grid without opening individual editors.
 * **301 Redirect Manager:** Handle moved pages and external redirects. Runs only on 404s to avoid any frontend overhead.
 * **404 Monitor:** A read-only log of 404 errors by path, paginated and capability-checked.
-* **Tracking Snippet Manager:** Store GA4 or GTM snippets with lazy-loaded panels.
 * **Health Notices:** Detects common configuration problems (site set to discourage search engines, entire post types noindexed) with one-click fixes.
 
 == Installation ==
@@ -33,8 +32,6 @@ Built for developers and agencies managing sites where precision matters more th
 1. Upload the `bare-bones-seo` folder to the `/wp-content/plugins/` directory. The folder name must be `bare-bones-seo` exactly.
 2. Activate the plugin through the Plugins screen in WordPress.
 3. Navigate to **Bare Bones SEO** in the admin menu to configure global indexation settings.
-
-**Note:** If you are running Wordfence or another WAF, you may need to allowlist the plugin's settings pages. POST bodies containing `<script>` tags or `gtag(` strings (used in the tracking snippet and schema fields) can trigger false-positive 403 blocks. See the FAQ for details.
 
 == Frequently Asked Questions ==
 
@@ -46,9 +43,13 @@ Running two SEO plugins simultaneously will cause conflicts — both plugins wil
 
 Yes. Global indexation controls apply to any registered post type. Page-level meta boxes appear on all public post types.
 
+= How do I add Google Analytics or other tracking codes? =
+
+Bare Bones SEO deliberately doesn't insert tracking code — plugins that inject scripts into every page are a common security risk. Use one of these instead: Site Kit by Google (Google Analytics, Search Console verification, and Google Ads), your theme's header/footer scripts setting, a lightweight code snippets plugin, or the service's own official WordPress plugin.
+
 = Wordfence is blocking my settings from saving. =
 
-Wordfence's WAF can block POST requests containing `<script>` tags or `gtag(` strings, which appear in the tracking snippet and JSON-LD schema fields. To fix this, add the plugin's settings pages to your Wordfence allowlist under **Wordfence > Firewall > Allowlisted URLs**.
+Wordfence's WAF can occasionally block POST requests containing JSON-LD schema. To fix this, add the plugin's settings pages to your Wordfence allowlist under **Wordfence > Firewall > Allowlisted URLs**.
 
 = What does "bare bones" mean for long-term development? =
 
@@ -65,6 +66,7 @@ It's a deliberate product philosophy, not a development phase. Features that bel
 == Changelog ==
 
 = 0.1.3 =
+* Removed the tracking snippet manager. The plugin no longer inserts scripts; see the FAQ for where tracking codes go instead.
 * Bulk page meta editor: paginated at 50 per page with delegated row expand/collapse.
 * Schema field: invalid JSON warning fires after AJAX save and holds the row open.
 * Health notice system: detects discouraged indexing and fully noindexed post types.

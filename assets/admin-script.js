@@ -15,30 +15,7 @@ jQuery(document).ready(function($) {
         $('#bbseo-tab-' + tabId).show();
     });
 
-    // --- 2. Add Tracking Row ---
-    $(document).on('click', '.bb-add-script-row', function(e) {
-        e.preventDefault();
-        var inputName = $(this).data('input-name');
-        var $wrapper = $(this).closest('.bbs-tracking-manager');
-        var $tbody = $wrapper.find('.bb-tracking-rows');
-        var $template = $('#tpl-' + inputName);
-
-        if ($template.length) {
-            var index = Date.now(); // Unique index
-            var html = $template.html().replace(/{{INDEX}}/g, index);
-            $tbody.append(html);
-        }
-    });
-
-    // --- 3. Remove Tracking Row ---
-    $(document).on('click', '.bb-remove-row', function(e) {
-        e.preventDefault();
-        if (confirm('Delete this script?')) {
-            $(this).closest('tr').remove();
-        }
-    });
-
-    // --- 4. Section Toggles ---
+    // --- 2. Section Toggles ---
     $(document).on('click', '.bb-section-toggle', function() {
         var targetId = $(this).data('target');
         var $target = (targetId.startsWith('bb-')) ? $('#' + targetId) : $('[id$="' + targetId + '"]');
@@ -53,7 +30,7 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // --- 5. Bulk Manager: expand / collapse a row ---
+    // --- 3. Bulk Manager: expand / collapse a row ---
     function bbCloseAllRows(exceptUid) {
         $('tr[id^="bb-"][id$="-expanded"]:visible').each(function() {
             var uid = this.id.replace(/-expanded$/, '');
@@ -61,44 +38,6 @@ jQuery(document).ready(function($) {
             $(this).hide();
             $('#' + uid + '-chevron').css('transform', 'rotate(0deg)');
         });
-    }
-
-    // Tracking tables are pulled in per row on first open rather than rendered
-    // for every row up front. Failures leave the row unflagged so the next
-    // open retries.
-    function bbLoadTracking(postId) {
-        if (typeof bbSeoData === 'undefined') { return; }
-
-        var $lazy = $('#bb-' + postId + '-expanded')
-            .find('.bb-tracking-lazy')
-            .not('.bb-loaded, .bb-loading');
-
-        if (!$lazy.length) { return; }
-
-        $lazy.addClass('bb-loading');
-
-        $.post(ajaxurl, {
-            action:   bbSeoData.trackingAction,
-            security: bbSeoData.nonce,
-            post_id:  postId
-        })
-            .done(function(response) {
-                if (response && response.success) {
-                    $lazy.html(response.data.html).removeClass('bb-loading').addClass('bb-loaded');
-                } else {
-                    bbTrackingError($lazy);
-                }
-            })
-            .fail(function() {
-                bbTrackingError($lazy);
-            });
-    }
-
-    function bbTrackingError($lazy) {
-        $lazy.removeClass('bb-loading').html(
-            '<p style="margin:0; color:#b32d2e;">Could not load tracking scripts. ' +
-            'Close and reopen this row to try again.</p>'
-        );
     }
 
     function bbToggleRow(postId) {
@@ -115,7 +54,6 @@ jQuery(document).ready(function($) {
         bbCloseAllRows(uid);
         $expanded.show();
         $chevron.css('transform', 'rotate(90deg)');
-        bbLoadTracking(postId);
     }
 
     // Delegated so it works regardless of script load order.
@@ -126,7 +64,7 @@ jQuery(document).ready(function($) {
         bbToggleRow($(this).data('post-id'));
     });
 
-    // --- 6. Bulk Manager: save a row over AJAX ---
+    // --- 4. Bulk Manager: save a row over AJAX ---
     $(document).on('click', '.bb-bulk-save', function(e) {
         e.preventDefault();
 

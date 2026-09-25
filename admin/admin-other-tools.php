@@ -4,6 +4,7 @@
  *
  * Explains what this plugin deliberately does not do, and points at off-server
  * tools for the jobs that would otherwise cost the host real processing time.
+ * Also covers where tracking codes go now that the plugin doesn't insert them.
  */
 
 if (!defined('ABSPATH')) exit;
@@ -51,6 +52,27 @@ function bare_bones_seo_render_other_tools_screen() {
             </p>
             <p style="margin:0; font-size:14px; line-height:1.6; color:#3c434a;">
                 <strong>Full Site Audits:</strong> For deep scans, run <strong>Screaming Frog SEO Spider</strong> (Free Version) locally from your desktop. It scans your site in seconds without using a single byte of server memory.
+            </p>
+        </div>
+
+        <div style="border-top:1px solid #f0f0f1; padding-top:20px; margin-top:24px;">
+            <h3 style="margin:0 0 8px; font-size:15px; font-weight:600; color:#1d2327;">
+                Tracking Codes (Analytics, Pixels, Verification)
+            </h3>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                Bare Bones SEO doesn't insert tracking code. Plugins that inject scripts into every page are a common security risk, so we leave that job to tools built for it. Pick whichever fits:
+            </p>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>Site Kit by Google:</strong> Google's official free plugin for Google Analytics, Search Console verification, and Google Ads. Sign in with Google and it places the tags for you.
+            </p>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>Your theme's header/footer setting:</strong> Many themes have a box for header and footer scripts in their options. If yours does, no extra plugin is needed.
+            </p>
+            <p style="margin:0 0 10px; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>A code snippets plugin:</strong> If your theme doesn't have that setting, a lightweight snippets plugin adds one.
+            </p>
+            <p style="margin:0; font-size:14px; line-height:1.6; color:#3c434a;">
+                <strong>The tool's own plugin:</strong> Meta, Microsoft Clarity, CallRail, and most other services offer an official WordPress plugin that installs their code.
             </p>
         </div>
 

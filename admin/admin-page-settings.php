@@ -75,21 +75,6 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
                     </details>
                 </div>
             </div>
-            <!-- Section 4: Tracking Scripts -->
-            <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden;">
-                <button type="button" class="bb-section-toggle" data-target="<?php echo esc_attr($uid); ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts <span class="bb-toggle-icon">+</span></button>
-                <div id="<?php echo esc_attr($uid); ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
-                    <?php if ($in_bulk) : ?>
-                        <?php // Filled over AJAX the first time the row opens — 50 tracking
-                              // tables per page load is a lot of markup nobody asked for. ?>
-                        <div class="bb-tracking-lazy" data-post-id="<?php echo esc_attr($post->ID); ?>">
-                            <p style="margin:0; color:#646970;">Loading tracking scripts&hellip;</p>
-                        </div>
-                    <?php else : ?>
-                        <?php bare_bones_seo_render_page_tracking_panel($post->ID); ?>
-                    <?php endif; ?>
-                </div>
-            </div>
         </div>
         <div>
             <div style="font-size:11px; font-weight:600; color:#888; text-transform:uppercase; margin-bottom:8px;">Live Preview</div>
@@ -115,13 +100,4 @@ function bare_bones_seo_save_meta_box_data($post_id) {
         'should_index' => isset($_POST['bb_seo_should_index_' . $post_id]) ? sanitize_key(wp_unslash($_POST['bb_seo_should_index_' . $post_id])) : 'yes',
     );
     bare_bones_seo_update_page_meta($post_id, $data);
-
-    // Keyed on the marker, not the array: an emptied table submits no array at
-    // all, and skipping the write there would silently ignore the deletion.
-    if (current_user_can('unfiltered_html') && !empty($_POST['bb_page_scripts_loaded_' . $post_id])) {
-        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- unslashed and sanitized in bare_bones_seo_sanitize_tracking_scripts().
-        $scripts   = bare_bones_seo_sanitize_tracking_scripts($submitted);
-        // wp_slash offsets the unslash update_post_meta() applies internally, so raw code survives intact.
-        update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));
-    }
 }
