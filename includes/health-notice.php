@@ -61,7 +61,7 @@ add_action( 'in_admin_header', function() {
 		return;
 	}
 
-	if ( isset( $_GET['bbseo_indexing_restored'] ) ) {
+	if ( isset( $_GET['bbseo_indexing_restored'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display flag only.
 		echo '<div class="notice notice-success" style="margin:16px 20px 0 2px;"><p>Search engine indexing is back on for this site.</p></div>';
 	}
 
@@ -74,7 +74,7 @@ add_action( 'in_admin_header', function() {
 	?>
 	<div style="margin:16px 20px 8px 2px; background:#1d2327; border-left:6px solid #d63638; border-radius:4px; padding:20px 22px; display:flex; gap:18px; align-items:flex-start; box-shadow:0 1px 4px rgba(0,0,0,.25);">
 		<div style="flex:0 0 auto; color:#f86368; line-height:0;">
-			<?php echo bare_bones_seo_skull_icon( 46, '#f86368' ); ?>
+			<?php echo bare_bones_seo_skull_icon( 46, '#f86368' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG; size and color escaped inside. ?>
 		</div>
 		<div style="flex:1 1 auto; min-width:0;">
 			<h2 style="margin:0 0 8px; padding:0; color:#fff; font-size:18px; line-height:1.3; font-weight:600;">

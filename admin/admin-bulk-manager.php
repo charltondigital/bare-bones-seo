@@ -47,16 +47,17 @@ function bare_bones_seo_process_bulk_ajax_save() {
     $index  = 'bb_seo_should_index_' . $post_id;
 
     bare_bones_seo_update_page_meta($post_id, array(
-        'title'        => isset($_POST[$title])  ? sanitize_text_field($_POST[$title]) : '',
-        'desc'         => isset($_POST[$desc])   ? sanitize_text_field($_POST[$desc])  : '',
-        'schema'       => isset($_POST[$schema]) ? $_POST[$schema]                     : '',
-        'should_index' => isset($_POST[$index])  ? sanitize_key($_POST[$index])        : 'yes',
+        'title'        => isset($_POST[$title])  ? sanitize_text_field(wp_unslash($_POST[$title])) : '',
+        'desc'         => isset($_POST[$desc])   ? sanitize_text_field(wp_unslash($_POST[$desc]))  : '',
+        // Raw JSON by design — validated and re-encoded on output. See bare_bones_seo_update_page_meta().
+        'schema'       => isset($_POST[$schema]) ? wp_unslash($_POST[$schema]) : '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        'should_index' => isset($_POST[$index])  ? sanitize_key(wp_unslash($_POST[$index]))        : 'yes',
     ));
 
     // Same marker rule as the meta box: only touch tracking when the panel was
     // actually loaded into the row, so an unopened panel can't wipe stored scripts.
     if (current_user_can('unfiltered_html') && !empty($_POST['bb_page_scripts_loaded_' . $post_id])) {
-        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array();
+        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- unslashed and sanitized in bare_bones_seo_sanitize_tracking_scripts().
         $scripts   = bare_bones_seo_sanitize_tracking_scripts($submitted);
         update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));
     }
@@ -102,7 +103,7 @@ function bare_bones_seo_load_tracking_panel() {
  */
 function bare_bones_seo_render_bulk_manager_screen() {
     $per_page = 50;
-    $paged    = isset($_GET['bb_paged']) ? max(1, intval($_GET['bb_paged'])) : 1;
+    $paged    = isset($_GET['bb_paged']) ? max(1, absint($_GET['bb_paged'])) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination.
 
     $query = new WP_Query(array(
         'post_type'      => array('page', 'post'),
@@ -175,7 +176,7 @@ function bare_bones_seo_render_bulk_manager_screen() {
                             </span>
                         </td>
                         <td style="padding:10px 12px; vertical-align:middle; text-align:center;" id="<?php echo esc_attr($uid); ?>-badge-cell">
-                            <?php echo $badge; ?>
+                            <?php echo wp_kses_post($badge); ?>
                         </td>
                         <td style="padding:10px 12px; vertical-align:middle; overflow:hidden;">
                             <span id="<?php echo esc_attr($uid); ?>-schema-preview"
@@ -234,14 +235,14 @@ function bare_bones_seo_render_bulk_manager_screen() {
                 <div class="tablenav-pages" style="float:none; text-align:right;">
                     <span class="displaying-num"><?php echo esc_html(number_format_i18n($query->found_posts)); ?> items</span>
                     <?php
-                    echo paginate_links(array(
+                    echo wp_kses_post(paginate_links(array(
                         'base'      => $base,
                         'format'    => '',
                         'prev_text' => '&laquo;',
                         'next_text' => '&raquo;',
                         'total'     => $query->max_num_pages,
                         'current'   => $paged,
-                    ));
+                    )));
                     ?>
                 </div>
             </div>

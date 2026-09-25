@@ -97,17 +97,19 @@ function bare_bones_seo_get_page_meta( $post_id ) {
  * @param array $data    The array of data to save.
  */
 function bare_bones_seo_update_page_meta( $post_id, $data ) {
+	// Callers pass unslashed values. wp_slash offsets the unslash that
+	// update_post_meta() applies internally, so backslashes survive intact.
 	if ( isset( $data['title'] ) ) {
-		update_post_meta( $post_id, BARE_BONES_SEO_META_TITLE, sanitize_text_field( $data['title'] ) );
+		update_post_meta( $post_id, BARE_BONES_SEO_META_TITLE, wp_slash( sanitize_text_field( $data['title'] ) ) );
 	}
 	if ( isset( $data['desc'] ) ) {
-		update_post_meta( $post_id, BARE_BONES_SEO_META_DESC, sanitize_text_field( $data['desc'] ) );
+		update_post_meta( $post_id, BARE_BONES_SEO_META_DESC, wp_slash( sanitize_text_field( $data['desc'] ) ) );
 	}
 	if ( isset( $data['schema'] ) ) {
 		// Store raw JSON. wp_kses_post is for HTML and would corrupt it; safety
 		// is enforced on output, where it's validated and re-encoded with tag
-		// escaping. update_post_meta unslashes for us.
-		update_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, trim( (string) $data['schema'] ) );
+		// escaping.
+		update_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, wp_slash( trim( (string) $data['schema'] ) ) );
 	}
 	if ( isset( $data['should_index'] ) ) {
 		update_post_meta( $post_id, BARE_BONES_SEO_META_INDEX, sanitize_key( $data['should_index'] ) );
@@ -168,7 +170,7 @@ function bare_bones_seo_install() {
  * Log 404s. Stores the request path only (no host — it's always this site,
  * and it's rebuilt with home_url() on display); skips common bot/scanner probes.
  */
-function bbseo_log_404_error() {
+function bare_bones_seo_log_404_error() {
 	if ( ! is_404() ) {
 		return;
 	}
@@ -176,7 +178,7 @@ function bbseo_log_404_error() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'bbseo_404_logs';
 
-	$path    = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+	$path    = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 	$referer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
 
 	// Skip bot/scanner probe noise so the table stays lean.
@@ -190,7 +192,7 @@ function bbseo_log_404_error() {
 		}
 	}
 
-	$existing = $wpdb->get_row( $wpdb->prepare( "SELECT id, hits FROM `$table_name` WHERE url = %s", $path ) );
+	$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT id, hits FROM %i WHERE url = %s', $table_name, $path ) );
 
 	if ( $existing ) {
 		$wpdb->update(
@@ -217,4 +219,4 @@ function bbseo_log_404_error() {
 		);
 	}
 }
-add_action( 'template_redirect', 'bbseo_log_404_error' );
+add_action( 'template_redirect', 'bare_bones_seo_log_404_error' );

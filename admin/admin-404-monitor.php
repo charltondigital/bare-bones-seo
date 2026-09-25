@@ -12,9 +12,9 @@ function bare_bones_seo_render_404_monitor_screen() {
 	$table_name = $wpdb->prefix . 'bbseo_404_logs';
 
 	// 1. Handle actions
-	if ( isset( $_GET['action'] ) && 'clear_all' === $_GET['action']
+	if ( isset( $_GET['action'] ) && 'clear_all' === sanitize_key( wp_unslash( $_GET['action'] ) )
 		&& current_user_can( 'manage_options' ) && check_admin_referer( 'bb_clear_all_404' ) ) {
-		$wpdb->query( "TRUNCATE TABLE `$table_name`" );
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table_name ) );
 		echo '<div class="notice notice-success is-dismissible"><p>All 404 logs successfully cleared.</p></div>';
 	}
 
@@ -22,14 +22,15 @@ function bare_bones_seo_render_404_monitor_screen() {
 	// Own page param: every tab renders on every request, so sharing one with
 	// the Page Meta table would page both at once.
 	$per_page = 50;
-	$total    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `$table_name`" );
+	$total    = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table_name ) );
 	$pages    = max( 1, (int) ceil( $total / $per_page ) );
-	$paged    = isset( $_GET['bb_404_paged'] ) ? max( 1, intval( $_GET['bb_404_paged'] ) ) : 1;
+	$paged    = isset( $_GET['bb_404_paged'] ) ? max( 1, absint( $_GET['bb_404_paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination.
 	$paged    = min( $paged, $pages );
 
 	$logs = $wpdb->get_results(
 		$wpdb->prepare(
-			"SELECT * FROM `$table_name` ORDER BY hits DESC, last_accessed DESC LIMIT %d OFFSET %d",
+			'SELECT * FROM %i ORDER BY hits DESC, last_accessed DESC LIMIT %d OFFSET %d',
+			$table_name,
 			$per_page,
 			( $paged - 1 ) * $per_page
 		)
@@ -93,14 +94,16 @@ function bare_bones_seo_render_404_monitor_screen() {
 					<?php
 					// Built from the tab URL rather than the current request, so the
 					// links stay on this tab no matter which one is being viewed.
-					echo paginate_links(
-						array(
-							'base'      => admin_url( 'admin.php?page=bare-bones-seo&tab=404-monitor&bb_404_paged=%#%' ),
-							'format'    => '',
-							'prev_text' => '&laquo;',
-							'next_text' => '&raquo;',
-							'total'     => $pages,
-							'current'   => $paged,
+					echo wp_kses_post(
+						paginate_links(
+							array(
+								'base'      => admin_url( 'admin.php?page=bare-bones-seo&tab=404-monitor&bb_404_paged=%#%' ),
+								'format'    => '',
+								'prev_text' => '&laquo;',
+								'next_text' => '&raquo;',
+								'total'     => $pages,
+								'current'   => $paged,
+							)
 						)
 					);
 					?>

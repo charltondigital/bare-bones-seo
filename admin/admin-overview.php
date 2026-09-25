@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
  */
 function bare_bones_seo_render_overview_screen() {
     // Get the current monitor status dynamically
-    $monitor_active = has_action('template_redirect', 'bbseo_log_404_error') ? 'Active' : 'Disabled';
+    $monitor_active = has_action('template_redirect', 'bare_bones_seo_log_404_error') ? 'Active' : 'Disabled';
 
     // The custom redirect engine, not a hook that never existed.
     $redirect_tracking = has_action('template_redirect', 'bare_bones_seo_apply_redirects') ? 'Active' : 'Disabled';

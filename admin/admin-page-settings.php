@@ -31,38 +31,38 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
         <div>
             <!-- Section 1: Snippet Builder -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
-                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-snippet" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Snippet Builder <span class="bb-toggle-icon">−</span></button>
-                <div id="<?php echo $uid; ?>-snippet" style="padding:14px; border-top:1px solid #ddd;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo esc_attr($uid); ?>-snippet" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Snippet Builder <span class="bb-toggle-icon">−</span></button>
+                <div id="<?php echo esc_attr($uid); ?>-snippet" style="padding:14px; border-top:1px solid #ddd;">
                     <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;">SEO TITLE</label>
-                    <input type="text" name="bb_seo_title_<?php echo $post->ID; ?>" value="<?php echo esc_attr($meta['title']); ?>" style="width:100%; margin-bottom:12px;">
+                    <input type="text" name="bb_seo_title_<?php echo esc_attr($post->ID); ?>" value="<?php echo esc_attr($meta['title']); ?>" style="width:100%; margin-bottom:12px;">
                     <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;">META DESCRIPTION</label>
-                    <textarea name="bb_seo_desc_<?php echo $post->ID; ?>" rows="3" style="width:100%;"><?php echo esc_textarea($meta['desc']); ?></textarea>
+                    <textarea name="bb_seo_desc_<?php echo esc_attr($post->ID); ?>" rows="3" style="width:100%;"><?php echo esc_textarea($meta['desc']); ?></textarea>
                 </div>
             </div>
             <!-- Section 2: Indexing -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
-                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-indexing" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Indexing <span class="bb-toggle-icon">+</span></button>
-                <div id="<?php echo $uid; ?>-indexing" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo esc_attr($uid); ?>-indexing" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Indexing <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo esc_attr($uid); ?>-indexing" style="display:none; padding:14px; border-top:1px solid #ddd;">
                     <?php 
                     $opts = array('yes' => 'Yes', 'no' => 'No', 'complicated_sitemap' => 'Remove from Sitemap Only');
                     foreach ($opts as $v => $l) : 
                         if (bare_bones_seo_more_restrictive($site_state, $v) === $v) : ?>
-                            <label style="display:block; margin-bottom:8px;"><input type="radio" name="bb_seo_should_index_<?php echo $post->ID; ?>" value="<?php echo $v; ?>" <?php checked($effective_state, $v); ?>> <?php echo $l; ?></label>
+                            <label style="display:block; margin-bottom:8px;"><input type="radio" name="bb_seo_should_index_<?php echo esc_attr($post->ID); ?>" value="<?php echo esc_attr($v); ?>" <?php checked($effective_state, $v); ?>> <?php echo esc_html($l); ?></label>
                     <?php endif; endforeach; ?>
                 </div>
             </div>
             <!-- Section 3: Schema -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:10px;">
-                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
-                <div id="<?php echo $uid; ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
-                    <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;" for="<?php echo $uid; ?>-schema-input">SCHEMA MARKUP (JSON-LD)</label>
-                    <textarea id="<?php echo $uid; ?>-schema-input" name="bb_seo_schema_<?php echo $post->ID; ?>" rows="4" style="width:100%; font-family:monospace;" placeholder='{"@context": "https://schema.org", "@type": "Person"}'><?php echo esc_textarea($meta['schema']); ?></textarea>
+                <button type="button" class="bb-section-toggle" data-target="<?php echo esc_attr($uid); ?>-schema" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Schema Markup <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo esc_attr($uid); ?>-schema" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                    <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px;" for="<?php echo esc_attr($uid); ?>-schema-input">SCHEMA MARKUP (JSON-LD)</label>
+                    <textarea id="<?php echo esc_attr($uid); ?>-schema-input" name="bb_seo_schema_<?php echo esc_attr($post->ID); ?>" rows="4" style="width:100%; font-family:monospace;" placeholder='{"@context": "https://schema.org", "@type": "Person"}'><?php echo esc_textarea($meta['schema']); ?></textarea>
                     <p style="margin:6px 0 0; font-size:12px; color:#646970;">
                         Paste the raw JSON only &mdash; no <code>&lt;script&gt;</code> tags and no <code>```</code> code fences. Invalid JSON is not added to the page.
                         <a href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer">Check your schema</a>
                     </p>
                     <?php // Always rendered so the save handler can reveal it without injecting markup. ?>
-                    <p id="<?php echo $uid; ?>-schema-error"
+                    <p id="<?php echo esc_attr($uid); ?>-schema-error"
                        style="margin:6px 0 0; color:#b32d2e;<?php echo bare_bones_seo_schema_is_invalid($meta['schema']) ? '' : ' display:none;'; ?>">
                         <strong>This JSON is not valid</strong> and will not be added to the page. Check for a missing comma, bracket, or quote.
                     </p>
@@ -77,8 +77,8 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
             </div>
             <!-- Section 4: Tracking Scripts -->
             <div class="bb-section" style="border:1px solid #ddd; border-radius:4px; overflow:hidden;">
-                <button type="button" class="bb-section-toggle" data-target="<?php echo $uid; ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts <span class="bb-toggle-icon">+</span></button>
-                <div id="<?php echo $uid; ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
+                <button type="button" class="bb-section-toggle" data-target="<?php echo esc_attr($uid); ?>-tracking" style="width:100%; display:flex; justify-content:space-between; padding:10px; background:#f6f7f7; border:none; cursor:pointer; font-weight:600;">Tracking Scripts <span class="bb-toggle-icon">+</span></button>
+                <div id="<?php echo esc_attr($uid); ?>-tracking" style="display:none; padding:14px; border-top:1px solid #ddd;">
                     <?php if ($in_bulk) : ?>
                         <?php // Filled over AJAX the first time the row opens — 50 tracking
                               // tables per page load is a lot of markup nobody asked for. ?>
@@ -104,21 +104,22 @@ function bare_bones_seo_render_fields($post, $in_bulk = false) {
 
 add_action('save_post', 'bare_bones_seo_save_meta_box_data');
 function bare_bones_seo_save_meta_box_data($post_id) {
-    if (!isset($_POST['bare_bones_seo_nonce']) || !wp_verify_nonce($_POST['bare_bones_seo_nonce'], BARE_BONES_SEO_NONCE_PAGE)) return;
+    if (!isset($_POST['bare_bones_seo_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bare_bones_seo_nonce'])), BARE_BONES_SEO_NONCE_PAGE)) return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
     $data = array(
-        'title'        => $_POST['bb_seo_title_'.$post_id] ?? '',
-        'desc'         => $_POST['bb_seo_desc_'.$post_id] ?? '',
-        'schema'       => $_POST['bb_seo_schema_'.$post_id] ?? '',
-        'should_index' => $_POST['bb_seo_should_index_'.$post_id] ?? 'yes',
+        'title'        => isset($_POST['bb_seo_title_' . $post_id]) ? sanitize_text_field(wp_unslash($_POST['bb_seo_title_' . $post_id])) : '',
+        'desc'         => isset($_POST['bb_seo_desc_' . $post_id]) ? sanitize_text_field(wp_unslash($_POST['bb_seo_desc_' . $post_id])) : '',
+        // Raw JSON by design — validated and re-encoded on output. See bare_bones_seo_update_page_meta().
+        'schema'       => isset($_POST['bb_seo_schema_' . $post_id]) ? wp_unslash($_POST['bb_seo_schema_' . $post_id]) : '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        'should_index' => isset($_POST['bb_seo_should_index_' . $post_id]) ? sanitize_key(wp_unslash($_POST['bb_seo_should_index_' . $post_id])) : 'yes',
     );
     bare_bones_seo_update_page_meta($post_id, $data);
 
     // Keyed on the marker, not the array: an emptied table submits no array at
     // all, and skipping the write there would silently ignore the deletion.
     if (current_user_can('unfiltered_html') && !empty($_POST['bb_page_scripts_loaded_' . $post_id])) {
-        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array();
+        $submitted = $_POST['bb_page_scripts_' . $post_id] ?? array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- unslashed and sanitized in bare_bones_seo_sanitize_tracking_scripts().
         $scripts   = bare_bones_seo_sanitize_tracking_scripts($submitted);
         // wp_slash offsets the unslash update_post_meta() applies internally, so raw code survives intact.
         update_post_meta($post_id, BARE_BONES_SEO_META_TRACKING, wp_slash($scripts));

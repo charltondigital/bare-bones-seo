@@ -5,8 +5,10 @@
 if (!defined('ABSPATH')) exit;
 
 function bare_bones_seo_render_tracking_screen() {
-    if (isset($_POST['bb_save_tracking']) && check_admin_referer('bb_tracking_nonce') && current_user_can('manage_options')) {
-        $scripts = isset($_POST['bb_scripts']) ? $_POST['bb_scripts'] : array();
+    // unfiltered_html as well as manage_options: this code is echoed raw on the
+    // front end, and on multisite site admins don't hold unfiltered_html.
+    if (isset($_POST['bb_save_tracking']) && check_admin_referer('bb_tracking_nonce') && current_user_can('manage_options') && current_user_can('unfiltered_html')) {
+        $scripts = isset($_POST['bb_scripts']) ? $_POST['bb_scripts'] : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- unslashed and sanitized in bare_bones_seo_sanitize_tracking_scripts().
         update_option(BARE_BONES_SEO_OPTION_TRACKING, bare_bones_seo_sanitize_tracking_scripts($scripts));
         echo '<div class="updated"><p>Tracking scripts updated.</p></div>';
     }
@@ -83,11 +85,11 @@ function bare_bones_seo_render_row($index, $data, $input_name, $is_global) {
     $name = "{$input_name}[$index]";
     ?>
     <tr>
-        <td><input type="text" name="<?php echo $name; ?>[label]" value="<?php echo esc_attr($label); ?>" class="widefat"></td>
-        <td><textarea name="<?php echo $name; ?>[code]" rows="2" class="widefat code" style="font-size:11px;"><?php echo esc_textarea($code); ?></textarea></td>
-        <td><select name="<?php echo $name; ?>[loc]"><option value="head" <?php selected($loc, 'head');?>>Head</option><option value="footer" <?php selected($loc, 'footer');?>>Footer</option></select></td>
-        <td><select name="<?php echo $name; ?>[status]"><option value="active" <?php selected($status, 'active');?>>Active</option><option value="paused" <?php selected($status, 'paused');?>>Paused</option></select></td>
-        <?php if ($is_global): ?><td><select name="<?php echo $name; ?>[scope]"><option value="all" <?php selected($scope, 'all');?>>Entire Site</option><option value="home" <?php selected($scope, 'home');?>>Home Only</option></select></td><?php endif; ?>
+        <td><input type="text" name="<?php echo esc_attr($name); ?>[label]" value="<?php echo esc_attr($label); ?>" class="widefat"></td>
+        <td><textarea name="<?php echo esc_attr($name); ?>[code]" rows="2" class="widefat code" style="font-size:11px;"><?php echo esc_textarea($code); ?></textarea></td>
+        <td><select name="<?php echo esc_attr($name); ?>[loc]"><option value="head" <?php selected($loc, 'head');?>>Head</option><option value="footer" <?php selected($loc, 'footer');?>>Footer</option></select></td>
+        <td><select name="<?php echo esc_attr($name); ?>[status]"><option value="active" <?php selected($status, 'active');?>>Active</option><option value="paused" <?php selected($status, 'paused');?>>Paused</option></select></td>
+        <?php if ($is_global): ?><td><select name="<?php echo esc_attr($name); ?>[scope]"><option value="all" <?php selected($scope, 'all');?>>Entire Site</option><option value="home" <?php selected($scope, 'home');?>>Home Only</option></select></td><?php endif; ?>
         <td><button type="button" class="bb-remove-row" style="color:#a00; border:none; background:none; cursor:pointer; font-size:20px;">&times;</button></td>
     </tr>
     <?php
@@ -96,8 +98,8 @@ function bare_bones_seo_render_row($index, $data, $input_name, $is_global) {
 /**
  * Code is stored raw (not run through wp_kses) because wp_kses corrupts inline
  * JS — it entity-encodes & and eats < in comparisons, breaking GA/GTM/Pixel
- * snippets. Access is gated by capability at the call sites instead: global
- * scripts are manage_options only, page scripts require unfiltered_html.
+ * snippets. Access is gated by capability at the call sites instead: saving
+ * requires unfiltered_html at both global and page level.
  */
 function bare_bones_seo_sanitize_tracking_scripts($input) {
     if (!is_array($input)) return array();

@@ -1,8 +1,8 @@
 === Bare Bones SEO ===
 Contributors: charltondigital
 Tags: seo, metadata, sitemap, noindex, redirects
-Requires at least: 6.0
-Tested up to: 6.7
+Requires at least: 6.2
+Tested up to: 7.1
 Stable tag: 0.1.3
 Requires PHP: 7.4
 License: GPLv2 or later

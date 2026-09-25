@@ -1,8 +1,14 @@
 <?php
 /**
- * Plugin Name: Bare Bones SEO
- * Author: Charlton Digital
- * Version: 0.1.3
+ * Plugin Name:       Bare Bones SEO
+ * Description:       A minimal SEO plugin: indexation controls, page meta, sitemaps, redirects, a 404 monitor, schema, and tracking snippets.
+ * Version:           0.1.3
+ * Requires at least: 6.2
+ * Requires PHP:      7.4
+ * Author:            Charlton Digital
+ * Author URI:        https://charltondigital.com
+ * License:           GPLv2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 if (!defined('ABSPATH')) { exit; }
@@ -18,8 +24,8 @@ define('BARE_BONES_SEO_OPTION_TRACKING', 'bare_bones_seo_tracking_scripts');
 define('BARE_BONES_SEO_NONCE_PAGE', 'bare_bones_seo_save_nonce');
 define('BARE_BONES_SEO_NONCE_GLOBAL_MAP', 'bb_global_map_nonce');
 define('BARE_BONES_SEO_NONCE_BULK_AJAX', 'bb_bulk_manager_nonce');
-define('BARE_BONES_SEO_AJAX_ACTION', 'bb_seo_bulk_save');
-define('BARE_BONES_SEO_AJAX_TRACKING', 'bb_seo_load_tracking');
+define('BARE_BONES_SEO_AJAX_ACTION', 'bare_bones_seo_bulk_save');
+define('BARE_BONES_SEO_AJAX_TRACKING', 'bare_bones_seo_load_tracking');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
 define('BARE_BONES_SEO_VERSION', '0.1.3');
@@ -56,7 +62,7 @@ if (is_admin()) {
 
 register_activation_hook(__FILE__, 'bare_bones_seo_install');
 
-// Covers installs that skip activation (GitHub updater, manual upload) and any
+// Covers installs that skip activation (e.g. manual file upload) and any
 // site where the table was dropped or never created.
 add_action('admin_init', function() {
     if (get_option(BARE_BONES_SEO_DB_VERSION_OPTION) !== BARE_BONES_SEO_DB_VERSION) {
@@ -82,12 +88,13 @@ function bare_bones_seo_skull_icon($size = 18, $color = 'currentColor') {
 }
 
 function bare_bones_seo_render_dashboard() {
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
+    // Read-only tab selection; no state changes, so no nonce.
+    $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     $tabs = array(
         'overview' => array('l' => 'Overview', 'c' => 'bare_bones_seo_render_overview_screen'),
         'indexation' => array('l' => 'Indexation', 'c' => 'bare_bones_seo_render_global_map_screen'),
         'bulk' => array('l' => 'Page Meta', 'c' => 'bare_bones_seo_render_bulk_manager_screen'),
-        'redirects' => array('l' => '301 Redirects', 'c' => 'render_bare_bones_redirects_tab'),
+        'redirects' => array('l' => '301 Redirects', 'c' => 'bare_bones_seo_render_redirects_tab'),
         '404-monitor' => array('l' => '404 Monitor', 'c' => 'bare_bones_seo_render_404_monitor_screen'),
         'tracking' => array('l' => 'Tracking', 'c' => 'bare_bones_seo_render_tracking_screen'),
         'other-tools' => array('l' => 'Other Tools', 'c' => 'bare_bones_seo_render_other_tools_screen'),
@@ -97,15 +104,15 @@ function bare_bones_seo_render_dashboard() {
         <?php // Marker hoists admin notices ABOVE the title instead of below it. ?>
         <div class="wp-header-end"></div>
         <?php $bb_issues = bare_bones_seo_get_critical_issues(); ?>
-        <h1 style="font-size:46px; font-weight:700; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48, $bb_issues ? '#d63638' : 'currentColor'); ?> Bare Bones SEO</h1>
+        <h1 style="font-size:46px; font-weight:700; line-height:1.2; display:flex; align-items:center; gap:8px; margin:0 0 14px;"><?php echo bare_bones_seo_skull_icon(48, $bb_issues ? '#d63638' : 'currentColor'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG; size and color escaped inside. ?> Bare Bones SEO</h1>
         <h2 class="nav-tab-wrapper" style="margin-bottom:20px;">
             <?php foreach ($tabs as $id => $t) : ?>
-                <a href="?page=bare-bones-seo<?php echo ($id == 'overview' ? '' : '&tab='.$id); ?>" class="nav-tab <?php echo ($active_tab == $id ? 'nav-tab-active' : ''); ?>"><?php echo $t['l']; ?></a>
+                <a href="?page=bare-bones-seo<?php echo ($id == 'overview' ? '' : '&tab=' . esc_attr($id)); ?>" class="nav-tab <?php echo ($active_tab == $id ? 'nav-tab-active' : ''); ?>"><?php echo esc_html($t['l']); ?></a>
             <?php endforeach; ?>
         </h2>
         <div id="bbseo-tabs-container">
             <?php foreach ($tabs as $id => $t) : ?>
-                <div id="bbseo-tab-<?php echo $id; ?>" class="bbseo-tab-content" style="display:<?php echo ($active_tab == $id ? 'block' : 'none'); ?>;">
+                <div id="bbseo-tab-<?php echo esc_attr($id); ?>" class="bbseo-tab-content" style="display:<?php echo ($active_tab == $id ? 'block' : 'none'); ?>;">
                     <?php if (function_exists($t['c'])) { call_user_func($t['c']); } ?>
                 </div>
             <?php endforeach; ?>
@@ -116,17 +123,12 @@ function bare_bones_seo_render_dashboard() {
 
 add_action('admin_enqueue_scripts', function($hook) {
     if(strpos($hook, 'bare-bones-seo') !== false || in_array($hook, array('post.php', 'post-new.php'))) {
-        wp_enqueue_style('bbs-css', plugins_url('assets/admin-style.css', __FILE__), array(), BARE_BONES_SEO_VERSION);
-        wp_enqueue_script('bbs-js', plugins_url('assets/admin-script.js', __FILE__), array('jquery'), BARE_BONES_SEO_VERSION, true);
-        wp_localize_script('bbs-js', 'bbSeoData', array(
+        wp_enqueue_style('bare-bones-seo-admin', plugins_url('assets/admin-style.css', __FILE__), array(), BARE_BONES_SEO_VERSION);
+        wp_enqueue_script('bare-bones-seo-admin', plugins_url('assets/admin-script.js', __FILE__), array('jquery'), BARE_BONES_SEO_VERSION, true);
+        wp_localize_script('bare-bones-seo-admin', 'bbSeoData', array(
             'ajaxAction'     => BARE_BONES_SEO_AJAX_ACTION,
             'trackingAction' => BARE_BONES_SEO_AJAX_TRACKING,
             'nonce'          => wp_create_nonce(BARE_BONES_SEO_NONCE_BULK_AJAX),
         ));
     }
 });
-
-if (is_admin() || wp_doing_cron()) {
-    require_once BARE_BONES_SEO_PATH . 'includes/github-updater.php';
-    new BBSEO_GitHub_Updater(__FILE__, 'charltondigital/bare-bones-seo');
-}

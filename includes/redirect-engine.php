@@ -24,11 +24,15 @@ function bare_bones_seo_apply_redirects() {
 		return;
 	}
 
-	$path = trim( (string) parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ), '/' );
+	if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+		return;
+	}
+	// Reduced to a path and used only as a lookup key into the redirect map.
+	$path = trim( (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ), '/' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	if ( '' !== $path && isset( $map[ $path ] ) ) {
 		// wp_redirect (not wp_safe_redirect) so admin-configured external
 		// targets are allowed; these are deliberate config, not user input.
-		wp_redirect( $map[ $path ], 301 );
+		wp_redirect( $map[ $path ], 301 ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
 		exit;
 	}
 }

@@ -63,6 +63,7 @@ function bare_bones_seo_output_scripts_by_location($location) {
         if (($s['loc'] ?? 'head') !== $location) continue;
         if (($s['scope'] ?? 'all') === 'home' && !is_front_page()) continue;
 
-        echo "\n" . $s['code'] . "\n";
+        // Raw by design: tracking snippets are JavaScript. Saving requires unfiltered_html.
+        echo "\n" . $s['code'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }

@@ -149,7 +149,7 @@ function bare_bones_seo_get_section_description($key, $type) {
 function bare_bones_seo_render_global_map_screen() {
     // Handle save
     if (isset($_POST['bb_save_global_map']) && check_admin_referer(BARE_BONES_SEO_NONCE_GLOBAL_MAP)) {
-        $submitted = isset($_POST['section_index']) ? $_POST['section_index'] : array();
+        $submitted = isset($_POST['section_index']) ? (array) wp_unslash($_POST['section_index']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each key and value sanitized below.
         $clean     = array();
         foreach ($submitted as $key => $val) {
             $clean[sanitize_key($key)] = sanitize_text_field($val);
@@ -158,7 +158,7 @@ function bare_bones_seo_render_global_map_screen() {
 
         // Clear native core sitemap cached transients to apply changes instantly
         global $wpdb;
-        $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wp_sitemaps_%'" );
+        $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_wp_sitemaps_' ) . '%' ) );
         flush_rewrite_rules( false );
 
         echo '<div class="updated"><p>Your settings have been saved and sitemaps rebuilt instantly!</p></div>';

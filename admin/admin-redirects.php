@@ -13,15 +13,16 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-add_action('admin_init', 'bb_handle_redirect_actions');
+add_action('admin_init', 'bare_bones_seo_handle_redirect_actions');
 
 /**
  * Handle add/delete actions before any HTML output.
  */
-function bb_handle_redirect_actions() {
+function bare_bones_seo_handle_redirect_actions() {
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- routing checks only; each action below verifies its own nonce.
     if (
-        !isset($_GET['page']) || $_GET['page'] !== 'bare-bones-seo' ||
-        !isset($_GET['tab']) || $_GET['tab'] !== 'redirects'
+        !isset($_GET['page']) || 'bare-bones-seo' !== sanitize_key(wp_unslash($_GET['page'])) ||
+        !isset($_GET['tab']) || 'redirects' !== sanitize_key(wp_unslash($_GET['tab']))
     ) {
         return;
     }
@@ -30,20 +31,19 @@ function bb_handle_redirect_actions() {
         return;
     }
 
-    $notices = get_transient('bb_redirect_notices_' . get_current_user_id());
+    $notices = get_transient('bare_bones_seo_redirect_notices_' . get_current_user_id());
     if (!is_array($notices)) {
         $notices = array();
     }
 
     // --- DELETE: native rename redirect ---
     if (
-        isset($_GET['action']) && $_GET['action'] === 'delete_redirect' &&
+        isset($_GET['action']) && 'delete_redirect' === sanitize_key(wp_unslash($_GET['action'])) &&
         isset($_GET['post_id']) && isset($_GET['slug'])
     ) {
-        check_admin_referer('bb_delete_redirect_' . $_GET['post_id'] . '_' . $_GET['slug']);
-
-        $post_id  = intval($_GET['post_id']);
+        $post_id  = absint($_GET['post_id']);
         $old_slug = sanitize_title(wp_unslash($_GET['slug']));
+        check_admin_referer('bb_delete_redirect_' . $post_id . '_' . $old_slug);
 
         delete_post_meta($post_id, '_wp_old_slug', $old_slug);
         delete_post_meta($post_id, '_wp_old_slug_hits_' . sanitize_key($old_slug));
@@ -52,16 +52,18 @@ function bb_handle_redirect_actions() {
         if (count($notices) > 5) {
             array_shift($notices);
         }
-        set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+        set_transient('bare_bones_seo_redirect_notices_' . get_current_user_id(), $notices, 300);
         wp_safe_redirect(remove_query_arg(array('action', 'post_id', 'slug', '_wpnonce')));
         exit;
     }
 
     // --- DELETE: custom redirect ---
     if (
-        isset($_GET['action']) && $_GET['action'] === 'delete_custom' && isset($_GET['source'])
+        isset($_GET['action']) && 'delete_custom' === sanitize_key(wp_unslash($_GET['action'])) && isset($_GET['source'])
     ) {
-        $source = trim((string) parse_url(wp_unslash($_GET['source']), PHP_URL_PATH), '/');
+        // Reduced to a path and used only as a lookup key; sanitize_text_field
+        // would strip percent-encoded characters and miss the stored key.
+        $source = trim((string) wp_parse_url(wp_unslash($_GET['source']), PHP_URL_PATH), '/'); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         check_admin_referer('bb_delete_custom_' . $source);
 
         $redirects = get_option('bare_bones_seo_redirects', array());
@@ -74,7 +76,7 @@ function bb_handle_redirect_actions() {
         if (count($notices) > 5) {
             array_shift($notices);
         }
-        set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+        set_transient('bare_bones_seo_redirect_notices_' . get_current_user_id(), $notices, 300);
         wp_safe_redirect(remove_query_arg(array('action', 'source', '_wpnonce')));
         exit;
     }
@@ -83,15 +85,17 @@ function bb_handle_redirect_actions() {
     if (
         isset($_POST['add_redirect']) &&
         isset($_POST['bb_add_redirect_nonce']) &&
-        wp_verify_nonce($_POST['bb_add_redirect_nonce'], 'bb_add_redirect')
+        wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bb_add_redirect_nonce'])), 'bb_add_redirect')
     ) {
-        $raw_source = isset($_POST['redirect_source']) ? wp_unslash($_POST['redirect_source']) : '';
-        $raw_target = isset($_POST['redirect_target']) ? wp_unslash($_POST['redirect_target']) : '';
-        $source = trim((string) parse_url($raw_source, PHP_URL_PATH), '/');
+        // Source is reduced to a path below (sanitize_text_field would strip
+        // percent-encoded characters); target goes through esc_url_raw().
+        $raw_source = isset($_POST['redirect_source']) ? wp_unslash($_POST['redirect_source']) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $raw_target = isset($_POST['redirect_target']) ? wp_unslash($_POST['redirect_target']) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $source = trim((string) wp_parse_url($raw_source, PHP_URL_PATH), '/');
         $target = esc_url_raw(trim($raw_target));
 
-        $target_host = parse_url($target, PHP_URL_HOST);
-        $target_path = trim((string) parse_url($target, PHP_URL_PATH), '/');
+        $target_host = wp_parse_url($target, PHP_URL_HOST);
+        $target_path = trim((string) wp_parse_url($target, PHP_URL_PATH), '/');
 
         if ('' === $source || '' === $target) {
             $notices[] = "ERROR: Both a source path and a target are required.";
@@ -109,21 +113,22 @@ function bb_handle_redirect_actions() {
             if (count($notices) > 5) {
                 array_shift($notices);
             }
-            set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+            set_transient('bare_bones_seo_redirect_notices_' . get_current_user_id(), $notices, 300);
             wp_safe_redirect(remove_query_arg(array('bb_add_redirect_nonce', 'add_redirect')));
             exit;
         }
-        set_transient('bb_redirect_notices_' . get_current_user_id(), $notices, 300);
+        set_transient('bare_bones_seo_redirect_notices_' . get_current_user_id(), $notices, 300);
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 }
 
 /**
  * Render the admin screen.
  */
-function render_bare_bones_redirects_tab() {
+function bare_bones_seo_render_redirects_tab() {
     global $wpdb;
 
-    $notices = get_transient('bb_redirect_notices_' . get_current_user_id());
+    $notices = get_transient('bare_bones_seo_redirect_notices_' . get_current_user_id());
     ?>
     <div class="wrap bare-bones-seo-wrap" style="padding: 0; margin-top: 10px;">
 
@@ -132,11 +137,11 @@ function render_bare_bones_redirects_tab() {
                 $class = (strpos($notice, 'ERROR:') === 0) ? 'notice-error' : 'notice-success';
                 $clean_notice = str_replace('ERROR: ', '', $notice);
                 ?>
-                <div class="notice <?php echo $class; ?> is-dismissible" style="margin: 0 0 15px 0;">
-                    <p style="margin: 0; padding: 2px 0; font-size: 13px;"><?php echo $clean_notice; ?></p>
+                <div class="notice <?php echo esc_attr($class); ?> is-dismissible" style="margin: 0 0 15px 0;">
+                    <p style="margin: 0; padding: 2px 0; font-size: 13px;"><?php echo wp_kses($clean_notice, array('code' => array())); ?></p>
                 </div>
             <?php endforeach; ?>
-            <?php delete_transient('bb_redirect_notices_' . get_current_user_id()); ?>
+            <?php delete_transient('bare_bones_seo_redirect_notices_' . get_current_user_id()); ?>
         <?php endif; ?>
 
         <div class="bb-redirects-container" style="background:#fff; border:1px solid #c3c4c7; padding:20px; border-radius:4px; max-width: 1200px;">
@@ -226,7 +231,7 @@ function render_bare_bones_redirects_tab() {
                     // --- RETRIEVE & AGGREGATE NATIVE REDIRECTS ---
                     $db_results = $wpdb->get_results("
                         SELECT post_id, meta_value AS old_slug
-                        FROM $wpdb->postmeta
+                        FROM {$wpdb->postmeta}
                         WHERE meta_key = '_wp_old_slug'
                     ");
 
@@ -294,7 +299,7 @@ function render_bare_bones_redirects_tab() {
                                         <code style="background: none; padding: 0;"><?php echo esc_html($child['old_url']); ?></code>
                                     </td>
                                     <td style="padding: 10px; text-align: right; color: #646970; font-size: 13px;">
-                                        <?php echo number_format_i18n($child['hits']); ?>
+                                        <?php echo esc_html(number_format_i18n($child['hits'])); ?>
                                     </td>
                                     <td style="padding: 10px; text-align: right; padding-right: 20px;">
                                         <?php
