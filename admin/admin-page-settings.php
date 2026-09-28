@@ -95,8 +95,8 @@ function bare_bones_seo_save_meta_box_data($post_id) {
     $data = array(
         'title'        => isset($_POST['bb_seo_title_' . $post_id]) ? sanitize_text_field(wp_unslash($_POST['bb_seo_title_' . $post_id])) : '',
         'desc'         => isset($_POST['bb_seo_desc_' . $post_id]) ? sanitize_text_field(wp_unslash($_POST['bb_seo_desc_' . $post_id])) : '',
-        // Raw JSON by design — validated and re-encoded on output. See bare_bones_seo_update_page_meta().
-        'schema'       => isset($_POST['bb_seo_schema_' . $post_id]) ? wp_unslash($_POST['bb_seo_schema_' . $post_id]) : '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // Tags stripped on input; JSON is validated and re-encoded on output.
+        'schema'       => isset($_POST['bb_seo_schema_' . $post_id]) ? wp_strip_all_tags(wp_unslash($_POST['bb_seo_schema_' . $post_id])) : '',
         'should_index' => isset($_POST['bb_seo_should_index_' . $post_id]) ? sanitize_key(wp_unslash($_POST['bb_seo_should_index_' . $post_id])) : 'yes',
     );
     bare_bones_seo_update_page_meta($post_id, $data);

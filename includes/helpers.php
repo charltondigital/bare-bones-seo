@@ -106,9 +106,9 @@ function bare_bones_seo_update_page_meta( $post_id, $data ) {
 		update_post_meta( $post_id, BARE_BONES_SEO_META_DESC, wp_slash( sanitize_text_field( $data['desc'] ) ) );
 	}
 	if ( isset( $data['schema'] ) ) {
-		// Store raw JSON. wp_kses_post is for HTML and would corrupt it; safety
-		// is enforced on output, where it's validated and re-encoded with tag
-		// escaping.
+		// Callers strip tags with wp_strip_all_tags(). The JSON itself is stored
+		// as entered so invalid input can be fixed in place; it's validated and
+		// re-encoded with tag escaping on output.
 		update_post_meta( $post_id, BARE_BONES_SEO_META_SCHEMA, wp_slash( trim( (string) $data['schema'] ) ) );
 	}
 	if ( isset( $data['should_index'] ) ) {

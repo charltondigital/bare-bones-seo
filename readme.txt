@@ -3,7 +3,7 @@ Contributors: charltondigital
 Tags: seo, metadata, sitemap, noindex, redirects
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 0.1.3
+Stable tag: 1.0.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -65,8 +65,13 @@ It's a deliberate product philosophy, not a development phase. Features that bel
 
 == Changelog ==
 
+= 1.0.0 =
+* First public release.
+* Removed the tracking snippet manager. The plugin no longer inserts scripts into your pages; see the FAQ for where tracking codes go instead.
+* Security and coding-standards hardening across all admin screens.
+* Deleting the plugin now removes its 404 log. All other settings and page data are kept.
+
 = 0.1.3 =
-* Removed the tracking snippet manager. The plugin no longer inserts scripts; see the FAQ for where tracking codes go instead.
 * Bulk page meta editor: paginated at 50 per page with delegated row expand/collapse.
 * Schema field: invalid JSON warning fires after AJAX save and holds the row open.
 * Health notice system: detects discouraged indexing and fully noindexed post types.
@@ -81,5 +86,5 @@ It's a deliberate product philosophy, not a development phase. Features that bel
 
 == Upgrade Notice ==
 
-= 0.1.3 =
-Beta release. Adds bulk editor pagination, schema JSON validation, and health notices.
+= 1.0.0 =
+First public release. Tracking snippets are no longer output — move any saved snippets to Site Kit, your theme's header/footer setting, or the service's own plugin before updating.

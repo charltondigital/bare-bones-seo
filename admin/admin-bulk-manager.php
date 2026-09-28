@@ -49,8 +49,8 @@ function bare_bones_seo_process_bulk_ajax_save() {
     bare_bones_seo_update_page_meta($post_id, array(
         'title'        => isset($_POST[$title])  ? sanitize_text_field(wp_unslash($_POST[$title])) : '',
         'desc'         => isset($_POST[$desc])   ? sanitize_text_field(wp_unslash($_POST[$desc]))  : '',
-        // Raw JSON by design — validated and re-encoded on output. See bare_bones_seo_update_page_meta().
-        'schema'       => isset($_POST[$schema]) ? wp_unslash($_POST[$schema]) : '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // Tags stripped on input; JSON is validated and re-encoded on output.
+        'schema'       => isset($_POST[$schema]) ? wp_strip_all_tags(wp_unslash($_POST[$schema])) : '',
         'should_index' => isset($_POST[$index])  ? sanitize_key(wp_unslash($_POST[$index]))        : 'yes',
     ));
 

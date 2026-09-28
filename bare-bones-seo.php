@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Bare Bones SEO
  * Description:       A minimal SEO plugin: indexation controls, page meta, sitemaps, redirects, a 404 monitor, and schema.
- * Version:           0.1.3
+ * Version:           1.0.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Charlton Digital
@@ -30,9 +30,9 @@ define('BARE_BONES_SEO_NONCE_BULK_AJAX', 'bb_bulk_manager_nonce');
 define('BARE_BONES_SEO_AJAX_ACTION', 'bare_bones_seo_bulk_save');
 define('BARE_BONES_SEO_PATH', plugin_dir_path(__FILE__));
 define('BARE_BONES_SEO_URL',  plugin_dir_url(__FILE__));
-define('BARE_BONES_SEO_VERSION', '0.1.3');
+define('BARE_BONES_SEO_VERSION', '1.0.0');
 // Measured per release with the Plugin Size Meter tool. Update alongside VERSION.
-define('BARE_BONES_SEO_SIZE', '127 KB');
+define('BARE_BONES_SEO_SIZE', '122 KB');
 define('BARE_BONES_SEO_DB_VERSION', '2');
 define('BARE_BONES_SEO_DB_VERSION_OPTION', 'bare_bones_seo_db_version');
 
